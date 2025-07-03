@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     valorBruto: 0,
     clienteId: '',
     numeroParcela: 1,
-    valorParcela: 0,
     totalParcelas: 1
   });
 
@@ -40,10 +40,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     csll: 0,
     pis: 0,
     cofins: 0,
+    totalImpostos: 0,
     valorEmitido: 0,
     valorRecebido: 0,
     valorLivreImpostos: 0,
-    valorLivre: 0
+    valorLivre: 0,
+    valorParcela: 0
   });
 
   useEffect(() => {
@@ -59,7 +61,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         valorBruto: invoice.valorBruto,
         clienteId: invoice.clienteId || '',
         numeroParcela: invoice.numeroParcela || 1,
-        valorParcela: invoice.valorParcela || invoice.valorBruto,
         totalParcelas: invoice.totalParcelas || 1
       });
     }
@@ -67,15 +68,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
 
   useEffect(() => {
     calculateTaxes();
-  }, [formData.valorBruto]);
-
-  useEffect(() => {
-    if (formData.totalParcelas > 0) {
-      setFormData(prev => ({
-        ...prev,
-        valorParcela: prev.valorBruto / prev.totalParcelas
-      }));
-    }
   }, [formData.valorBruto, formData.totalParcelas]);
 
   const calculateTaxes = () => {
@@ -89,16 +81,19 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     const valorEmitido = valorBruto - totalImpostos;
     const valorLivreImpostos = valorBruto * 0.975; // 2,5% livre
     const valorLivre = valorBruto * 0.85; // 15% livre
+    const valorParcela = formData.totalParcelas > 0 ? valorBruto / formData.totalParcelas : 0;
 
     setCalculatedValues({
       irrf,
       csll,
       pis,
       cofins,
+      totalImpostos,
       valorEmitido,
       valorRecebido: formData.status === 'pago' ? valorEmitido : 0,
       valorLivreImpostos,
-      valorLivre
+      valorLivre,
+      valorParcela
     });
   };
 
@@ -281,7 +276,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="numeroParcela">Número da Parcela</Label>
                       <Input
@@ -301,17 +296,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                         min="1"
                         value={formData.totalParcelas}
                         onChange={(e) => handleInputChange('totalParcelas', parseInt(e.target.value) || 1)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="valorParcela">Valor da Parcela</Label>
-                      <Input
-                        id="valorParcela"
-                        type="number"
-                        step="0.01"
-                        value={formData.valorParcela}
-                        onChange={(e) => handleInputChange('valorParcela', parseFloat(e.target.value) || 0)}
                         required
                       />
                     </div>
@@ -353,27 +337,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
 
                   <div className="space-y-3 pt-4 border-t">
                     <div className="flex justify-between">
-                      <span className="font-medium">Valor Emitido:</span>
-                      <span className="font-bold text-blue-600">
+                      <span className="font-medium text-lg">Total de Impostos:</span>
+                      <span className="font-bold text-red-600 text-lg">
+                        {formatCurrency(calculatedValues.totalImpostos)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-lg">Valor Emitido:</span>
+                      <span className="font-bold text-blue-600 text-lg">
                         {formatCurrency(calculatedValues.valorEmitido)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">Valor Recebido:</span>
-                      <span className="font-bold text-green-600">
-                        {formatCurrency(calculatedValues.valorRecebido)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">Valor Livre de Impostos:</span>
-                      <span className="font-bold text-purple-600">
-                        {formatCurrency(calculatedValues.valorLivreImpostos)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">Valor Livre (15%):</span>
-                      <span className="font-bold text-orange-600">
-                        {formatCurrency(calculatedValues.valorLivre)}
                       </span>
                     </div>
                   </div>
