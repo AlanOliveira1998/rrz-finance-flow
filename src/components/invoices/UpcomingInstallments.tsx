@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +32,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   
   const cliente = clients.find(c => c.id === clienteId);
   
-  // Corrigindo o cálculo: valor de cada parcela é o valor total dividido pelo número total de parcelas
+  // Valor fixo por parcela - sempre o mesmo para todas as parcelas
   const valorPorParcela = valorTotal / totalParcelas;
 
   const generateUpcomingInstallments = () => {
@@ -49,7 +48,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
       installments.push({
         numero: i,
         dataVencimento: dueDate.toISOString().split('T')[0],
-        valor: valorPorParcela, // Usar o valor correto por parcela
+        valor: valorPorParcela, // Valor fixo para todas as parcelas
         mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
         mesNumerico: dueDate.getMonth() + 1,
         cliente: cliente?.razaoSocial || 'Cliente não encontrado',
@@ -82,6 +81,9 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
+
+  // Resumo usando o valor correto por parcela
+  const totalFilteredValue = filteredInstallments.length * valorPorParcela;
 
   if (totalParcelas <= 1 || numeroParcela >= totalParcelas) {
     return null;
@@ -189,7 +191,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
               <div className="text-right">
                 <p className="text-sm text-blue-700">Valor total das parcelas filtradas</p>
                 <p className="text-lg font-bold text-blue-900">
-                  {formatCurrency(filteredInstallments.length * valorPorParcela)}
+                  {formatCurrency(totalFilteredValue)}
                 </p>
               </div>
             </div>
