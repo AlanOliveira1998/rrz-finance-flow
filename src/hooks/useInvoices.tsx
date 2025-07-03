@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Invoice {
@@ -20,6 +19,10 @@ export interface Invoice {
   valorLivreImpostos: number;
   valorLivre: number;
   cliente?: string;
+  clienteId?: string;
+  numeroParcela?: number;
+  valorParcela?: number;
+  totalParcelas?: number;
 }
 
 interface InvoicesContextType {
@@ -39,7 +42,6 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (savedInvoices) {
       setInvoices(JSON.parse(savedInvoices));
     } else {
-      // Dados de exemplo
       const sampleInvoices: Invoice[] = [
         {
           id: '1',
@@ -59,7 +61,10 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           valorRecebido: 9385,
           valorLivreImpostos: 9385,
           valorLivre: 8500,
-          cliente: 'Empresa ABC Ltda'
+          cliente: 'Empresa ABC Ltda',
+          numeroParcela: 1,
+          totalParcelas: 1,
+          valorParcela: 10000
         },
         {
           id: '2',
@@ -78,7 +83,10 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           valorRecebido: 0,
           valorLivreImpostos: 14077.5,
           valorLivre: 12750,
-          cliente: 'Empresa XYZ S.A.'
+          cliente: 'Empresa XYZ S.A.',
+          numeroParcela: 1,
+          totalParcelas: 3,
+          valorParcela: 5000
         }
       ];
       setInvoices(sampleInvoices);
