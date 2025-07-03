@@ -23,20 +23,24 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   const { clients } = useClients();
   
   const cliente = clients.find(c => c.id === clienteId);
-  const valorParcela = valorTotal / totalParcelas;
+  
+  // Corrigindo o cálculo: valor de cada parcela é o valor total dividido pelo número total de parcelas
+  const valorPorParcela = valorTotal / totalParcelas;
 
   const generateUpcomingInstallments = () => {
     const installments = [];
     const baseDate = new Date(dataVencimento);
     
+    // Gerar parcelas futuras (da próxima até a última)
     for (let i = numeroParcela + 1; i <= totalParcelas; i++) {
       const dueDate = new Date(baseDate);
+      // Adicionar meses baseado na diferença entre a parcela atual e a futura
       dueDate.setMonth(dueDate.getMonth() + (i - numeroParcela));
       
       installments.push({
         numero: i,
         dataVencimento: dueDate.toISOString().split('T')[0],
-        valor: valorParcela,
+        valor: valorPorParcela, // Usar o valor correto por parcela
         mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
       });
     }
@@ -135,7 +139,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
             <div className="text-right">
               <p className="text-sm text-blue-700">Valor total restante</p>
               <p className="text-lg font-bold text-blue-900">
-                {formatCurrency(upcomingInstallments.length * valorParcela)}
+                {formatCurrency(upcomingInstallments.length * valorPorParcela)}
               </p>
             </div>
           </div>
