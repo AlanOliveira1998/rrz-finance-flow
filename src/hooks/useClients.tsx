@@ -51,20 +51,22 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       
       const data = await response.json();
+      console.log('API Response:', data);
+      
       return {
-        razaoSocial: data.legal_name || data.company_name,
-        nomeFantasia: data.trade_name || data.fantasy_name,
+        razaoSocial: data.razao_social || '',
+        nomeFantasia: data.nome_fantasia || '',
         cnpj: data.cnpj,
-        email: data.email,
-        telefone: data.phone,
+        email: data.email || '',
+        telefone: data.ddd_telefone_1 ? `(${data.ddd_telefone_1.substring(0,2)}) ${data.ddd_telefone_1.substring(2)}` : '',
         endereco: {
-          logradouro: data.address?.street || '',
-          numero: data.address?.number || '',
-          complemento: data.address?.details || '',
-          bairro: data.address?.district || '',
-          cidade: data.address?.city || '',
-          uf: data.address?.state || '',
-          cep: data.address?.zip_code || ''
+          logradouro: data.logradouro || '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.municipio || '',
+          uf: data.uf || '',
+          cep: data.cep || ''
         }
       };
     } catch (error) {

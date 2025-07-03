@@ -44,10 +44,25 @@ export const ClientForm = () => {
     setLoading(true);
     try {
       const clientData = await getClientByCnpj(formData.cnpj);
+      console.log('Client data received:', clientData);
+      
       setFormData(prev => ({
         ...prev,
-        ...clientData
+        razaoSocial: clientData.razaoSocial || '',
+        nomeFantasia: clientData.nomeFantasia || '',
+        email: clientData.email || '',
+        telefone: clientData.telefone || '',
+        endereco: {
+          logradouro: clientData.endereco?.logradouro || '',
+          numero: clientData.endereco?.numero || '',
+          complemento: clientData.endereco?.complemento || '',
+          bairro: clientData.endereco?.bairro || '',
+          cidade: clientData.endereco?.cidade || '',
+          uf: clientData.endereco?.uf || '',
+          cep: clientData.endereco?.cep || ''
+        }
       }));
+      
       toast({
         title: "CNPJ encontrado",
         description: "Dados preenchidos automaticamente.",
@@ -101,13 +116,13 @@ export const ClientForm = () => {
     });
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof typeof prev],
+          ...(prev[parent as keyof typeof prev] as object),
           [child]: value
         }
       }));
@@ -117,11 +132,6 @@ export const ClientForm = () => {
         [field]: value
       }));
     }
-  };
-
-  const formatCNPJ = (value: string) => {
-    const cleanValue = value.replace(/\D/g, '');
-    return cleanValue.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   };
 
   return (
