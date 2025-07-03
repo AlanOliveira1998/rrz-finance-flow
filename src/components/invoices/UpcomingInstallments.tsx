@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
-import { Calendar, DollarSign, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 interface UpcomingInstallmentsProps {
   valorTotal: number;
@@ -11,6 +14,8 @@ interface UpcomingInstallmentsProps {
   totalParcelas: number;
   dataVencimento: string;
   clienteId: string;
+  numeroNota: string;
+  dataEmissao: string;
 }
 
 export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
@@ -18,9 +23,13 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   numeroParcela,
   totalParcelas,
   dataVencimento,
-  clienteId
+  clienteId,
+  numeroNota,
+  dataEmissao
 }) => {
   const { clients } = useClients();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [monthFilter, setMonthFilter] = useState('all');
   
   const cliente = clients.find(c => c.id === clienteId);
   
@@ -41,7 +50,11 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
         numero: i,
         dataVencimento: dueDate.toISOString().split('T')[0],
         valor: valorPorParcela, // Usar o valor correto por parcela
-        mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        mesNumerico: dueDate.getMonth() + 1,
+        cliente: cliente?.razaoSocial || 'Cliente não encontrado',
+        numeroNota,
+        dataEmissao
       });
     }
     
@@ -49,6 +62,15 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   };
 
   const upcomingInstallments = generateUpcomingInstallments();
+
+  // Filtrar parcelas
+  const filteredInstallments = upcomingInstallments.filter(installment => {
+    const matchesSearch = installment.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         installment.numeroNota.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesMonth = monthFilter === 'all' || installment.mesNumerico.toString() === monthFilter;
+    
+    return matchesSearch && matchesMonth;
+  });
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -62,89 +84,118 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   };
 
   if (totalParcelas <= 1 || numeroParcela >= totalParcelas) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela futura</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Esta nota não possui parcelas futuras para exibir.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Próximas Parcelas a Emitir</h3>
-          <p className="text-sm text-gray-600">
-            {cliente && `Cliente: ${cliente.razaoSocial}`}
-          </p>
-        </div>
-        <Badge variant="outline" className="text-sm">
-          {upcomingInstallments.length} parcela{upcomingInstallments.length !== 1 ? 's' : ''}
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {upcomingInstallments.map((installment) => (
-          <Card key={installment.numero} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">
-                  Parcela {installment.numero}/{totalParcelas}
-                </CardTitle>
-                <Badge variant="secondary">
-                  Pendente
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  {formatDate(installment.dataVencimento)}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-900">
-                  {formatCurrency(installment.valor)}
-                </span>
-              </div>
-              
-              <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                Vencimento em {installment.mes}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
-              <p className="text-sm text-blue-700">
-                Total de {totalParcelas} parcelas • Atual: {numeroParcela}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-blue-700">Valor total restante</p>
-              <p className="text-lg font-bold text-blue-900">
-                {formatCurrency(upcomingInstallments.length * valorPorParcela)}
-              </p>
-            </div>
+    <div className="space-y-4">
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              placeholder="Buscar por cliente ou número da nota..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os meses</SelectItem>
+                <SelectItem value="1">Janeiro</SelectItem>
+                <SelectItem value="2">Fevereiro</SelectItem>
+                <SelectItem value="3">Março</SelectItem>
+                <SelectItem value="4">Abril</SelectItem>
+                <SelectItem value="5">Maio</SelectItem>
+                <SelectItem value="6">Junho</SelectItem>
+                <SelectItem value="7">Julho</SelectItem>
+                <SelectItem value="8">Agosto</SelectItem>
+                <SelectItem value="9">Setembro</SelectItem>
+                <SelectItem value="10">Outubro</SelectItem>
+                <SelectItem value="11">Novembro</SelectItem>
+                <SelectItem value="12">Dezembro</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
+
+      {/* Tabela */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Próximas Parcelas a Emitir</CardTitle>
+            <Badge variant="outline" className="text-sm">
+              {filteredInstallments.length} parcela{filteredInstallments.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredInstallments.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mês</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Valor da Parcela</TableHead>
+                  <TableHead>Data de Emissão</TableHead>
+                  <TableHead>Parcela</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInstallments.map((installment) => (
+                  <TableRow key={`${installment.numeroNota}-${installment.numero}`}>
+                    <TableCell>{installment.mes}</TableCell>
+                    <TableCell>{installment.cliente}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatCurrency(installment.valor)}
+                    </TableCell>
+                    <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
+                    <TableCell>
+                      {installment.numero}/{totalParcelas}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela encontrada</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Tente ajustar os filtros para ver mais resultados.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Resumo */}
+      {filteredInstallments.length > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-blue-900">Resumo das Parcelas Filtradas</h4>
+                <p className="text-sm text-blue-700">
+                  {filteredInstallments.length} de {upcomingInstallments.length} parcelas
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-blue-700">Valor total das parcelas filtradas</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {formatCurrency(filteredInstallments.length * valorPorParcela)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
