@@ -38,6 +38,16 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const handleEdit = (invoice: Invoice) => {
+    console.log('Editando nota fiscal:', invoice);
+    onEdit(invoice);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log('Excluindo nota fiscal:', id);
+    deleteInvoice(id);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -129,14 +139,14 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEdit(invoice)}
+                    onClick={() => handleEdit(invoice)}
                   >
                     Editar
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => deleteInvoice(invoice.id)}
+                    onClick={() => handleDelete(invoice.id)}
                   >
                     Excluir
                   </Button>
