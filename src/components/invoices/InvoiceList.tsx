@@ -16,8 +16,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
-  console.log('InvoiceList renderizado. onEdit recebido:', typeof onEdit);
-
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          invoice.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,18 +38,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   };
 
   const handleEdit = (invoice: Invoice) => {
-    console.log('=== INÍCIO HANDLE EDIT ===');
-    console.log('Invoice recebida:', invoice);
-    console.log('Tipo de onEdit:', typeof onEdit);
-    console.log('onEdit existe?', !!onEdit);
-    
-    try {
-      onEdit(invoice);
-      console.log('onEdit executado com sucesso');
-    } catch (error) {
-      console.error('Erro ao executar onEdit:', error);
-    }
-    console.log('=== FIM HANDLE EDIT ===');
+    onEdit(invoice);
   };
 
   const handleDelete = (id: string) => {
@@ -150,12 +137,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={(e) => {
-                      console.log('Botão Editar clicado para invoice:', invoice.numero);
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleEdit(invoice);
-                    }}
+                    onClick={() => handleEdit(invoice)}
                   >
                     Editar
                   </Button>

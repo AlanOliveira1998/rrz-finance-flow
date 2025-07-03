@@ -9,17 +9,23 @@ import { ClientList } from '@/components/clients/ClientList';
 import { ClientForm } from '@/components/clients/ClientForm';
 import { Reports } from '@/components/reports/Reports';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { Invoice } from '@/hooks/useInvoices';
 
 export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const handleEditInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setActiveTab('new-invoice');
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardOverview />;
       case 'invoices':
-        return <InvoiceList onEdit={setSelectedInvoice} />;
+        return <InvoiceList onEdit={handleEditInvoice} />;
       case 'new-invoice':
         return <InvoiceForm invoice={selectedInvoice} onBack={() => setActiveTab('invoices')} />;
       case 'clients':
