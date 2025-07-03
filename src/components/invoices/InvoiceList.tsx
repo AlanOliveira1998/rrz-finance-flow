@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,8 +38,17 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   };
 
   const handleEdit = (invoice: Invoice) => {
-    console.log('Editando nota fiscal:', invoice);
-    onEdit(invoice);
+    console.log('InvoiceList: Iniciando edição da nota fiscal:', invoice);
+    console.log('InvoiceList: Tipo da função onEdit:', typeof onEdit);
+    console.log('InvoiceList: onEdit é uma função?', typeof onEdit === 'function');
+    
+    if (typeof onEdit === 'function') {
+      console.log('InvoiceList: Chamando onEdit com a nota:', invoice);
+      onEdit(invoice);
+      console.log('InvoiceList: onEdit chamado com sucesso');
+    } else {
+      console.error('InvoiceList: onEdit não é uma função válida!');
+    }
   };
 
   const handleDelete = (id: string) => {
