@@ -38,17 +38,8 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   };
 
   const handleEdit = (invoice: Invoice) => {
-    console.log('InvoiceList: Iniciando edição da nota fiscal:', invoice);
-    console.log('InvoiceList: Tipo da função onEdit:', typeof onEdit);
-    console.log('InvoiceList: onEdit é uma função?', typeof onEdit === 'function');
-    
-    if (typeof onEdit === 'function') {
-      console.log('InvoiceList: Chamando onEdit com a nota:', invoice);
-      onEdit(invoice);
-      console.log('InvoiceList: onEdit chamado com sucesso');
-    } else {
-      console.error('InvoiceList: onEdit não é uma função válida!');
-    }
+    console.log('Editando nota fiscal:', invoice.numero);
+    onEdit(invoice);
   };
 
   const handleDelete = (id: string) => {
