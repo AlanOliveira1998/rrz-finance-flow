@@ -5,6 +5,8 @@ import { Header } from '@/components/layout/Header';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import { InvoiceList } from '@/components/invoices/InvoiceList';
 import { InvoiceForm } from '@/components/invoices/InvoiceForm';
+import { ClientList } from '@/components/clients/ClientList';
+import { ClientForm } from '@/components/clients/ClientForm';
 import { Reports } from '@/components/reports/Reports';
 import { UserManagement } from '@/components/admin/UserManagement';
 
@@ -20,6 +22,10 @@ export const Dashboard = () => {
         return <InvoiceList onEdit={setSelectedInvoice} />;
       case 'new-invoice':
         return <InvoiceForm invoice={selectedInvoice} onBack={() => setActiveTab('invoices')} />;
+      case 'clients':
+        return <ClientList />;
+      case 'new-client':
+        return <ClientForm />;
       case 'reports':
         return <Reports />;
       case 'users':
