@@ -78,7 +78,7 @@ export const ClientForm = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.cnpj || !formData.razaoSocial) {
@@ -90,30 +90,42 @@ export const ClientForm = () => {
       return;
     }
 
-    addClient(formData);
-    toast({
-      title: "Cliente cadastrado",
-      description: "Cliente foi cadastrado com sucesso.",
-    });
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
+      addClient(formData);
+      toast({
+        title: "Cliente cadastrado",
+        description: "Cliente foi cadastrado com sucesso.",
+      });
 
-    // Reset form
-    setFormData({
-      cnpj: '',
-      razaoSocial: '',
-      nomeFantasia: '',
-      email: '',
-      telefone: '',
-      endereco: {
-        logradouro: '',
-        numero: '',
-        complemento: '',
-        bairro: '',
-        cidade: '',
-        uf: '',
-        cep: ''
-      },
-      ativo: true
-    });
+      // Reset form
+      setFormData({
+        cnpj: '',
+        razaoSocial: '',
+        nomeFantasia: '',
+        email: '',
+        telefone: '',
+        endereco: {
+          logradouro: '',
+          numero: '',
+          complemento: '',
+          bairro: '',
+          cidade: '',
+          uf: '',
+          cep: ''
+        },
+        ativo: true
+      });
+    } catch (e) {
+      toast({
+        title: "Erro ao cadastrar",
+        description: "Não foi possível cadastrar o cliente.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -142,8 +154,8 @@ export const ClientForm = () => {
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex justify-end mb-4">
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            Cadastrar Cliente
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} aria-label="Cadastrar Cliente">
+            {loading ? 'Cadastrando...' : 'Cadastrar Cliente'}
           </Button>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -170,6 +182,7 @@ export const ClientForm = () => {
                     onClick={handleCnpjSearch}
                     disabled={loading}
                     className="bg-blue-600 hover:bg-blue-700"
+                    aria-label="Buscar CNPJ"
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
