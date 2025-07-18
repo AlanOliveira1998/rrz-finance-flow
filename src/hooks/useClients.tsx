@@ -47,32 +47,55 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('CNPJ deve ter 14 dígitos');
       }
 
-      // Tentar a API da BrasilAPI
-      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      // Tentar a API da Receita Federal (mais confiável)
+      const response = await fetch(`https://receitaws.com.br/v1/cnpj/${cleanCnpj}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
       
       if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('CNPJ não encontrado na base de dados');
-        } else if (response.status === 429) {
-          throw new Error('Muitas consultas. Tente novamente em alguns segundos');
-        } else {
-          throw new Error(`Erro na consulta: ${response.status}`);
+        // Se a primeira API falhar, tentar a BrasilAPI como fallback
+        const brasilApiResponse = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+        
+        if (!brasilApiResponse.ok) {
+          throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto e tente novamente.');
         }
+        
+        const brasilApiData = await brasilApiResponse.json();
+        
+        return {
+          razaoSocial: brasilApiData.razao_social || '',
+          nomeFantasia: brasilApiData.nome_fantasia || '',
+          cnpj: brasilApiData.cnpj || cleanCnpj,
+          email: brasilApiData.email || '',
+          telefone: brasilApiData.ddd_telefone_1 ? `(${brasilApiData.ddd_telefone_1.substring(0,2)}) ${brasilApiData.ddd_telefone_1.substring(2)}` : '',
+          endereco: {
+            logradouro: brasilApiData.logradouro || '',
+            numero: brasilApiData.numero || '',
+            complemento: brasilApiData.complemento || '',
+            bairro: brasilApiData.bairro || '',
+            cidade: brasilApiData.municipio || '',
+            uf: brasilApiData.uf || '',
+            cep: brasilApiData.cep || ''
+          }
+        };
       }
 
       const data = await response.json();
       
       // Verificar se a resposta contém dados válidos
-      if (!data.razao_social) {
+      if (!data.nome) {
         throw new Error('CNPJ encontrado mas sem dados válidos');
       }
 
       return {
-        razaoSocial: data.razao_social || '',
-        nomeFantasia: data.nome_fantasia || '',
+        razaoSocial: data.nome || '',
+        nomeFantasia: data.fantasia || '',
         cnpj: data.cnpj || cleanCnpj,
         email: data.email || '',
-        telefone: data.ddd_telefone_1 ? `(${data.ddd_telefone_1.substring(0,2)}) ${data.ddd_telefone_1.substring(2)}` : '',
+        telefone: data.telefone ? data.telefone : '',
         endereco: {
           logradouro: data.logradouro || '',
           numero: data.numero || '',
@@ -85,7 +108,15 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
     } catch (error) {
       console.error('Erro na consulta do CNPJ:', error);
-      throw error;
+      
+      // Se todas as APIs falharem, retornar erro mais amigável
+      if (error.message.includes('CNPJ não encontrado')) {
+        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto e tente novamente.');
+      } else if (error.message.includes('fetch')) {
+        throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
+      } else {
+        throw new Error('Erro ao consultar CNPJ. Tente novamente em alguns segundos.');
+      }
     }
   };
 
