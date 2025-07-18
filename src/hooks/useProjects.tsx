@@ -15,6 +15,19 @@ interface ProjectsContextType {
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
+function logProjectAction(action: string, project: any) {
+  const logs = JSON.parse(localStorage.getItem('rrz_logs') || '[]');
+  logs.push({
+    type: 'projeto',
+    action,
+    projectId: project.id,
+    nome: project.nome,
+    timestamp: new Date().toISOString(),
+    user: localStorage.getItem('rrz_user') ? JSON.parse(localStorage.getItem('rrz_user')).email : 'desconhecido',
+  });
+  localStorage.setItem('rrz_logs', JSON.stringify(logs));
+}
+
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -33,12 +46,14 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedProjects = [...projects, newProject];
     setProjects(updatedProjects);
     localStorage.setItem('rrz_projects', JSON.stringify(updatedProjects));
+    logProjectAction('criação', newProject);
   };
 
   const deleteProject = (id: string) => {
     const updatedProjects = projects.filter((p) => p.id !== id);
     setProjects(updatedProjects);
     localStorage.setItem('rrz_projects', JSON.stringify(updatedProjects));
+    logProjectAction('exclusão', { id });
   };
 
   return (
