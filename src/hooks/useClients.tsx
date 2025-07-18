@@ -39,14 +39,38 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const getClientByCnpj = async (cnpj: string) => {
     try {
+      // Limpar o CNPJ removendo caracteres não numéricos
       const cleanCnpj = cnpj.replace(/\D/g, '');
+      
+      // Validar se o CNPJ tem 14 dígitos
+      if (cleanCnpj.length !== 14) {
+        throw new Error('CNPJ deve ter 14 dígitos');
+      }
+
+      // Tentar a API da BrasilAPI
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
-      if (!response.ok) throw new Error('CNPJ não encontrado');
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('CNPJ não encontrado na base de dados');
+        } else if (response.status === 429) {
+          throw new Error('Muitas consultas. Tente novamente em alguns segundos');
+        } else {
+          throw new Error(`Erro na consulta: ${response.status}`);
+        }
+      }
+
       const data = await response.json();
+      
+      // Verificar se a resposta contém dados válidos
+      if (!data.razao_social) {
+        throw new Error('CNPJ encontrado mas sem dados válidos');
+      }
+
       return {
         razaoSocial: data.razao_social || '',
         nomeFantasia: data.nome_fantasia || '',
-        cnpj: data.cnpj,
+        cnpj: data.cnpj || cleanCnpj,
         email: data.email || '',
         telefone: data.ddd_telefone_1 ? `(${data.ddd_telefone_1.substring(0,2)}) ${data.ddd_telefone_1.substring(2)}` : '',
         endereco: {
@@ -60,6 +84,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       };
     } catch (error) {
+      console.error('Erro na consulta do CNPJ:', error);
       throw error;
     }
   };
