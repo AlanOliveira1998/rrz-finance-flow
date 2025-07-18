@@ -5,10 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useClients } from '@/hooks/useClients';
 import { Search, Edit, Trash2, Building } from 'lucide-react';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export const ClientList = () => {
   const { clients, deleteClient } = useClients();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [clientToDelete, setClientToDelete] = useState<{ id: string, razaoSocial: string } | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const filteredClients = clients.filter(client =>
     client.razaoSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -20,9 +25,25 @@ export const ClientList = () => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   };
 
-  const handleDelete = (id: string, razaoSocial: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o cliente ${razaoSocial}?`)) {
+  const handleDelete = async (id: string, razaoSocial: string) => {
+    setLoadingDelete(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
       deleteClient(id);
+      toast({
+        title: 'Cliente excluído',
+        description: `Cliente ${razaoSocial} foi excluído com sucesso.`,
+        variant: 'default',
+      });
+    } catch (e) {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o cliente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDelete(false);
+      setClientToDelete(null);
     }
   };
 
@@ -63,7 +84,7 @@ export const ClientList = () => {
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    onClick={() => handleDelete(client.id, client.razaoSocial)}
+                    onClick={() => setClientToDelete({ id: client.id, razaoSocial: client.razaoSocial })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -119,6 +140,27 @@ export const ClientList = () => {
           </p>
         </div>
       )}
+
+      {/* Modal de confirmação de exclusão */}
+      <AlertDialog open={!!clientToDelete} onOpenChange={open => { if (!open) setClientToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <b>{clientToDelete?.razaoSocial}</b>? Esta ação não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => clientToDelete && handleDelete(clientToDelete.id, clientToDelete.razaoSocial)}
+              disabled={loadingDelete}
+            >
+              {loadingDelete ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
