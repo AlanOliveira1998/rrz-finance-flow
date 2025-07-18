@@ -15,6 +15,7 @@ interface UpcomingInstallmentsProps {
   clienteId: string;
   numeroNota: string;
   dataEmissao: string;
+  valorLivreImpostos: number; // Adicionar prop para valor líquido
 }
 
 export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
@@ -24,7 +25,8 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   dataVencimento,
   clienteId,
   numeroNota,
-  dataEmissao
+  dataEmissao,
+  valorLivreImpostos // Receber valor líquido
 }) => {
   const { clients } = useClients();
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,8 +34,8 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   
   const cliente = clients.find(c => c.id === clienteId);
   
-  // Valor fixo por parcela - sempre o mesmo para todas as parcelas
-  const valorPorParcela = valorTotal / totalParcelas;
+  // Valor líquido por parcela (agora: repetir o valor líquido total em cada parcela)
+  const valorLiquidoPorParcela = valorLivreImpostos || valorTotal;
 
   const generateUpcomingInstallments = () => {
     const installments = [];
@@ -48,7 +50,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
       installments.push({
         numero: i,
         dataVencimento: dueDate.toISOString().split('T')[0],
-        valor: valorPorParcela, // Valor fixo para todas as parcelas
+        valor: valorLiquidoPorParcela, // Repetir valor líquido total em cada parcela
         mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
         mesNumerico: dueDate.getMonth() + 1,
         cliente: cliente?.razaoSocial || 'Cliente não encontrado',
@@ -83,7 +85,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   };
 
   // Resumo usando o valor correto por parcela
-  const totalFilteredValue = filteredInstallments.length * valorPorParcela;
+  const totalFilteredValue = filteredInstallments.length * valorLiquidoPorParcela;
 
   if (totalParcelas <= 1 || numeroParcela >= totalParcelas) {
     return null;
