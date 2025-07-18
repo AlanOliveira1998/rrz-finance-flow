@@ -9,7 +9,15 @@ export interface Client {
   nomeFantasia: string;
   email: string;
   telefone: string;
-  endereco: any;
+  endereco: {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+  };
   ativo: boolean;
   created_at?: string;
 }
@@ -20,7 +28,22 @@ interface ClientsContextType {
   addClient: (clientData: Omit<Client, 'id' | 'created_at'>) => Promise<void>;
   updateClient: (id: string, clientData: Partial<Client>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
-  getClientByCnpj: (cnpj: string) => Promise<any>;
+  getClientByCnpj: (cnpj: string) => Promise<{
+    razaoSocial: string;
+    nomeFantasia: string;
+    cnpj: string;
+    email: string;
+    telefone: string;
+    endereco: {
+      logradouro: string;
+      numero: string;
+      complemento: string;
+      bairro: string;
+      cidade: string;
+      uf: string;
+      cep: string;
+    };
+  }>;
 }
 
 const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
@@ -184,7 +207,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     console.log('Dados convertidos para Supabase:', supabaseData);
     
-    const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
+    const { data, error } = await supabase.from('clients').insert(supabaseData).select();
     
     console.log('Resposta do Supabase:', { data, error });
     
@@ -219,7 +242,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     
     // Converter camelCase para snake_case
-    const supabaseData: any = {};
+    const supabaseData: Record<string, unknown> = {};
     if (clientData.cnpj !== undefined) supabaseData.cnpj = clientData.cnpj;
     if (clientData.razaoSocial !== undefined) supabaseData.razao_social = clientData.razaoSocial;
     if (clientData.nomeFantasia !== undefined) supabaseData.nome_fantasia = clientData.nomeFantasia;
