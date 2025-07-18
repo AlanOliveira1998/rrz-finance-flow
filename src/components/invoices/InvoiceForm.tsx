@@ -50,8 +50,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     valorParcela: 0
   });
 
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (invoice) {
       setFormData({
@@ -105,7 +103,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
@@ -137,7 +134,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      // Remover: setLoading(false);
     }
   };
 
