@@ -46,11 +46,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <div className="fixed top-0 left-0 w-64 h-screen bg-gray-900 text-white flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
       <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="font-bold text-lg">RRZ</span>
+          <div className="w-12 h-12 flex items-center justify-center">
+            <img src="/logo.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
           </div>
           <div>
             <h2 className="font-bold text-lg">Sistema Financeiro</h2>
@@ -77,15 +77,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         <nav>
           {menuSections.filter(section => section.title !== '').map((section, idx) => (
             <div key={idx} className="mb-2">
-              {section.title && <div className="text-xs uppercase text-gray-400 font-bold mb-2 mt-4 pl-2">{section.title}</div>}
+              {section.title && <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 mt-4 pl-2">{section.title}</div>}
               {section.items.map((item) => (
                 <Button
                   key={item.id}
                   variant={activeTab === item.id ? "secondary" : "ghost"}
                   className={`w-full justify-start text-left ${
                     activeTab === item.id 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      ? 'bg-blue-700 text-white' 
+                      : 'text-gray-200 hover:text-white hover:bg-gray-800'
                   }`}
                   onClick={() => onTabChange(item.id)}
                   aria-label={item.label}
@@ -94,11 +94,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                   {item.label}
                 </Button>
               ))}
-              {idx < menuSections.length - 2 && <div className="border-t border-gray-700 my-2" />}
+              {idx < menuSections.length - 2 && <hr className="my-4 border-gray-700" />}
             </div>
           ))}
         </nav>
       </div>
-    </div>
+    </aside>
   );
 };
