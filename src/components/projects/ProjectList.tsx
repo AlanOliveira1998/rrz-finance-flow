@@ -7,36 +7,26 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, 
 import { useToast } from '@/hooks/use-toast';
 
 export const ProjectList = () => {
-  const { projects, deleteProject } = useProjects();
+  const { projects, deleteProject, loading } = useProjects();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [projectToDelete, setProjectToDelete] = useState<{ id: string, nome: string } | null>(null);
-  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
 
   const filteredProjects = projects.filter(project =>
     project.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (project.descricao && project.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleDelete = async (id: string, nome: string) => {
-    setLoadingDelete(true);
+  const handleDelete = async (id: string) => {
+    setLoadingDelete(id);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      deleteProject(id);
-      toast({
-        title: 'Projeto excluído',
-        description: `Projeto ${nome} foi excluído com sucesso.`,
-        variant: 'default',
-      });
+      await deleteProject(id);
+      toast({ title: 'Projeto excluído', description: 'Projeto removido com sucesso.' });
     } catch (e) {
-      toast({
-        title: 'Erro ao excluir',
-        description: 'Não foi possível excluir o projeto.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao excluir', description: 'Não foi possível excluir o projeto.', variant: 'destructive' });
     } finally {
-      setLoadingDelete(false);
-      setProjectToDelete(null);
+      setLoadingDelete(null);
     }
   };
 
@@ -59,42 +49,48 @@ export const ProjectList = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <Card key={project.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{project.nome}</CardTitle>
-                  {project.descricao && (
-                    <p className="text-sm text-gray-600">{project.descricao}</p>
-                  )}
+        {loading ? (
+          <div className="text-center py-8">Carregando...</div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-8">Nenhum projeto cadastrado.</div>
+        ) : (
+          filteredProjects.map((project) => (
+            <Card key={project.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{project.nome}</CardTitle>
+                    {project.descricao && (
+                      <p className="text-sm text-gray-600">{project.descricao}</p>
+                    )}
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      onClick={() => setProjectToDelete({ id: project.id, nome: project.nome })}
+                      disabled={loadingDelete === project.id}
+                    >
+                      {loadingDelete === project.id ? 'Excluindo...' : 'Excluir'}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex space-x-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    onClick={() => setProjectToDelete({ id: project.id, nome: project.nome })}
-                    disabled={loadingDelete}
-                  >
-                    {loadingDelete && projectToDelete?.id === project.id ? 'Excluindo...' : 'Excluir'}
-                  </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="pt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    project.ativo 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {project.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="pt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  project.ativo 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {project.ativo ? 'Ativo' : 'Inativo'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
       {filteredProjects.length === 0 && (
         <div className="text-center py-12">
@@ -114,12 +110,12 @@ export const ProjectList = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={loadingDelete !== null}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => projectToDelete && handleDelete(projectToDelete.id, projectToDelete.nome)}
-              disabled={loadingDelete}
+              onClick={() => projectToDelete && handleDelete(projectToDelete.id)}
+              disabled={loadingDelete !== null}
             >
-              {loadingDelete ? 'Excluindo...' : 'Excluir'}
+              {loadingDelete !== null ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
