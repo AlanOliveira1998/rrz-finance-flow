@@ -239,8 +239,6 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
                   <TableHead>Data de Emissão</TableHead>
                   <TableHead>Parcela</TableHead>
                   <TableHead>Emitida?</TableHead>
-                  <TableHead>Data Pagamento</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -263,25 +261,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
                         onChange={() => handleToggleEmit(installment.key)}
                       />
                     </TableCell>
-                    <TableCell>
-                      <input
-                        type="date"
-                        value={installment.dataPagamento}
-                        onChange={e => handleDateChange(installment.key, e.target.value)}
-                        className="border rounded px-2 py-1"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <select
-                        value={installment.status}
-                        onChange={e => handleStatusChange(installment.key, e.target.value as 'pendente' | 'pago' | 'atrasado')}
-                        className="border rounded px-2 py-1"
-                      >
-                        <option value="pendente">Pendente</option>
-                        <option value="pago">Pago</option>
-                        <option value="atrasado">Atrasado</option>
-                      </select>
-                    </TableCell>
+                    {/* Remover Data Pagamento e Status da aba de emitidas */}
                     <TableCell>
                       {onEditNota && (
                         <Button
