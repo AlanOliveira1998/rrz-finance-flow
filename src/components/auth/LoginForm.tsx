@@ -51,7 +51,7 @@ export const LoginForm = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-36 h-36 flex items-center justify-center">
+          <div className="mx-auto mb-4 w-36 h-36 flex items-center justify-center" style={{caretColor: 'transparent'}}>
             <img src="/logo.png" alt="Logo RRZ" className="w-36 h-36 object-contain" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Sistema Financeiro RRZ</CardTitle>
