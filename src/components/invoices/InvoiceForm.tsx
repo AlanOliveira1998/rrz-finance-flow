@@ -34,6 +34,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     numeroParcela: 1,
     totalParcelas: 1,
     projetoId: '',
+    tipoProjeto: '',
   });
 
   const [calculatedValues, setCalculatedValues] = useState({
@@ -64,6 +65,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         numeroParcela: invoice.numeroParcela || 1,
         totalParcelas: invoice.totalParcelas || 1,
         projetoId: invoice.projetoId || '',
+        tipoProjeto: invoice.tipoProjeto || '',
       });
     }
   }, [invoice]);
@@ -110,6 +112,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       ...calculatedValues,
       cliente: selectedClient?.razaoSocial || '',
       projeto: selectedProject?.nome || '',
+      tipoProjeto: formData.tipoProjeto,
     };
 
     if (invoice) {
@@ -189,6 +192,22 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="tipoProjeto">Tipo de Projeto</Label>
+                <Select value={formData.tipoProjeto} onValueChange={(value) => handleInputChange('tipoProjeto', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo de projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Escopo Fechado">Escopo Fechado</SelectItem>
+                    <SelectItem value="Assessoria Continua - Banco de Horas">Assessoria Continua - Banco de Horas</SelectItem>
+                    <SelectItem value="Assessoria Continua - Por Demanda">Assessoria Continua - Por Demanda</SelectItem>
+                    <SelectItem value="Processos e Controles">Processos e Controles</SelectItem>
+                    <SelectItem value="Offshore">Offshore</SelectItem>
+                    <SelectItem value="Não Financeiro">Não Financeiro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="projetoId">Projeto</Label>
