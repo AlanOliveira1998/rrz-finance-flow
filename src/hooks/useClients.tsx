@@ -31,6 +31,19 @@ interface ClientsContextType {
 
 const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
 
+function logClientAction(action: string, client: any) {
+  const logs = JSON.parse(localStorage.getItem('rrz_logs') || '[]');
+  logs.push({
+    type: 'cliente',
+    action,
+    clientId: client.id,
+    razaoSocial: client.razaoSocial,
+    timestamp: new Date().toISOString(),
+    user: localStorage.getItem('rrz_user') ? JSON.parse(localStorage.getItem('rrz_user')).email : 'desconhecido',
+  });
+  localStorage.setItem('rrz_logs', JSON.stringify(logs));
+}
+
 export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clients, setClients] = useState<Client[]>([]);
 
@@ -85,6 +98,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updatedClients = [...clients, newClient];
     setClients(updatedClients);
     localStorage.setItem('rrz_clients', JSON.stringify(updatedClients));
+    logClientAction('criação', newClient);
   };
 
   const updateClient = (id: string, clientData: Partial<Client>) => {
@@ -93,12 +107,15 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
     setClients(updatedClients);
     localStorage.setItem('rrz_clients', JSON.stringify(updatedClients));
+    const updated = updatedClients.find(c => c.id === id);
+    if (updated) logClientAction('edição', updated);
   };
 
   const deleteClient = (id: string) => {
     const updatedClients = clients.filter(client => client.id !== id);
     setClients(updatedClients);
     localStorage.setItem('rrz_clients', JSON.stringify(updatedClients));
+    logClientAction('exclusão', { id });
   };
 
   return (
