@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
+# RRZ Finance Flow
 
-## Project info
+Sistema financeiro completo para gestão de clientes, projetos, notas fiscais, conciliação bancária e relatórios.
 
-**URL**: https://lovable.dev/projects/e5c67baf-034b-40b7-af36-13e3224c45be
+## ✨ Funcionalidades Principais
 
-## How can I edit this code?
+- **Dashboard (Página Inicial):**
+  - Resumo financeiro (recebido, pendente, atrasado, total de notas)
+  - Controle de recebimento de notas (data, status, valor)
+  - Notificações automáticas para notas a vencer e vencidas
+- **Notas Fiscais:**
+  - Cadastro, edição, exclusão e listagem
+  - Busca avançada e filtros dinâmicos (projeto, tipo, cliente, valor, período, status)
+  - Controle de parcelas, conciliação e histórico
+- **Clientes:**
+  - Cadastro, edição, exclusão e busca por CNPJ (integração BrasilAPI)
+- **Projetos:**
+  - Cadastro, edição, exclusão e vinculação a notas
+  - Tipos de projeto customizáveis
+- **Impostos:**
+  - Resumo de impostos por nota
+  - Filtros por período
+- **Histórico de Alterações:**
+  - Log de criação, edição e exclusão de clientes, notas e projetos
+- **Acessibilidade e UX:**
+  - Toasts de feedback, loading states, modais de confirmação, navegação por teclado
 
-There are several ways of editing your application.
+## 🚀 Tecnologias Utilizadas
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- shadcn-ui
+- Radix UI (modais, alertas)
+- LocalStorage para persistência
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/e5c67baf-034b-40b7-af36-13e3224c45be) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 📁 Estrutura de Pastas
+```
+src/
+  components/        # Componentes de UI e páginas
+  hooks/             # Hooks customizados (clientes, notas, projetos, auth)
+  pages/             # Páginas principais
+  lib/               # Utilitários
+  App.tsx            # Composição de providers e rotas
 ```
 
-**Edit a file directly in GitHub**
+## 🛠️ Como rodar o projeto localmente
+```sh
+# Clone o repositório
+$ git clone <URL_DO_REPO>
+$ cd <NOME_DO_PROJETO>
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Instale as dependências
+$ npm install
 
-**Use GitHub Codespaces**
+# Rode o servidor de desenvolvimento
+$ npm run dev
+```
+Acesse http://localhost:5173 no navegador.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🧪 Testes e Contribuição
+- Sinta-se à vontade para abrir issues ou pull requests.
+- Sugestões de melhorias são bem-vindas!
 
-## What technologies are used for this project?
+## 📄 Licença
+Este projeto é privado/empresarial. Consulte o responsável antes de redistribuir.
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e5c67baf-034b-40b7-af36-13e3224c45be) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
+Desenvolvido por RRZ Consultoria.
