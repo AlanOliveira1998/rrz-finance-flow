@@ -24,16 +24,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
+    const fetchProfileAndSetUser = async (userObj: any) => {
+      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', userObj.id).single();
+      setUser({
+        id: userObj.id,
+        email: userObj.email ?? '',
+        name: profile?.name,
+        role: profile?.role,
+      });
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         const { user } = data.session;
-        setUser({ id: user.id, email: user.email ?? '' });
+        fetchProfileAndSetUser(user);
         setIsAuthenticated(true);
       }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email ?? '' });
+        fetchProfileAndSetUser(session.user);
         setIsAuthenticated(true);
       } else {
         setUser(null);
@@ -49,7 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return false;
     if (data.user) {
-      setUser({ id: data.user.id, email: data.user.email ?? '' });
+      // Buscar perfil após login
+      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', data.user.id).single();
+      setUser({
+        id: data.user.id,
+        email: data.user.email ?? '',
+        name: profile?.name,
+        role: profile?.role,
+      });
       setIsAuthenticated(true);
       return true;
     }
