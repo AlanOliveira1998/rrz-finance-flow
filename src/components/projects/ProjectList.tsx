@@ -3,19 +3,40 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjects } from '@/hooks/useProjects';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export const ProjectList = () => {
   const { projects, deleteProject } = useProjects();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string, nome: string } | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const filteredProjects = projects.filter(project =>
     project.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (project.descricao && project.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleDelete = (id: string, nome: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o projeto ${nome}?`)) {
+  const handleDelete = async (id: string, nome: string) => {
+    setLoadingDelete(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
       deleteProject(id);
+      toast({
+        title: 'Projeto excluído',
+        description: `Projeto ${nome} foi excluído com sucesso.`,
+        variant: 'default',
+      });
+    } catch (e) {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o projeto.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDelete(false);
+      setProjectToDelete(null);
     }
   };
 
@@ -53,9 +74,10 @@ export const ProjectList = () => {
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    onClick={() => handleDelete(project.id, project.nome)}
+                    onClick={() => setProjectToDelete({ id: project.id, nome: project.nome })}
+                    disabled={loadingDelete}
                   >
-                    Excluir
+                    {loadingDelete && projectToDelete?.id === project.id ? 'Excluindo...' : 'Excluir'}
                   </Button>
                 </div>
               </div>
@@ -82,6 +104,26 @@ export const ProjectList = () => {
           </p>
         </div>
       )}
+      {/* Modal de confirmação de exclusão de projeto */}
+      <AlertDialog open={!!projectToDelete} onOpenChange={open => { if (!open) setProjectToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o projeto <b>{projectToDelete?.nome}</b>? Esta ação não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => projectToDelete && handleDelete(projectToDelete.id, projectToDelete.nome)}
+              disabled={loadingDelete}
+            >
+              {loadingDelete ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }; 
