@@ -37,6 +37,19 @@ interface InvoicesContextType {
 
 const InvoicesContext = createContext<InvoicesContextType | undefined>(undefined);
 
+function logInvoiceAction(action: string, invoice: any) {
+  const logs = JSON.parse(localStorage.getItem('rrz_logs') || '[]');
+  logs.push({
+    type: 'nota',
+    action,
+    invoiceId: invoice.id,
+    numero: invoice.numero,
+    timestamp: new Date().toISOString(),
+    user: localStorage.getItem('rrz_user') ? JSON.parse(localStorage.getItem('rrz_user')).email : 'desconhecido',
+  });
+  localStorage.setItem('rrz_logs', JSON.stringify(logs));
+}
+
 export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
@@ -106,6 +119,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedInvoices = [...invoices, newInvoice];
     setInvoices(updatedInvoices);
     localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
+    logInvoiceAction('criação', newInvoice);
   };
 
   const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
@@ -114,12 +128,15 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
     setInvoices(updatedInvoices);
     localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
+    const updated = updatedInvoices.find(inv => inv.id === id);
+    if (updated) logInvoiceAction('edição', updated);
   };
 
   const deleteInvoice = (id: string) => {
     const updatedInvoices = invoices.filter(inv => inv.id !== id);
     setInvoices(updatedInvoices);
     localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
+    logInvoiceAction('exclusão', { id });
   };
 
   return (
