@@ -16,7 +16,7 @@ interface InvoiceFormProps {
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => {
-  const { addInvoice, updateInvoice } = useInvoices();
+  const { addInvoice, updateInvoice, loading } = useInvoices();
   const { clients } = useClients();
   const { projects } = useProjects();
   const { toast } = useToast();
@@ -107,7 +107,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     e.preventDefault();
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
       const invoiceData = {
@@ -118,13 +117,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         tipoProjeto: formData.tipoProjeto,
       };
       if (invoice) {
-        updateInvoice(invoice.id, invoiceData);
+        await updateInvoice(invoice.id, invoiceData);
         toast({
           title: "Nota fiscal atualizada",
           description: "A nota fiscal foi atualizada com sucesso.",
         });
       } else {
-        addInvoice(invoiceData);
+        await addInvoice(invoiceData);
         toast({
           title: "Nota fiscal criada",
           description: "A nota fiscal foi criada com sucesso.",
