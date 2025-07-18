@@ -47,7 +47,7 @@ const isFixedHoliday = (date: Date) => {
 
 // Função para avançar para o próximo dia útil
 const getNextBusinessDay = (date: Date) => {
-  let d = new Date(date);
+  const d = new Date(date);
   while (d.getDay() === 0 || d.getDay() === 6 || isFixedHoliday(d)) {
     d.setDate(d.getDate() + 1);
   }
@@ -67,6 +67,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   onEditNota
 }) => {
   const { clients } = useClients();
+  const { invoices } = useInvoices();
   const [searchTerm, setSearchTerm] = useState('');
   const [monthFilter, setMonthFilter] = useState('all');
   const cliente = clients.find(c => c.id === clienteId);
@@ -107,7 +108,6 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
   const generateUpcomingInstallments = () => {
     const installments = [];
     // Buscar a nota matriz (parcela 1) para garantir a data de emissão correta
-    const { invoices } = useInvoices ? useInvoices() : { invoices: [] };
     let dataEmissaoBase = dataEmissao;
     if (invoices && numeroNota) {
       // Se houver uma parcela emitida, use a data de emissão dela como base
