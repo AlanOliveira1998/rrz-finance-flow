@@ -25,6 +25,7 @@ export interface Invoice {
   totalParcelas?: number;
   projetoId?: string;
   projeto?: string;
+  tipoProjeto?: string;
 }
 
 interface InvoicesContextType {
