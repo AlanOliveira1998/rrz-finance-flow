@@ -140,8 +140,12 @@ export const ClientForm = () => {
         <h2 className="text-3xl font-bold text-gray-900">Cadastro de Clientes</h2>
         <p className="text-gray-600">Cadastre novos clientes usando o CNPJ</p>
       </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex justify-end mb-4">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            Cadastrar Cliente
+          </Button>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -290,12 +294,6 @@ export const ClientForm = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            Cadastrar Cliente
-          </Button>
         </div>
       </form>
     </div>
