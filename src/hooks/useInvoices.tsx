@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface Invoice {
   id: string;
@@ -30,117 +31,49 @@ export interface Invoice {
 
 interface InvoicesContextType {
   invoices: Invoice[];
-  addInvoice: (invoice: Omit<Invoice, 'id'>) => void;
-  updateInvoice: (id: string, invoice: Partial<Invoice>) => void;
-  deleteInvoice: (id: string) => void;
+  loading: boolean;
+  addInvoice: (invoice: Omit<Invoice, 'id'>) => Promise<void>;
+  updateInvoice: (id: string, invoice: Partial<Invoice>) => Promise<void>;
+  deleteInvoice: (id: string) => Promise<void>;
 }
 
 const InvoicesContext = createContext<InvoicesContextType | undefined>(undefined);
 
-function logInvoiceAction(action: string, invoice: any) {
-  const logs = JSON.parse(localStorage.getItem('rrz_logs') || '[]');
-  logs.push({
-    type: 'nota',
-    action,
-    invoiceId: invoice.id,
-    numero: invoice.numero,
-    timestamp: new Date().toISOString(),
-    user: localStorage.getItem('rrz_user') ? JSON.parse(localStorage.getItem('rrz_user')).email : 'desconhecido',
-  });
-  localStorage.setItem('rrz_logs', JSON.stringify(logs));
-}
-
 export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const savedInvoices = localStorage.getItem('rrz_invoices');
-    if (savedInvoices) {
-      setInvoices(JSON.parse(savedInvoices));
-    } else {
-      const sampleInvoices: Invoice[] = [
-        {
-          id: '1',
-          numero: 'NF-001',
-          descricao: 'Consultoria em Gestão Financeira',
-          tipo: 'entrada',
-          status: 'pago',
-          dataEmissao: '2024-01-15',
-          dataVencimento: '2024-02-15',
-          dataRecebimento: '2024-02-10',
-          valorBruto: 10000,
-          irrf: 150,
-          csll: 100,
-          pis: 65,
-          cofins: 300,
-          valorEmitido: 9385,
-          valorRecebido: 9385,
-          valorLivreImpostos: 9385,
-          valorLivre: 8500,
-          cliente: 'Empresa ABC Ltda',
-          numeroParcela: 1,
-          totalParcelas: 1,
-          valorParcela: 10000
-        },
-        {
-          id: '2',
-          numero: 'NF-002',
-          descricao: 'Auditoria Contábil',
-          tipo: 'entrada',
-          status: 'pendente',
-          dataEmissao: '2024-02-01',
-          dataVencimento: '2024-03-01',
-          valorBruto: 15000,
-          irrf: 225,
-          csll: 150,
-          pis: 97.5,
-          cofins: 450,
-          valorEmitido: 14077.5,
-          valorRecebido: 0,
-          valorLivreImpostos: 14077.5,
-          valorLivre: 12750,
-          cliente: 'Empresa XYZ S.A.',
-          numeroParcela: 1,
-          totalParcelas: 3,
-          valorParcela: 5000
-        }
-      ];
-      setInvoices(sampleInvoices);
-      localStorage.setItem('rrz_invoices', JSON.stringify(sampleInvoices));
-    }
+    setLoading(true);
+    supabase.from('invoices').select('*').then(({ data, error }) => {
+      if (!error && data) setInvoices(data as Invoice[]);
+      setLoading(false);
+    });
   }, []);
 
-  const addInvoice = (invoiceData: Omit<Invoice, 'id'>) => {
-    const newInvoice: Invoice = {
-      ...invoiceData,
-      id: Date.now().toString()
-    };
-    
-    const updatedInvoices = [...invoices, newInvoice];
-    setInvoices(updatedInvoices);
-    localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
-    logInvoiceAction('criação', newInvoice);
+  const addInvoice = async (invoiceData: Omit<Invoice, 'id'>) => {
+    setLoading(true);
+    const { data, error } = await supabase.from('invoices').insert([{ ...invoiceData }]).select();
+    if (!error && data) setInvoices((prev) => [...prev, data[0] as Invoice]);
+    setLoading(false);
   };
 
-  const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
-    const updatedInvoices = invoices.map(inv => 
-      inv.id === id ? { ...inv, ...invoiceData } : inv
-    );
-    setInvoices(updatedInvoices);
-    localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
-    const updated = updatedInvoices.find(inv => inv.id === id);
-    if (updated) logInvoiceAction('edição', updated);
+  const updateInvoice = async (id: string, invoiceData: Partial<Invoice>) => {
+    setLoading(true);
+    const { data, error } = await supabase.from('invoices').update(invoiceData).eq('id', id).select();
+    if (!error && data) setInvoices((prev) => prev.map(inv => inv.id === id ? { ...inv, ...data[0] } : inv));
+    setLoading(false);
   };
 
-  const deleteInvoice = (id: string) => {
-    const updatedInvoices = invoices.filter(inv => inv.id !== id);
-    setInvoices(updatedInvoices);
-    localStorage.setItem('rrz_invoices', JSON.stringify(updatedInvoices));
-    logInvoiceAction('exclusão', { id });
+  const deleteInvoice = async (id: string) => {
+    setLoading(true);
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    if (!error) setInvoices((prev) => prev.filter(inv => inv.id !== id));
+    setLoading(false);
   };
 
   return (
-    <InvoicesContext.Provider value={{ invoices, addInvoice, updateInvoice, deleteInvoice }}>
+    <InvoicesContext.Provider value={{ invoices, loading, addInvoice, updateInvoice, deleteInvoice }}>
       {children}
     </InvoicesContext.Provider>
   );
