@@ -118,7 +118,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       proposal_url: invoiceData.proposalUrl
     };
     
-    const { data, error } = await supabase.from('invoices').insert([supabaseData]).select();
+    const { data, error } = await supabase.from('invoices').insert(supabaseData).select();
     if (error) {
       console.error('Erro ao adicionar invoice:', error);
       throw error;
@@ -162,7 +162,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLoading(true);
     
     // Converter camelCase para snake_case
-    const supabaseData: any = {};
+    const supabaseData: Record<string, unknown> = {};
     if (invoiceData.numero !== undefined) supabaseData.numero = invoiceData.numero;
     if (invoiceData.descricao !== undefined) supabaseData.descricao = invoiceData.descricao;
     if (invoiceData.tipo !== undefined) supabaseData.tipo = invoiceData.tipo;
