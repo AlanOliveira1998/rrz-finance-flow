@@ -17,6 +17,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'new-invoice', label: 'Nova Nota', icon: '➕' },
     { id: 'clients', label: 'Clientes', icon: '🏢' },
     { id: 'new-client', label: 'Novo Cliente', icon: '👤' },
+    { id: 'projects', label: 'Projetos', icon: '🗂️' },
+    { id: 'new-project', label: 'Novo Projeto', icon: '📝' },
     { id: 'reports', label: 'Relatórios', icon: '📈' },
     ...(user?.role === 'admin' ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : [])
   ];
