@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useToast } from '@/components/ui/use-toast';
 
 export const DashboardOverview = () => {
   const { invoices, updateInvoice } = useInvoices();
+  const { toast } = useToast();
+  const [logs, setLogs] = React.useState<any[]>([]);
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
@@ -62,10 +65,33 @@ export const DashboardOverview = () => {
     return date.toLocaleDateString('pt-BR');
   };
 
+  useEffect(() => {
+    // Notificações automáticas para notas a vencer em até 3 dias
+    const hoje = new Date();
+    invoices.forEach((invoice) => {
+      if (invoice.status === 'pendente') {
+        const vencimento = new Date(invoice.dataVencimento);
+        const diff = (vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
+        if (diff >= 0 && diff <= 3) {
+          updateInvoice && updateInvoice(invoice.id, {}); // força re-render para evitar toast duplicado
+          toast({
+            title: 'Nota a vencer',
+            description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,
+            variant: 'default',
+          });
+        }
+      }
+    });
+  }, [invoices, toast, updateInvoice]);
+
+  React.useEffect(() => {
+    setLogs(JSON.parse(localStorage.getItem('rrz_logs') || '[]').reverse());
+  }, [invoices]);
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+        <h2 className="text-3xl font-bold text-gray-900">Página Inicial</h2>
         <p className="text-gray-600">Visão geral dos lançamentos financeiros</p>
       </div>
 
@@ -137,6 +163,11 @@ export const DashboardOverview = () => {
                         <option value="pago">Pago</option>
                         <option value="atrasado">Atrasado</option>
                       </select>
+                      {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
+                        <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
+                          Vencida
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
