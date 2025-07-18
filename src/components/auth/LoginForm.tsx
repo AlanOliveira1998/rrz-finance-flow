@@ -9,16 +9,23 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 export const LoginForm = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('remembered_email') || '');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(!!localStorage.getItem('remembered_email'));
   const { login } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (rememberEmail) {
+      localStorage.setItem('remembered_email', email);
+    } else {
+      localStorage.removeItem('remembered_email');
+    }
 
     try {
       const success = await login(email, password);
@@ -86,6 +93,16 @@ export const LoginForm = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                id="rememberEmail"
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={() => setRememberEmail((v) => !v)}
+                className="form-checkbox h-4 w-4 text-blue-600"
+              />
+              <Label htmlFor="rememberEmail" className="text-sm">Lembrar meu email</Label>
             </div>
             <Button 
               type="submit" 
