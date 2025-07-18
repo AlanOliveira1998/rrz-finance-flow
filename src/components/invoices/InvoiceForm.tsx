@@ -50,6 +50,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     valorParcela: 0
   });
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (invoice) {
       setFormData({
@@ -101,35 +103,43 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const selectedClient = clients.find(c => c.id === formData.clienteId);
-    const selectedProject = projects.find(p => p.id === formData.projetoId);
-    
-    const invoiceData = {
-      ...formData,
-      ...calculatedValues,
-      cliente: selectedClient?.razaoSocial || '',
-      projeto: selectedProject?.nome || '',
-      tipoProjeto: formData.tipoProjeto,
-    };
-
-    if (invoice) {
-      updateInvoice(invoice.id, invoiceData);
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
+      const selectedClient = clients.find(c => c.id === formData.clienteId);
+      const selectedProject = projects.find(p => p.id === formData.projetoId);
+      const invoiceData = {
+        ...formData,
+        ...calculatedValues,
+        cliente: selectedClient?.razaoSocial || '',
+        projeto: selectedProject?.nome || '',
+        tipoProjeto: formData.tipoProjeto,
+      };
+      if (invoice) {
+        updateInvoice(invoice.id, invoiceData);
+        toast({
+          title: "Nota fiscal atualizada",
+          description: "A nota fiscal foi atualizada com sucesso.",
+        });
+      } else {
+        addInvoice(invoiceData);
+        toast({
+          title: "Nota fiscal criada",
+          description: "A nota fiscal foi criada com sucesso.",
+        });
+      }
+      onBack();
+    } catch (e) {
       toast({
-        title: "Nota fiscal atualizada",
-        description: "A nota fiscal foi atualizada com sucesso.",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a nota fiscal.",
+        variant: "destructive"
       });
-    } else {
-      addInvoice(invoiceData);
-      toast({
-        title: "Nota fiscal criada",
-        description: "A nota fiscal foi criada com sucesso.",
-      });
+    } finally {
+      setLoading(false);
     }
-
-    onBack();
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -388,8 +398,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
           <Button type="button" variant="outline" onClick={onBack}>
             Cancelar
           </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            {invoice ? 'Atualizar' : 'Criar'} Nota Fiscal
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} aria-label="Salvar Nota Fiscal">
+            {loading ? (invoice ? 'Atualizando...' : 'Criando...') : (invoice ? 'Atualizar' : 'Criar')} Nota Fiscal
           </Button>
         </div>
       </form>
