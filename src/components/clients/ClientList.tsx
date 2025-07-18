@@ -9,11 +9,11 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { useToast } from '@/hooks/use-toast';
 
 export const ClientList = () => {
-  const { clients, deleteClient } = useClients();
+  const { clients, deleteClient, loading } = useClients();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [clientToDelete, setClientToDelete] = useState<{ id: string, razaoSocial: string } | null>(null);
-  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
 
   const filteredClients = clients.filter(client =>
     client.razaoSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,25 +25,15 @@ export const ClientList = () => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   };
 
-  const handleDelete = async (id: string, razaoSocial: string) => {
-    setLoadingDelete(true);
+  const handleDelete = async (id: string) => {
+    setLoadingDelete(id);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
-      deleteClient(id);
-      toast({
-        title: 'Cliente excluído',
-        description: `Cliente ${razaoSocial} foi excluído com sucesso.`,
-        variant: 'default',
-      });
+      await deleteClient(id);
+      toast({ title: 'Cliente excluído', description: 'Cliente removido com sucesso.' });
     } catch (e) {
-      toast({
-        title: 'Erro ao excluir',
-        description: 'Não foi possível excluir o cliente.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao excluir', description: 'Não foi possível excluir o cliente.', variant: 'destructive' });
     } finally {
-      setLoadingDelete(false);
-      setClientToDelete(null);
+      setLoadingDelete(null);
     }
   };
 
@@ -68,67 +58,73 @@ export const ClientList = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredClients.map((client) => (
-          <Card key={client.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2">
-                  <Building className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg">{client.razaoSocial}</CardTitle>
+        {loading ? (
+          <div className="text-center py-8">Carregando...</div>
+        ) : clients.length === 0 ? (
+          <div className="text-center py-8">Nenhum cliente cadastrado.</div>
+        ) : (
+          filteredClients.map((client) => (
+            <Card key={client.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Building className="h-5 w-5 text-blue-600" />
+                    <CardTitle className="text-lg">{client.razaoSocial}</CardTitle>
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      onClick={() => setClientToDelete({ id: client.id, razaoSocial: client.razaoSocial })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex space-x-1">
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    onClick={() => setClientToDelete({ id: client.id, razaoSocial: client.razaoSocial })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              {client.nomeFantasia && (
-                <p className="text-sm text-gray-600">{client.nomeFantasia}</p>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div>
-                <p className="text-sm font-medium text-gray-700">CNPJ:</p>
-                <p className="text-sm text-gray-600">{formatCNPJ(client.cnpj)}</p>
-              </div>
-              {client.email && (
+                {client.nomeFantasia && (
+                  <p className="text-sm text-gray-600">{client.nomeFantasia}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-2">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">E-mail:</p>
-                  <p className="text-sm text-gray-600">{client.email}</p>
+                  <p className="text-sm font-medium text-gray-700">CNPJ:</p>
+                  <p className="text-sm text-gray-600">{formatCNPJ(client.cnpj)}</p>
                 </div>
-              )}
-              {client.telefone && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Telefone:</p>
-                  <p className="text-sm text-gray-600">{client.telefone}</p>
+                {client.email && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">E-mail:</p>
+                    <p className="text-sm text-gray-600">{client.email}</p>
+                  </div>
+                )}
+                {client.telefone && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Telefone:</p>
+                    <p className="text-sm text-gray-600">{client.telefone}</p>
+                  </div>
+                )}
+                {client.endereco?.cidade && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Cidade:</p>
+                    <p className="text-sm text-gray-600">{client.endereco.cidade} - {client.endereco.uf}</p>
+                  </div>
+                )}
+                <div className="pt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    client.ativo 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {client.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
                 </div>
-              )}
-              {client.endereco?.cidade && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Cidade:</p>
-                  <p className="text-sm text-gray-600">{client.endereco.cidade} - {client.endereco.uf}</p>
-                </div>
-              )}
-              <div className="pt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  client.ativo 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {client.ativo ? 'Ativo' : 'Inativo'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {filteredClients.length === 0 && (
@@ -151,12 +147,12 @@ export const ClientList = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={loadingDelete !== null}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => clientToDelete && handleDelete(clientToDelete.id, clientToDelete.razaoSocial)}
-              disabled={loadingDelete}
+              onClick={() => clientToDelete && handleDelete(clientToDelete.id)}
+              disabled={loadingDelete !== null}
             >
-              {loadingDelete ? 'Excluindo...' : 'Excluir'}
+              {loadingDelete !== null ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
