@@ -1,11 +1,33 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
 
 export const UserManagement = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'leitura' });
+  const [formLoading, setFormLoading] = useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    supabase.from('profiles').select('*').then(({ data, error }) => {
+      if (error) {
+        toast({ title: 'Erro', description: 'Não foi possível carregar usuários', variant: 'destructive' });
+      } else {
+        setUsers(data || []);
+      }
+    }).finally(() => setLoading(false));
+  }, [showModal]);
 
   if (user?.role !== 'admin') {
     return (
@@ -15,11 +37,34 @@ export const UserManagement = () => {
     );
   }
 
-  const mockUsers = [
-    { id: '1', name: 'Administrador RRZ', email: 'admin@rrz.com', role: 'admin', status: 'ativo' },
-    { id: '2', name: 'Analista Financeiro', email: 'financeiro@rrz.com', role: 'financeiro', status: 'ativo' },
-    { id: '3', name: 'Consultor', email: 'consultor@rrz.com', role: 'leitura', status: 'inativo' }
-  ];
+  const handleOpenModal = () => {
+    setForm({ name: '', email: '', password: '', role: 'leitura' });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const { register } = useAuth();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    try {
+      const { success, error } = await register(form.email, form.password, form.name, form.role);
+      if (!success) throw new Error(error || 'Erro ao cadastrar usuário');
+      toast({ title: 'Usuário cadastrado', description: 'Usuário cadastrado com sucesso!' });
+      setShowModal(false);
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -28,7 +73,7 @@ export const UserManagement = () => {
           <h2 className="text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h2>
           <p className="text-gray-600">Controle de acesso e permissões do sistema</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleOpenModal}>
           Novo Usuário
         </Button>
       </div>
@@ -50,43 +95,80 @@ export const UserManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockUsers.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="p-4 font-medium">{user.name}</td>
-                    <td className="p-4">{user.email}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                        user.role === 'financeiro' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        user.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          Editar
-                        </Button>
-                        <Button variant="destructive" size="sm">
-                          Desativar
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <tr><td colSpan={5} className="p-4 text-center">Carregando...</td></tr>
+                ) : users.length === 0 ? (
+                  <tr><td colSpan={5} className="p-4 text-center">Nenhum usuário cadastrado.</td></tr>
+                ) : (
+                  users.map((user: any) => (
+                    <tr key={user.id} className="border-b">
+                      <td className="p-4 font-medium">{user.name}</td>
+                      <td className="p-4">{user.email}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          user.role === 'financeiro' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="p-4">-</td>
+                      <td className="p-4">
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" disabled>
+                            Editar
+                          </Button>
+                          <Button variant="destructive" size="sm" disabled>
+                            Desativar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de cadastro de usuário */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Usuário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" name="name" value={form.name} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" value={form.email} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" name="password" type="password" value={form.password} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="role">Função</Label>
+              <select id="role" name="role" value={form.role} onChange={handleFormChange} className="w-full border rounded p-2">
+                <option value="admin">Administrador</option>
+                <option value="financeiro">Financeiro</option>
+                <option value="leitura">Leitura</option>
+              </select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseModal} disabled={formLoading}>Cancelar</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={formLoading}>
+                {formLoading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
