@@ -66,3 +66,39 @@ Este projeto é privado/empresarial. Consulte o responsável antes de redistribu
 
 ---
 Desenvolvido por RRZ Consultoria.
+
+# Deploy na Vercel
+
+Este projeto está pronto para deploy na Vercel utilizando Vite + React + TypeScript.
+
+## Passos para Deploy
+
+1. **Importe o projeto no painel da Vercel**
+   - Clique em "Add New... > Project" e conecte o repositório.
+
+2. **Configure o build**
+   - Framework Preset: `Vite`
+   - Build Command: `vite build`
+   - Output Directory: `dist`
+   - Install Command: `npm install` (ou `pnpm install` se usar pnpm)
+
+3. **Variáveis de ambiente**
+   - Se necessário, adicione as variáveis do Supabase no painel da Vercel (ex: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+   - No seu código, prefira usar `import.meta.env.VITE_SUPABASE_URL` para ler essas variáveis.
+
+4. **Configuração de SPA (Single Page Application)**
+   - A Vercel já trata rotas de SPA automaticamente para projetos Vite/React. Se necessário, adicione um arquivo `vercel.json` com:
+
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+5. **Deploy**
+   - Clique em "Deploy" e aguarde a publicação.
+
+## Observações
+- Certifique-se de que todas as URLs de API do Supabase estejam corretas e públicas.
+- O backend local foi removido, todo o sistema depende apenas do frontend + Supabase.
+- Para builds locais, use `npm run build` e sirva a pasta `dist` com um servidor estático.
