@@ -10,6 +10,8 @@ import { ClientForm } from '@/components/clients/ClientForm';
 import { Reports } from '@/components/reports/Reports';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { Invoice } from '@/hooks/useInvoices';
+import { ProjectList } from '@/components/projects/ProjectList';
+import { ProjectForm } from '@/components/projects/ProjectForm';
 
 export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,6 +34,10 @@ export const Dashboard = () => {
         return <ClientList />;
       case 'new-client':
         return <ClientForm />;
+      case 'projects':
+        return <ProjectList />;
+      case 'new-project':
+        return <ProjectForm />;
       case 'reports':
         return <Reports />;
       case 'users':
