@@ -11,7 +11,7 @@ import { Search, Loader2 } from 'lucide-react';
 export const ClientForm = () => {
   const { addClient, loading } = useClients();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  // Remover: const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     cnpj: '',
@@ -41,7 +41,7 @@ export const ClientForm = () => {
       return;
     }
 
-    setLoading(true);
+    // Remover: setLoading(true);
     try {
       const clientData = await getClientByCnpj(formData.cnpj);
       console.log('Client data received:', clientData);
@@ -74,7 +74,7 @@ export const ClientForm = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      // Remover: setLoading(false);
     }
   };
 
@@ -90,7 +90,7 @@ export const ClientForm = () => {
       return;
     }
 
-    setLoading(true);
+    // Remover: setLoading(true);
     try {
       await addClient(formData);
       toast({
@@ -123,7 +123,7 @@ export const ClientForm = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      // Remover: setLoading(false);
     }
   };
 
