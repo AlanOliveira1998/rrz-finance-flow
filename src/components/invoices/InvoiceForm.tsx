@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInvoices, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
+import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 
 interface InvoiceFormProps {
@@ -17,6 +18,7 @@ interface InvoiceFormProps {
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => {
   const { addInvoice, updateInvoice } = useInvoices();
   const { clients } = useClients();
+  const { projects } = useProjects();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -30,7 +32,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     valorBruto: 0,
     clienteId: '',
     numeroParcela: 1,
-    totalParcelas: 1
+    totalParcelas: 1,
+    projetoId: '',
   });
 
   const [calculatedValues, setCalculatedValues] = useState({
@@ -59,7 +62,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         valorBruto: invoice.valorBruto,
         clienteId: invoice.clienteId || '',
         numeroParcela: invoice.numeroParcela || 1,
-        totalParcelas: invoice.totalParcelas || 1
+        totalParcelas: invoice.totalParcelas || 1,
+        projetoId: invoice.projetoId || '',
       });
     }
   }, [invoice]);
@@ -77,7 +81,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     
     const totalImpostos = irrf + csll + pis + cofins;
     const valorEmitido = valorBruto - totalImpostos;
-    const valorLivreImpostos = valorBruto * 0.975; // 2,5% livre
+    const valorLivreImpostos = valorBruto - totalImpostos; // valor líquido real
     const valorLivre = valorBruto * 0.85; // 15% livre
     const valorParcela = formData.totalParcelas > 0 ? valorBruto / formData.totalParcelas : 0;
 
@@ -99,11 +103,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     e.preventDefault();
     
     const selectedClient = clients.find(c => c.id === formData.clienteId);
+    const selectedProject = projects.find(p => p.id === formData.projetoId);
     
     const invoiceData = {
       ...formData,
       ...calculatedValues,
-      cliente: selectedClient?.razaoSocial || ''
+      cliente: selectedClient?.razaoSocial || '',
+      projeto: selectedProject?.nome || '',
     };
 
     if (invoice) {
@@ -183,6 +189,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="projetoId">Projeto</Label>
+                <Select value={formData.projetoId} onValueChange={(value) => handleInputChange('projetoId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
