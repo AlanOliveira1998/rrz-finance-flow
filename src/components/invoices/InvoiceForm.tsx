@@ -9,6 +9,7 @@ import { useInvoices, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 interface InvoiceFormProps {
   invoice?: Invoice | null;
@@ -49,6 +50,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     valorLivre: 0,
     valorParcela: 0
   });
+
+  const [proposalFile, setProposalFile] = useState<File | null>(null);
+  const [proposalUrl, setProposalUrl] = useState<string | null>(invoice?.proposalUrl || null);
 
   useEffect(() => {
     if (invoice) {
@@ -104,6 +108,16 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let uploadedProposalUrl = proposalUrl;
+      if (proposalFile) {
+        const fileExt = proposalFile.name.split('.').pop();
+        const fileName = `propostas/${formData.numero || Date.now()}.${fileExt}`;
+        const { data, error } = await supabase.storage.from('propostas').upload(fileName, proposalFile, { upsert: true });
+        if (error) throw new Error('Erro ao fazer upload da proposta');
+        const { data: publicUrlData } = supabase.storage.from('propostas').getPublicUrl(fileName);
+        uploadedProposalUrl = publicUrlData.publicUrl;
+        setProposalUrl(uploadedProposalUrl);
+      }
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
       const invoiceData = {
@@ -112,6 +126,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         cliente: selectedClient?.razaoSocial || '',
         projeto: selectedProject?.nome || '',
         tipoProjeto: formData.tipoProjeto,
+        proposalUrl: uploadedProposalUrl,
       };
       if (invoice) {
         await updateInvoice(invoice.id, invoiceData);
@@ -336,6 +351,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                     required
                   />
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="proposalFile">Anexar Proposta (PDF)</Label>
+                <Input
+                  id="proposalFile"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => setProposalFile(e.target.files?.[0] || null)}
+                />
+                {proposalUrl && (
+                  <a href={proposalUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm mt-1 block">Ver proposta anexada</a>
+                )}
               </div>
             </CardContent>
           </Card>
