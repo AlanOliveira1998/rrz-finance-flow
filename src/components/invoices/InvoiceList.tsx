@@ -8,6 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInvoices } from '@/hooks/useInvoices';
 import { Invoice } from '@/hooks/useInvoices';
 import { UpcomingInstallments } from './UpcomingInstallments';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useProjects } from '@/hooks/useProjects';
+import { useClients } from '@/hooks/useClients';
 
 interface InvoiceListProps {
   onEdit: (invoice: Invoice) => void;
@@ -15,12 +19,27 @@ interface InvoiceListProps {
 
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const { invoices, deleteInvoice, updateInvoice } = useInvoices();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   // Estado local para data de recebimento e status por nota
   const [notaExtras, setNotaExtras] = useState<{ [id: string]: { dataRecebimento?: string; status?: 'pendente' | 'pago' | 'atrasado' } }>({});
+
+  const { projects } = useProjects();
+  const { clients } = useClients();
+  const [projectFilter, setProjectFilter] = useState('all');
+  const [tipoProjetoFilter, setTipoProjetoFilter] = useState('all');
+  const [clienteFilter, setClienteFilter] = useState('all');
+  const [valorMin, setValorMin] = useState('');
+  const [valorMax, setValorMax] = useState('');
+  const [dataEmissaoInicio, setDataEmissaoInicio] = useState('');
+  const [dataEmissaoFim, setDataEmissaoFim] = useState('');
+  const [dataVencimentoInicio, setDataVencimentoInicio] = useState('');
+  const [dataVencimentoFim, setDataVencimentoFim] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('rrz_nota_extras');
@@ -30,6 +49,24 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   useEffect(() => {
     localStorage.setItem('rrz_nota_extras', JSON.stringify(notaExtras));
   }, [notaExtras]);
+
+  useEffect(() => {
+    // Notificações automáticas para notas a vencer em até 3 dias
+    const hoje = new Date();
+    invoices.forEach((invoice) => {
+      if (invoice.status === 'pendente') {
+        const vencimento = new Date(invoice.dataVencimento);
+        const diff = (vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
+        if (diff >= 0 && diff <= 3) {
+          toast({
+            title: 'Nota a vencer',
+            description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,
+            variant: 'default',
+          });
+        }
+      }
+    });
+  }, [invoices, toast]);
 
   const handleDataRecebimentoChange = (id: string, value: string) => {
     setNotaExtras(prev => ({ ...prev, [id]: { ...prev[id], dataRecebimento: value } }));
@@ -48,8 +85,16 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                          (invoice.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     const matchesType = typeFilter === 'all' || invoice.tipo === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesProject = projectFilter === 'all' || invoice.projetoId === projectFilter;
+    const matchesTipoProjeto = tipoProjetoFilter === 'all' || invoice.tipoProjeto === tipoProjetoFilter;
+    const matchesCliente = clienteFilter === 'all' || invoice.clienteId === clienteFilter;
+    const matchesValorMin = !valorMin || invoice.valorBruto >= parseFloat(valorMin);
+    const matchesValorMax = !valorMax || invoice.valorBruto <= parseFloat(valorMax);
+    const matchesDataEmissaoInicio = !dataEmissaoInicio || new Date(invoice.dataEmissao) >= new Date(dataEmissaoInicio);
+    const matchesDataEmissaoFim = !dataEmissaoFim || new Date(invoice.dataEmissao) <= new Date(dataEmissaoFim);
+    const matchesDataVencimentoInicio = !dataVencimentoInicio || new Date(invoice.dataVencimento) >= new Date(dataVencimentoInicio);
+    const matchesDataVencimentoFim = !dataVencimentoFim || new Date(invoice.dataVencimento) <= new Date(dataVencimentoFim);
+    return matchesSearch && matchesStatus && matchesType && matchesProject && matchesTipoProjeto && matchesCliente && matchesValorMin && matchesValorMax && matchesDataEmissaoInicio && matchesDataEmissaoFim && matchesDataVencimentoInicio && matchesDataVencimentoFim;
   });
 
   const formatCurrency = (value: number) => {
@@ -67,9 +112,26 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     onEdit(invoice);
   };
 
-  const handleDelete = (id: string) => {
-    console.log('Excluindo nota fiscal:', id);
-    deleteInvoice(id);
+  const handleDelete = async (id: string, numero: string) => {
+    setLoadingDelete(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      deleteInvoice(id);
+      toast({
+        title: 'Nota fiscal excluída',
+        description: `Nota ${numero} foi excluída com sucesso.`,
+        variant: 'default',
+      });
+    } catch (e) {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir a nota fiscal.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDelete(false);
+      setInvoiceToDelete(null);
+    }
   };
 
   // Pegar todas as notas com parcelas futuras para a aba de próximas parcelas
@@ -126,6 +188,86 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Projetos</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>{project.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={tipoProjetoFilter} onValueChange={setTipoProjetoFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de Projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Tipos de Projeto</SelectItem>
+                    <SelectItem value="Escopo Fechado">Escopo Fechado</SelectItem>
+                    <SelectItem value="Assessoria Continua - Banco de Horas">Assessoria Continua - Banco de Horas</SelectItem>
+                    <SelectItem value="Assessoria Continua - Por Demanda">Assessoria Continua - Por Demanda</SelectItem>
+                    <SelectItem value="Processos e Controles">Processos e Controles</SelectItem>
+                    <SelectItem value="Offshore">Offshore</SelectItem>
+                    <SelectItem value="Não Financeiro">Não Financeiro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={clienteFilter} onValueChange={setClienteFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Clientes</SelectItem>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>{client.razaoSocial}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  type="number"
+                  placeholder="Valor mínimo"
+                  value={valorMin}
+                  onChange={e => setValorMin(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Valor máximo"
+                  value={valorMax}
+                  onChange={e => setValorMax(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    placeholder="Emissão início"
+                    value={dataEmissaoInicio}
+                    onChange={e => setDataEmissaoInicio(e.target.value)}
+                  />
+                  <Input
+                    type="date"
+                    placeholder="Emissão fim"
+                    value={dataEmissaoFim}
+                    onChange={e => setDataEmissaoFim(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    placeholder="Vencimento início"
+                    value={dataVencimentoInicio}
+                    onChange={e => setDataVencimentoInicio(e.target.value)}
+                  />
+                  <Input
+                    type="date"
+                    placeholder="Vencimento fim"
+                    value={dataVencimentoFim}
+                    onChange={e => setDataVencimentoFim(e.target.value)}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -144,6 +286,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                         }`}>
                           {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                         </span>
+                        {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
+                          <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
+                            Vencida
+                          </span>
+                        )}
                         <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
                           invoice.tipo === 'entrada' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
                         }`}>
@@ -180,18 +327,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                             className="border rounded px-2 py-1 w-full"
                           />
                         </div>
-                        <div>
-                          <span className="text-gray-500">Status:</span>
-                          <select
-                            value={notaExtras[invoice.id]?.status || invoice.status}
-                            onChange={e => handleStatusChange(invoice.id, e.target.value as 'pendente' | 'pago' | 'atrasado')}
-                            className="border rounded px-2 py-1 w-full"
-                          >
-                            <option value="pendente">Pendente</option>
-                            <option value="pago">Pago</option>
-                            <option value="atrasado">Atrasado</option>
-                          </select>
-                        </div>
                       </div>
                     </div>
                     <div className="flex flex-col space-y-2 ml-4">
@@ -205,7 +340,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDelete(invoice.id)}
+                        onClick={() => setInvoiceToDelete(invoice)}
                       >
                         Excluir
                       </Button>
@@ -290,6 +425,27 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Modal de confirmação de exclusão de nota fiscal */}
+      <AlertDialog open={!!invoiceToDelete} onOpenChange={open => { if (!open) setInvoiceToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a nota fiscal <b>{invoiceToDelete?.numero}</b>? Esta ação não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => invoiceToDelete && handleDelete(invoiceToDelete.id, invoiceToDelete.numero)}
+              disabled={loadingDelete}
+            >
+              {loadingDelete ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
