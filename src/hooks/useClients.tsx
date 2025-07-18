@@ -31,8 +31,32 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     setLoading(true);
+    console.log('Carregando clientes...');
+    
     supabase.from('clients').select('*').then(({ data, error }) => {
-      if (!error && data) setClients(data as Client[]);
+      console.log('Resposta do carregamento de clientes:', { data, error });
+      
+      if (error) {
+        console.error('Erro ao carregar clientes:', error);
+      }
+      
+      if (data) {
+        console.log('Clientes carregados:', data);
+        // Converter snake_case para camelCase
+        const convertedClients = data.map(client => ({
+          id: client.id,
+          cnpj: client.cnpj,
+          razaoSocial: client.razao_social,
+          nomeFantasia: client.nome_fantasia,
+          email: client.email,
+          telefone: client.telefone,
+          endereco: client.endereco,
+          ativo: client.ativo,
+          created_at: client.created_at
+        }));
+        setClients(convertedClients as Client[]);
+      }
+      
       setLoading(false);
     });
   }, []);
@@ -145,15 +169,80 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
     setLoading(true);
-    const { data, error } = await supabase.from('clients').insert([{ ...clientData }]).select();
-    if (!error && data) setClients((prev) => [...prev, data[0] as Client]);
+    console.log('Tentando adicionar cliente:', clientData);
+    
+    // Converter camelCase para snake_case para o Supabase
+    const supabaseData = {
+      cnpj: clientData.cnpj,
+      razao_social: clientData.razaoSocial,
+      nome_fantasia: clientData.nomeFantasia,
+      email: clientData.email,
+      telefone: clientData.telefone,
+      endereco: clientData.endereco,
+      ativo: clientData.ativo
+    };
+    
+    console.log('Dados convertidos para Supabase:', supabaseData);
+    
+    const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
+    
+    console.log('Resposta do Supabase:', { data, error });
+    
+    if (error) {
+      console.error('Erro ao adicionar cliente:', error);
+      throw error;
+    }
+    
+    if (data && data.length > 0) {
+      console.log('Cliente adicionado com sucesso:', data[0]);
+      // Converter de volta para camelCase
+      const client = {
+        id: data[0].id,
+        cnpj: data[0].cnpj,
+        razaoSocial: data[0].razao_social,
+        nomeFantasia: data[0].nome_fantasia,
+        email: data[0].email,
+        telefone: data[0].telefone,
+        endereco: data[0].endereco,
+        ativo: data[0].ativo,
+        created_at: data[0].created_at
+      };
+      setClients((prev) => [...prev, client as Client]);
+    } else {
+      console.error('Nenhum dado retornado após inserção');
+    }
+    
     setLoading(false);
   };
 
   const updateClient = async (id: string, clientData: Partial<Client>) => {
     setLoading(true);
-    const { data, error } = await supabase.from('clients').update(clientData).eq('id', id).select();
-    if (!error && data) setClients((prev) => prev.map(c => c.id === id ? { ...c, ...data[0] } : c));
+    
+    // Converter camelCase para snake_case
+    const supabaseData: any = {};
+    if (clientData.cnpj !== undefined) supabaseData.cnpj = clientData.cnpj;
+    if (clientData.razaoSocial !== undefined) supabaseData.razao_social = clientData.razaoSocial;
+    if (clientData.nomeFantasia !== undefined) supabaseData.nome_fantasia = clientData.nomeFantasia;
+    if (clientData.email !== undefined) supabaseData.email = clientData.email;
+    if (clientData.telefone !== undefined) supabaseData.telefone = clientData.telefone;
+    if (clientData.endereco !== undefined) supabaseData.endereco = clientData.endereco;
+    if (clientData.ativo !== undefined) supabaseData.ativo = clientData.ativo;
+    
+    const { data, error } = await supabase.from('clients').update(supabaseData).eq('id', id).select();
+    if (!error && data && data.length > 0) {
+      const updatedClient = {
+        id: data[0].id,
+        cnpj: data[0].cnpj,
+        razaoSocial: data[0].razao_social,
+        nomeFantasia: data[0].nome_fantasia,
+        email: data[0].email,
+        telefone: data[0].telefone,
+        endereco: data[0].endereco,
+        ativo: data[0].ativo,
+        created_at: data[0].created_at
+      };
+      setClients((prev) => prev.map(c => c.id === id ? updatedClient : c));
+    }
     setLoading(false);
   };
 
