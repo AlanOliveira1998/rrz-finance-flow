@@ -12,6 +12,7 @@ import { UserManagement } from '@/components/admin/UserManagement';
 import { Invoice } from '@/hooks/useInvoices';
 import { ProjectList } from '@/components/projects/ProjectList';
 import { ProjectForm } from '@/components/projects/ProjectForm';
+import { TaxesList } from '@/components/taxes/TaxesList';
 
 export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -42,6 +43,8 @@ export const Dashboard = () => {
         return <Reports />;
       case 'users':
         return <UserManagement />;
+      case 'taxes':
+        return <TaxesList />;
       default:
         return <DashboardOverview />;
     }
