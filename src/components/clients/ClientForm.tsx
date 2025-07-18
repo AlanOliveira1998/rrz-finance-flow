@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Loader2 } from 'lucide-react';
 
 export const ClientForm = () => {
-  const { addClient, getClientByCnpj } = useClients();
+  const { addClient, loading } = useClients();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -92,8 +92,7 @@ export const ClientForm = () => {
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
-      addClient(formData);
+      await addClient(formData);
       toast({
         title: "Cliente cadastrado",
         description: "Cliente foi cadastrado com sucesso.",
