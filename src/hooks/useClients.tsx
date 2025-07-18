@@ -61,14 +61,46 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto.');
+        // Se a API falhar, retornar um objeto vazio para permitir preenchimento manual
+        return {
+          razaoSocial: '',
+          nomeFantasia: '',
+          cnpj: cleanCnpj,
+          email: '',
+          telefone: '',
+          endereco: {
+            logradouro: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            cep: ''
+          }
+        };
       }
 
       const data = await response.json();
       
       // Verificar se a resposta contém dados válidos
       if (!data.razao_social) {
-        throw new Error('CNPJ encontrado mas sem dados válidos');
+        // Se não tiver dados válidos, retornar objeto vazio
+        return {
+          razaoSocial: '',
+          nomeFantasia: '',
+          cnpj: cleanCnpj,
+          email: '',
+          telefone: '',
+          endereco: {
+            logradouro: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            cep: ''
+          }
+        };
       }
 
       return {
@@ -90,13 +122,24 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Erro na consulta do CNPJ:', error);
       
-      if (error.name === 'AbortError') {
-        throw new Error('Tempo limite excedido. Tente novamente.');
-      } else if (error.message.includes('CNPJ não encontrado')) {
-        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto.');
-      } else {
-        throw new Error('Erro ao consultar CNPJ. Tente novamente.');
-      }
+      // Em caso de erro, retornar objeto vazio para permitir preenchimento manual
+      const cleanCnpj = cnpj.replace(/\D/g, '');
+      return {
+        razaoSocial: '',
+        nomeFantasia: '',
+        cnpj: cleanCnpj,
+        email: '',
+        telefone: '',
+        endereco: {
+          logradouro: '',
+          numero: '',
+          complemento: '',
+          bairro: '',
+          cidade: '',
+          uf: '',
+          cep: ''
+        }
+      };
     }
   };
 
