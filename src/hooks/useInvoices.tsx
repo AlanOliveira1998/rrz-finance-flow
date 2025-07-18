@@ -23,6 +23,8 @@ export interface Invoice {
   numeroParcela?: number;
   valorParcela?: number;
   totalParcelas?: number;
+  projetoId?: string;
+  projeto?: string;
 }
 
 interface InvoicesContextType {
