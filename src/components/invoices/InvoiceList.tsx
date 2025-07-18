@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,10 +14,33 @@ interface InvoiceListProps {
 }
 
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
-  const { invoices, deleteInvoice } = useInvoices();
+  const { invoices, deleteInvoice, updateInvoice } = useInvoices();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+
+  // Estado local para data de recebimento e status por nota
+  const [notaExtras, setNotaExtras] = useState<{ [id: string]: { dataRecebimento?: string; status?: 'pendente' | 'pago' | 'atrasado' } }>({});
+
+  useEffect(() => {
+    const saved = localStorage.getItem('rrz_nota_extras');
+    if (saved) setNotaExtras(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('rrz_nota_extras', JSON.stringify(notaExtras));
+  }, [notaExtras]);
+
+  const handleDataRecebimentoChange = (id: string, value: string) => {
+    setNotaExtras(prev => ({ ...prev, [id]: { ...prev[id], dataRecebimento: value } }));
+    // Atualizar no contexto de notas
+    updateInvoice(id, { dataRecebimento: value });
+  };
+
+  const handleStatusChange = (id: string, value: 'pendente' | 'pago' | 'atrasado') => {
+    setNotaExtras(prev => ({ ...prev, [id]: { ...prev[id], status: value } }));
+    updateInvoice(id, { status: value });
+  };
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,6 +170,27 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                         <div>
                           <span className="text-gray-500">Vencimento:</span>
                           <p className="font-medium">{formatDate(invoice.dataVencimento)}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Recebimento:</span>
+                          <input
+                            type="date"
+                            value={notaExtras[invoice.id]?.dataRecebimento || invoice.dataRecebimento || ''}
+                            onChange={e => handleDataRecebimentoChange(invoice.id, e.target.value)}
+                            className="border rounded px-2 py-1 w-full"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Status:</span>
+                          <select
+                            value={notaExtras[invoice.id]?.status || invoice.status}
+                            onChange={e => handleStatusChange(invoice.id, e.target.value as 'pendente' | 'pago' | 'atrasado')}
+                            className="border rounded px-2 py-1 w-full"
+                          >
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="atrasado">Atrasado</option>
+                          </select>
                         </div>
                       </div>
                     </div>
