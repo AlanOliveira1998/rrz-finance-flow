@@ -1,63 +1,59 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface Project {
   id: string;
   nome: string;
   descricao: string;
   ativo: boolean;
+  created_at?: string;
 }
 
 interface ProjectsContextType {
   projects: Project[];
-  addProject: (projectData: Omit<Project, 'id'>) => void;
-  deleteProject: (id: string) => void;
+  loading: boolean;
+  addProject: (projectData: Omit<Project, 'id' | 'created_at'>) => Promise<void>;
+  updateProject: (id: string, projectData: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
-function logProjectAction(action: string, project: any) {
-  const logs = JSON.parse(localStorage.getItem('rrz_logs') || '[]');
-  logs.push({
-    type: 'projeto',
-    action,
-    projectId: project.id,
-    nome: project.nome,
-    timestamp: new Date().toISOString(),
-    user: localStorage.getItem('rrz_user') ? JSON.parse(localStorage.getItem('rrz_user')).email : 'desconhecido',
-  });
-  localStorage.setItem('rrz_logs', JSON.stringify(logs));
-}
-
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const savedProjects = localStorage.getItem('rrz_projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    }
+    setLoading(true);
+    supabase.from('projects').select('*').then(({ data, error }) => {
+      if (!error && data) setProjects(data as Project[]);
+      setLoading(false);
+    });
   }, []);
 
-  const addProject = (projectData: Omit<Project, 'id'>) => {
-    const newProject: Project = {
-      ...projectData,
-      id: Date.now().toString(),
-    };
-    const updatedProjects = [...projects, newProject];
-    setProjects(updatedProjects);
-    localStorage.setItem('rrz_projects', JSON.stringify(updatedProjects));
-    logProjectAction('criação', newProject);
+  const addProject = async (projectData: Omit<Project, 'id' | 'created_at'>) => {
+    setLoading(true);
+    const { data, error } = await supabase.from('projects').insert([{ ...projectData }]).select();
+    if (!error && data) setProjects((prev) => [...prev, data[0] as Project]);
+    setLoading(false);
   };
 
-  const deleteProject = (id: string) => {
-    const updatedProjects = projects.filter((p) => p.id !== id);
-    setProjects(updatedProjects);
-    localStorage.setItem('rrz_projects', JSON.stringify(updatedProjects));
-    logProjectAction('exclusão', { id });
+  const updateProject = async (id: string, projectData: Partial<Project>) => {
+    setLoading(true);
+    const { data, error } = await supabase.from('projects').update(projectData).eq('id', id).select();
+    if (!error && data) setProjects((prev) => prev.map(p => p.id === id ? { ...p, ...data[0] } : p));
+    setLoading(false);
+  };
+
+  const deleteProject = async (id: string) => {
+    setLoading(true);
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (!error) setProjects((prev) => prev.filter(p => p.id !== id));
+    setLoading(false);
   };
 
   return (
-    <ProjectsContext.Provider value={{ projects, addProject, deleteProject }}>
+    <ProjectsContext.Provider value={{ projects, loading, addProject, updateProject, deleteProject }}>
       {children}
     </ProjectsContext.Provider>
   );
