@@ -8,15 +8,15 @@ export const DashboardOverview = () => {
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
-    .reduce((sum, inv) => sum + inv.valorRecebido, 0);
+    .reduce((sum, inv) => sum + (inv.valorLivreImpostos || 0), 0);
 
   const totalPending = invoices
     .filter(inv => inv.status === 'pendente')
-    .reduce((sum, inv) => sum + inv.valorBruto, 0);
+    .reduce((sum, inv) => sum + (inv.valorLivreImpostos || 0), 0);
 
   const totalOverdue = invoices
     .filter(inv => inv.status === 'atrasado')
-    .reduce((sum, inv) => sum + inv.valorBruto, 0);
+    .reduce((sum, inv) => sum + (inv.valorLivreImpostos || 0), 0);
 
   const stats = [
     {
@@ -98,7 +98,7 @@ export const DashboardOverview = () => {
                     <p className="text-sm text-gray-600">{invoice.descricao}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(invoice.valorBruto)}</p>
+                    <p className="font-medium">{formatCurrency(invoice.valorLivreImpostos || 0)}</p>
                     <span className={`inline-block px-2 py-1 rounded text-xs ${
                       invoice.status === 'pago' ? 'bg-green-100 text-green-800' :
                       invoice.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
