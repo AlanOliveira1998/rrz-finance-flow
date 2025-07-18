@@ -18,7 +18,7 @@ interface InvoiceListProps {
 }
 
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
-  const { invoices, deleteInvoice, updateInvoice } = useInvoices();
+  const { invoices, deleteInvoice, updateInvoice, loading } = useInvoices();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -115,8 +115,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const handleDelete = async (id: string, numero: string) => {
     setLoadingDelete(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      deleteInvoice(id);
+      await deleteInvoice(id);
       toast({
         title: 'Nota fiscal excluída',
         description: `Nota ${numero} foi excluída com sucesso.`,
@@ -272,92 +271,115 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
           </Card>
 
           <div className="grid gap-4">
-            {filteredInvoices.map((invoice) => (
-              <Card key={invoice.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4 mb-2">
-                        <h3 className="text-lg font-semibold">{invoice.numero}</h3>
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                          invoice.status === 'pago' ? 'bg-green-100 text-green-800' :
-                          invoice.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                        </span>
-                        {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
-                          <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
-                            Vencida
-                          </span>
-                        )}
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                          invoice.tipo === 'entrada' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {invoice.tipo.charAt(0).toUpperCase() + invoice.tipo.slice(1)}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 mb-2">{invoice.descricao}</p>
-                      {invoice.cliente && (
-                        <p className="text-sm text-gray-500 mb-2">Cliente: {invoice.cliente}</p>
-                      )}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">Valor Bruto:</span>
-                          <p className="font-medium">{formatCurrency(invoice.valorBruto)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Valor Recebido:</span>
-                          <p className="font-medium">{formatCurrency(invoice.valorRecebido)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Emissão:</span>
-                          <p className="font-medium">{formatDate(invoice.dataEmissao)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Vencimento:</span>
-                          <p className="font-medium">{formatDate(invoice.dataVencimento)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Recebimento:</span>
-                          <input
-                            type="date"
-                            value={notaExtras[invoice.id]?.dataRecebimento || invoice.dataRecebimento || ''}
-                            onChange={e => handleDataRecebimentoChange(invoice.id, e.target.value)}
-                            className="border rounded px-2 py-1 w-full"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(invoice)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setInvoiceToDelete(invoice)}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>
+            {loading ? (
+              <div className="text-center py-8">Carregando...</div>
+            ) : filteredInvoices.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">Nenhuma nota fiscal encontrada.</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              filteredInvoices.map((invoice) => (
+                <Card key={invoice.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-2">
+                          <h3 className="text-lg font-semibold">{invoice.numero}</h3>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                            invoice.status === 'pago' ? 'bg-green-100 text-green-800' :
+                            invoice.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          </span>
+                          {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
+                            <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
+                              Vencida
+                            </span>
+                          )}
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                            invoice.tipo === 'entrada' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {invoice.tipo.charAt(0).toUpperCase() + invoice.tipo.slice(1)}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 mb-2">{invoice.descricao}</p>
+                        {invoice.cliente && (
+                          <p className="text-sm text-gray-500 mb-2">Cliente: {invoice.cliente}</p>
+                        )}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Valor Bruto:</span>
+                            <p className="font-medium">{formatCurrency(invoice.valorBruto)}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Valor Recebido:</span>
+                            <p className="font-medium">{formatCurrency(invoice.valorRecebido)}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Emissão:</span>
+                            <p className="font-medium">{formatDate(invoice.dataEmissao)}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Vencimento:</span>
+                            <p className="font-medium">{formatDate(invoice.dataVencimento)}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Recebimento:</span>
+                            <input
+                              type="date"
+                              value={notaExtras[invoice.id]?.dataRecebimento || invoice.dataRecebimento || ''}
+                              onChange={e => handleDataRecebimentoChange(invoice.id, e.target.value)}
+                              className="border rounded px-2 py-1 w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col space-y-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(invoice)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setInvoiceToDelete(invoice)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
 
-          {filteredInvoices.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-gray-500">Nenhuma nota fiscal encontrada.</p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Modal de confirmação de exclusão de nota fiscal */}
+          <AlertDialog open={!!invoiceToDelete} onOpenChange={open => { if (!open) setInvoiceToDelete(null); }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir a nota fiscal <b>{invoiceToDelete?.numero}</b>? Esta ação não poderá ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => invoiceToDelete && handleDelete(invoiceToDelete.id, invoiceToDelete.numero)}
+                  disabled={loadingDelete}
+                >
+                  {loadingDelete ? 'Excluindo...' : 'Excluir'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
 
         <TabsContent value="parcelas" className="space-y-6">
@@ -425,27 +447,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* Modal de confirmação de exclusão de nota fiscal */}
-      <AlertDialog open={!!invoiceToDelete} onOpenChange={open => { if (!open) setInvoiceToDelete(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a nota fiscal <b>{invoiceToDelete?.numero}</b>? Esta ação não poderá ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={loadingDelete}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => invoiceToDelete && handleDelete(invoiceToDelete.id, invoiceToDelete.numero)}
-              disabled={loadingDelete}
-            >
-              {loadingDelete ? 'Excluindo...' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
