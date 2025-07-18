@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Loader2 } from 'lucide-react';
 
 export const ClientForm = () => {
-  const { addClient, loading } = useClients();
+  const { addClient, loading, getClientByCnpj } = useClients();
   const { toast } = useToast();
   // Remover: const [loading, setLoading] = useState(false);
 
@@ -63,14 +63,22 @@ export const ClientForm = () => {
         }
       }));
       
-      toast({
-        title: "CNPJ encontrado",
-        description: "Dados preenchidos automaticamente.",
-      });
+      // Verificar se encontrou dados ou se retornou vazio
+      if (clientData.razaoSocial) {
+        toast({
+          title: "CNPJ encontrado",
+          description: "Dados preenchidos automaticamente.",
+        });
+      } else {
+        toast({
+          title: "CNPJ não encontrado",
+          description: "Preencha os dados manualmente.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Erro na consulta",
-        description: "CNPJ não encontrado ou inválido.",
+        description: "Preencha os dados manualmente.",
         variant: "destructive"
       });
     } finally {
