@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src="/logo.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
+            <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
           </div>
           <div>
             <h2 className="font-bold text-lg">Sistema Financeiro</h2>
