@@ -63,9 +63,10 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
       </div>
 
       <Tabs defaultValue="lista" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="lista">Lista de Notas</TabsTrigger>
           <TabsTrigger value="parcelas">Próximas Parcelas</TabsTrigger>
+          <TabsTrigger value="parcelas-emitidas">Parcelas Emitidas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="lista" className="space-y-6">
@@ -194,6 +195,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     clienteId={invoice.clienteId || ''}
                     numeroNota={invoice.numero}
                     dataEmissao={invoice.dataEmissao}
+                    onEditNota={() => handleEdit(invoice)}
                   />
                 </div>
               ))}
@@ -205,6 +207,38 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                   <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela futura</h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Não há notas fiscais com parcelas futuras para exibir.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value="parcelas-emitidas" className="space-y-6">
+          {invoicesWithFutureInstallments.length > 0 ? (
+            <div className="space-y-6">
+              {invoicesWithFutureInstallments.map((invoice) => (
+                <div key={invoice.id}>
+                  <UpcomingInstallments 
+                    valorTotal={invoice.valorBruto}
+                    valorLivreImpostos={invoice.valorLivreImpostos}
+                    numeroParcela={invoice.numeroParcela || 1}
+                    totalParcelas={invoice.totalParcelas || 1}
+                    dataVencimento={invoice.dataVencimento}
+                    clienteId={invoice.clienteId || ''}
+                    numeroNota={invoice.numero}
+                    dataEmissao={invoice.dataEmissao}
+                    onlyEmitted={true}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="text-center">
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela emitida</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Não há parcelas emitidas para exibir.
                   </p>
                 </div>
               </CardContent>
