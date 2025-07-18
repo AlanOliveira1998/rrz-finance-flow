@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInvoices } from '@/hooks/useInvoices';
 
 export const DashboardOverview = () => {
-  const { invoices } = useInvoices();
+  const { invoices, updateInvoice } = useInvoices();
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
@@ -56,6 +56,12 @@ export const DashboardOverview = () => {
     }).format(value);
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,63 +90,70 @@ export const DashboardOverview = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Notas Fiscais Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {invoices.slice(0, 5).map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{invoice.numero}</p>
-                    <p className="text-sm text-gray-600">{invoice.descricao}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatCurrency(invoice.valorLivreImpostos || 0)}</p>
-                    <span className={`inline-block px-2 py-1 rounded text-xs ${
-                      invoice.status === 'pago' ? 'bg-green-100 text-green-800' :
-                      invoice.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Controle de recebimento das notas */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Controle de Recebimento das Notas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead>
+                <tr>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {invoices.map((invoice) => (
+                  <tr key={invoice.id}>
+                    <td className="px-2 py-1 whitespace-nowrap">{invoice.numero}</td>
+                    <td className="px-2 py-1 whitespace-nowrap truncate max-w-[120px]">{invoice.cliente}</td>
+                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatCurrency(invoice.valorLivreImpostos)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataEmissao)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataVencimento)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap">
+                      <input
+                        type="date"
+                        value={invoice.dataRecebimento || ''}
+                        onChange={e => updateInvoice(invoice.id, { dataRecebimento: e.target.value })}
+                        className="border rounded px-1 py-0.5 w-28 text-xs"
+                        style={{ minWidth: 0 }}
+                      />
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap">
+                      <select
+                        value={invoice.status}
+                        onChange={e => updateInvoice(invoice.id, { status: e.target.value as 'pendente' | 'pago' | 'atrasado' })}
+                        className="border rounded px-1 py-0.5 w-24 text-xs"
+                        style={{ minWidth: 0 }}
+                      >
+                        <option value="pendente">Pendente</option>
+                        <option value="pago">Pago</option>
+                        <option value="atrasado">Atrasado</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {invoices.length === 0 && (
+              <div className="text-center py-8">
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma nota fiscal encontrada</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Cadastre uma nota fiscal para começar o controle de recebimento.
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Status das Notas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Pagas</span>
-                <span className="text-sm text-green-600">
-                  {invoices.filter(inv => inv.status === 'pago').length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Pendentes</span>
-                <span className="text-sm text-yellow-600">
-                  {invoices.filter(inv => inv.status === 'pendente').length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Atrasadas</span>
-                <span className="text-sm text-red-600">
-                  {invoices.filter(inv => inv.status === 'atrasado').length}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
