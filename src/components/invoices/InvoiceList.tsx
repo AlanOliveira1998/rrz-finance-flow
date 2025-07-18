@@ -187,6 +187,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                 <div key={invoice.id}>
                   <UpcomingInstallments 
                     valorTotal={invoice.valorBruto}
+                    valorLivreImpostos={invoice.valorLivreImpostos}
                     numeroParcela={invoice.numeroParcela || 1}
                     totalParcelas={invoice.totalParcelas || 1}
                     dataVencimento={invoice.dataVencimento}
