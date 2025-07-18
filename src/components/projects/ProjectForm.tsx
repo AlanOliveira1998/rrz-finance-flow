@@ -14,8 +14,9 @@ export const ProjectForm = () => {
     descricao: '',
     ativo: true
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome) {
       toast({
@@ -25,12 +26,24 @@ export const ProjectForm = () => {
       });
       return;
     }
-    addProject(formData);
-    toast({
-      title: 'Projeto cadastrado',
-      description: 'Projeto cadastrado com sucesso.',
-    });
-    setFormData({ nome: '', descricao: '', ativo: true });
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
+      addProject(formData);
+      toast({
+        title: 'Projeto cadastrado',
+        description: 'Projeto cadastrado com sucesso.',
+      });
+      setFormData({ nome: '', descricao: '', ativo: true });
+    } catch (e) {
+      toast({
+        title: 'Erro ao cadastrar',
+        description: 'Não foi possível cadastrar o projeto.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,8 +88,8 @@ export const ProjectForm = () => {
           </CardContent>
         </Card>
         <div className="flex justify-end space-x-4">
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            Cadastrar Projeto
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} aria-label="Cadastrar Projeto">
+            {loading ? 'Cadastrando...' : 'Cadastrar Projeto'}
           </Button>
         </div>
       </form>
