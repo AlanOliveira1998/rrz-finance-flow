@@ -7,14 +7,13 @@ import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 
 export const ProjectForm = () => {
-  const { addProject } = useProjects();
+  const { addProject, loading } = useProjects();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
     ativo: true
   });
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +25,8 @@ export const ProjectForm = () => {
       });
       return;
     }
-    setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula loading
-      addProject(formData);
+      await addProject(formData);
       toast({
         title: 'Projeto cadastrado',
         description: 'Projeto cadastrado com sucesso.',
@@ -41,8 +38,6 @@ export const ProjectForm = () => {
         description: 'Não foi possível cadastrar o projeto.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
