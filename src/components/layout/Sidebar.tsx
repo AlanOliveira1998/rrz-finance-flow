@@ -11,22 +11,43 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'invoices', label: 'Notas Fiscais', icon: '📄' },
-    { id: 'new-invoice', label: 'Nova Nota', icon: '➕' },
-    { id: 'clients', label: 'Clientes', icon: '🏢' },
-    { id: 'new-client', label: 'Novo Cliente', icon: '👤' },
-    { id: 'projects', label: 'Projetos', icon: '🗂️' },
-    { id: 'new-project', label: 'Novo Projeto', icon: '📝' },
-    { id: 'taxes', label: 'Impostos', icon: '💸' },
-    { id: 'reports', label: 'Relatórios', icon: '📈' },
-    ...(user?.role === 'admin' ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : [])
+  const menuSections = [
+    {
+      title: '',
+      items: [
+        { id: 'dashboard', label: 'Página Inicial', icon: '📊' },
+      ],
+    },
+    {
+      title: 'Financeiro',
+      items: [
+        { id: 'invoices', label: 'Notas Fiscais', icon: '📄' },
+        { id: 'new-invoice', label: 'Nova Nota', icon: '➕' },
+        { id: 'taxes', label: 'Impostos', icon: '💸' },
+        { id: 'reports', label: 'Relatórios', icon: '📈' },
+      ],
+    },
+    {
+      title: 'Cadastros',
+      items: [
+        { id: 'clients', label: 'Clientes', icon: '🏢' },
+        { id: 'new-client', label: 'Novo Cliente', icon: '👤' },
+        { id: 'projects', label: 'Projetos', icon: '🗂️' },
+        { id: 'new-project', label: 'Novo Projeto', icon: '📝' },
+      ],
+    },
+    {
+      title: 'Administração',
+      items: [
+        ...(user?.role === 'admin' ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : []),
+        { id: 'logs', label: 'Histórico de Alterações', icon: '🕑' },
+      ],
+    },
   ];
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col">
-      <div className="p-6 border-b border-gray-700">
+    <div className="fixed top-0 left-0 w-64 h-screen bg-gray-900 text-white flex flex-col z-50">
+      <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="font-bold text-lg">RRZ</span>
@@ -38,23 +59,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => (
-          <Button
-            key={item.id}
-            variant={activeTab === item.id ? "secondary" : "ghost"}
-            className={`w-full justify-start text-left ${
-              activeTab === item.id 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'text-gray-300 hover:text-white hover:bg-gray-800'
-            }`}
-            onClick={() => onTabChange(item.id)}
-          >
-            <span className="mr-3">{item.icon}</span>
-            {item.label}
-          </Button>
-        ))}
-      </nav>
+      <Button
+        key="dashboard"
+        variant={activeTab === 'dashboard' ? "secondary" : "ghost"}
+        className={`w-full justify-start text-left mt-4 mb-2 ${
+          activeTab === 'dashboard' 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'text-gray-300 hover:text-white hover:bg-gray-800'
+        }`}
+        onClick={() => onTabChange('dashboard')}
+        aria-label="Página Inicial"
+      >
+        <span className="mr-3">📊</span>
+        Página Inicial
+      </Button>
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
+        <nav>
+          {menuSections.filter(section => section.title !== '').map((section, idx) => (
+            <div key={idx} className="mb-2">
+              {section.title && <div className="text-xs uppercase text-gray-400 font-bold mb-2 mt-4 pl-2">{section.title}</div>}
+              {section.items.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "secondary" : "ghost"}
+                  className={`w-full justify-start text-left ${
+                    activeTab === item.id 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  }`}
+                  onClick={() => onTabChange(item.id)}
+                  aria-label={item.label}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {item.label}
+                </Button>
+              ))}
+              {idx < menuSections.length - 2 && <div className="border-t border-gray-700 my-2" />}
+            </div>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 };
