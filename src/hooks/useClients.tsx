@@ -47,55 +47,36 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('CNPJ deve ter 14 dígitos');
       }
 
-      // Tentar a API da Receita Federal (mais confiável)
-      const response = await fetch(`https://receitaws.com.br/v1/cnpj/${cleanCnpj}`, {
-        method: 'GET',
+      // Usar apenas a BrasilAPI com timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`, {
+        signal: controller.signal,
         headers: {
           'Accept': 'application/json',
         },
       });
+
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        // Se a primeira API falhar, tentar a BrasilAPI como fallback
-        const brasilApiResponse = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
-        
-        if (!brasilApiResponse.ok) {
-          throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto e tente novamente.');
-        }
-        
-        const brasilApiData = await brasilApiResponse.json();
-        
-        return {
-          razaoSocial: brasilApiData.razao_social || '',
-          nomeFantasia: brasilApiData.nome_fantasia || '',
-          cnpj: brasilApiData.cnpj || cleanCnpj,
-          email: brasilApiData.email || '',
-          telefone: brasilApiData.ddd_telefone_1 ? `(${brasilApiData.ddd_telefone_1.substring(0,2)}) ${brasilApiData.ddd_telefone_1.substring(2)}` : '',
-          endereco: {
-            logradouro: brasilApiData.logradouro || '',
-            numero: brasilApiData.numero || '',
-            complemento: brasilApiData.complemento || '',
-            bairro: brasilApiData.bairro || '',
-            cidade: brasilApiData.municipio || '',
-            uf: brasilApiData.uf || '',
-            cep: brasilApiData.cep || ''
-          }
-        };
+        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto.');
       }
 
       const data = await response.json();
       
       // Verificar se a resposta contém dados válidos
-      if (!data.nome) {
+      if (!data.razao_social) {
         throw new Error('CNPJ encontrado mas sem dados válidos');
       }
 
       return {
-        razaoSocial: data.nome || '',
-        nomeFantasia: data.fantasia || '',
+        razaoSocial: data.razao_social || '',
+        nomeFantasia: data.nome_fantasia || '',
         cnpj: data.cnpj || cleanCnpj,
         email: data.email || '',
-        telefone: data.telefone ? data.telefone : '',
+        telefone: data.ddd_telefone_1 ? `(${data.ddd_telefone_1.substring(0,2)}) ${data.ddd_telefone_1.substring(2)}` : '',
         endereco: {
           logradouro: data.logradouro || '',
           numero: data.numero || '',
@@ -109,13 +90,12 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Erro na consulta do CNPJ:', error);
       
-      // Se todas as APIs falharem, retornar erro mais amigável
-      if (error.message.includes('CNPJ não encontrado')) {
-        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto e tente novamente.');
-      } else if (error.message.includes('fetch')) {
-        throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
+      if (error.name === 'AbortError') {
+        throw new Error('Tempo limite excedido. Tente novamente.');
+      } else if (error.message.includes('CNPJ não encontrado')) {
+        throw new Error('CNPJ não encontrado. Verifique se o CNPJ está correto.');
       } else {
-        throw new Error('Erro ao consultar CNPJ. Tente novamente em alguns segundos.');
+        throw new Error('Erro ao consultar CNPJ. Tente novamente.');
       }
     }
   };
