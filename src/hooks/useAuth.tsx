@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   register: (email: string, password: string, name: string, role: string) => Promise<{ success: boolean; error?: string }>;
+  refreshSession: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,8 +98,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true };
   };
 
+  const refreshSession = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('Erro ao recarregar sessão:', error);
+        return false;
+      }
+      if (data.session) {
+        const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', data.session.user.id).single();
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email ?? '',
+          name: profile?.name,
+          role: profile?.role,
+        });
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Erro ao recarregar sessão:', error);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );
