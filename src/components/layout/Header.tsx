@@ -2,9 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -18,7 +20,7 @@ export const Header = () => {
             <p className="text-sm font-medium text-gray-900">{user?.name}</p>
             <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
           </div>
-          <Button variant="outline" onClick={logout}>
+          <Button variant="outline" onClick={async () => { await logout(); navigate('/'); }}>
             Sair
           </Button>
         </div>
