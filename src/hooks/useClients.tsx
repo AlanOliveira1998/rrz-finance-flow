@@ -75,7 +75,9 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           nomeFantasia: client.nome_fantasia,
           email: client.email,
           telefone: client.telefone,
-          endereco: client.endereco,
+          endereco: typeof client.endereco === 'string'
+            ? JSON.parse(client.endereco)
+            : client.endereco || {},
           ativo: client.ativo,
           created_at: client.created_at
         }));
