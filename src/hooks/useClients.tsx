@@ -242,7 +242,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     console.log('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
     console.log('Usuário autenticado:', session.user.id);
     
-    const { data, error } = await supabase.from('clients').insert(supabaseData).select();
+    const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
     
     console.log('Resposta do Supabase:', { data, error });
     
@@ -255,7 +255,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const sessionRefreshed = await refreshSession();
         if (sessionRefreshed) {
           console.log('Sessão recarregada, tentando inserção novamente...');
-          const { data: retryData, error: retryError } = await supabase.from('clients').insert(supabaseData).select();
+          const { data: retryData, error: retryError } = await supabase.from('clients').insert([supabaseData]).select();
           if (retryError) {
             console.error('Erro persistente após recarregar sessão:', retryError);
             throw retryError;
