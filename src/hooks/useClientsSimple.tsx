@@ -71,7 +71,7 @@ export const useClientsSimple = () => {
       console.log('Dados para Supabase:', supabaseData);
       console.log('Usuário autenticado:', session.user.id);
       
-      const { data, error } = await supabase.from('clients').insert(supabaseData).select();
+      const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
       
       console.log('Resposta do Supabase:', { data, error });
       
