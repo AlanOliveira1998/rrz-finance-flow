@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthSimple } from '@/hooks/useAuthSimple';
 
 const Index = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuthSimple();
 
   if (!isAuthenticated) {
     return (
