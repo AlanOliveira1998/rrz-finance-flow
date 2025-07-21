@@ -46,7 +46,7 @@ export const AuthDebug = () => {
 
       const { data, error } = await supabase
         .from('clients')
-        .insert(testClient)
+        .insert([testClient])
         .select();
 
       if (error) {
