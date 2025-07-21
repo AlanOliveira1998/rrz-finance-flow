@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClients } from '@/hooks/useClients';
+import { useClientsSimple } from '@/hooks/useClientsSimple';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Loader2 } from 'lucide-react';
 
 export const ClientForm = () => {
-  const { addClient, loading, getClientByCnpj } = useClients();
+  const { addClient, loading, getClientByCnpj } = useClientsSimple();
   const { toast } = useToast();
   // Remover: const [loading, setLoading] = useState(false);
 
