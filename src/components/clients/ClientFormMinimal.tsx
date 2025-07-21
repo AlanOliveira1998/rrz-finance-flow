@@ -16,6 +16,8 @@ export const ClientFormMinimal = () => {
       // Verificar autenticação
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Sessão:', session);
+      console.log('Usuário ID:', session?.user?.id);
+      console.log('Usuário Email:', session?.user?.email);
       
       if (!session) {
         alert('Usuário não está autenticado');
@@ -29,7 +31,9 @@ export const ClientFormMinimal = () => {
         ativo: true
       };
       
-      console.log('Dados:', clientData);
+      console.log('Dados sendo enviados:', clientData);
+      console.log('Tipo dos dados:', typeof clientData);
+      console.log('JSON dos dados:', JSON.stringify(clientData, null, 2));
       
       const { data, error } = await supabase
         .from('clients')
