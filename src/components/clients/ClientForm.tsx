@@ -49,28 +49,29 @@ export const ClientForm = () => {
     const cleanDoc = doc.replace(/\D/g, '');
     if (isCNPJ(cleanDoc)) {
       try {
-        const res = await fetch(`https://www.receitaws.com.br/v1/cnpj/${cleanDoc}`);
-        const data = await res.json();
-        if (data.status === 'ERROR') {
-          setError('CNPJ não encontrado ou limite de requisições atingido. Preencha manualmente.');
-        } else {
-          setFields({
-            ...fields,
-            cnpj: cleanDoc,
-            razao_social: data.nome || '',
-            nome_fantasia: data.fantasia || '',
-            email: data.email || '',
-            telefone: data.telefone || '',
-            endereco: data.logradouro || '',
-            numero: data.numero || '',
-            complemento: data.complemento || '',
-            bairro: data.bairro || '',
-            cidade: data.municipio || '',
-            uf: data.uf || '',
-            cep: data.cep || '',
-            ativo: true,
-          });
+        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanDoc}`);
+        if (!res.ok) {
+          setError('CNPJ não encontrado na BrasilAPI. Preencha manualmente.');
+          setAutoFillLoading(false);
+          return;
         }
+        const data = await res.json();
+        setFields({
+          ...fields,
+          cnpj: cleanDoc,
+          razao_social: data.razao_social || '',
+          nome_fantasia: data.nome_fantasia || '',
+          email: (data.qsa && data.qsa[0]?.nome) || '', // BrasilAPI não retorna email, mas pode retornar sócio
+          telefone: data.telefone || '',
+          endereco: data.descricao_tipo_de_logradouro && data.logradouro ? `${data.descricao_tipo_de_logradouro} ${data.logradouro}` : '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.municipio || '',
+          uf: data.uf || '',
+          cep: data.cep || '',
+          ativo: data.situacao_cadastral === 'ATIVA',
+        });
       } catch (err) {
         setError('Erro ao buscar dados do CNPJ. Preencha manualmente.');
       }
