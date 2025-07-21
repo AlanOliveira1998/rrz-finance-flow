@@ -242,26 +242,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     console.log('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
     console.log('Usuário autenticado:', session.user.id);
     
-    // Teste de conexão primeiro
-    console.log('Testando conexão...');
-    const { data: testData, error: testError } = await supabase.from('clients').select('count').limit(1);
-    console.log('Teste de conexão:', { testData, testError });
-    
-    if (testError) {
-      console.error('Erro na conexão:', testError);
-      throw new Error(`Erro de conexão: ${testError.message}`);
-    }
-    
-    // Teste com dados mínimos primeiro
-    const minimalData = {
-      cnpj: cleanClientData.cnpj,
-      razao_social: cleanClientData.razaoSocial,
-      ativo: cleanClientData.ativo
-    };
-    
-    console.log('Tentando inserção mínima:', minimalData);
-    
-    const { data, error } = await supabase.from('clients').insert(minimalData).select();
+    const { data, error } = await supabase.from('clients').insert(supabaseData).select();
     
     console.log('Resposta do Supabase:', { data, error });
     
