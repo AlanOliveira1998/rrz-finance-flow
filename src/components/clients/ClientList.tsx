@@ -16,9 +16,9 @@ export const ClientList = () => {
   const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
 
   const filteredClients = clients.filter(client =>
-    client.razaoSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.razaoSocial?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     client.cnpj.includes(searchTerm) ||
-    (client.nomeFantasia && client.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()))
+    (client.nomeFantasia?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const formatCNPJ = (cnpj: string) => {
