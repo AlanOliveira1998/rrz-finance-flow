@@ -155,8 +155,8 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
 
   // Filtrar parcelas
   const filteredInstallments = upcomingInstallments.filter(installment => {
-    const matchesSearch = installment.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         installment.numeroNota.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (installment.cliente?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (installment.numeroNota?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesMonth = monthFilter === 'all' || installment.mesNumerico.toString() === monthFilter;
     const matchesEmit = onlyEmitted ? installment.emitida : !installment.emitida;
     return matchesSearch && matchesMonth && matchesEmit;
