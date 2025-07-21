@@ -37,7 +37,7 @@ export const ClientFormMinimal = () => {
       
       const { data, error } = await supabase
         .from('clients')
-        .insert(clientData)
+        .insert([clientData]) // Corrigido: agora é um array
         .select();
       
       if (error) {
