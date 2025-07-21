@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { InvoicesProvider } from "@/hooks/useInvoices";
-import { ClientsProvider } from "@/hooks/useClients";
 import { ProjectsProvider } from "@/hooks/useProjects";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -19,16 +18,14 @@ const App = () => (
       <AuthProvider>
         <ProjectsProvider>
           <InvoicesProvider>
-            <ClientsProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </ClientsProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
           </InvoicesProvider>
         </ProjectsProvider>
       </AuthProvider>
