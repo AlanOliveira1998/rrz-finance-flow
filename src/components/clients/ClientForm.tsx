@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+console.log('Supabase client version:', supabase.constructor?.version);
+
 function isCNPJ(value: string) {
   return value.replace(/\D/g, '').length === 14;
 }
