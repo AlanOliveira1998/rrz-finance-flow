@@ -216,7 +216,10 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ativo: clientData.ativo
     };
     
+    console.log('Dados originais:', clientData);
     console.log('Dados convertidos para Supabase:', supabaseData);
+    console.log('Tipo dos dados:', typeof supabaseData);
+    console.log('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
     console.log('Usuário autenticado:', session.user.id);
     
     const { data, error } = await supabase.from('clients').insert(supabaseData).select();
