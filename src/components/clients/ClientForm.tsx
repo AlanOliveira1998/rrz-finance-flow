@@ -86,7 +86,38 @@ export const ClientForm = () => {
     setLoading(true);
     setError(null);
     try {
-      const payload = isCNPJ(doc) ? { ...fields, cnpj: doc.replace(/\D/g, '') } : { ...fields, cpf: doc.replace(/\D/g, '') };
+      const payload = isCNPJ(doc)
+        ? {
+            cnpj: doc.replace(/\D/g, ''),
+            razao_social: fields.razao_social,
+            nome_fantasia: fields.nome_fantasia,
+            email: fields.email,
+            telefone: fields.telefone,
+            endereco: fields.endereco,
+            numero: fields.numero,
+            complemento: fields.complemento,
+            bairro: fields.bairro,
+            cidade: fields.cidade,
+            uf: fields.uf,
+            cep: fields.cep,
+            ativo: fields.ativo,
+          }
+        : {
+            cpf: doc.replace(/\D/g, ''),
+            razao_social: fields.razao_social,
+            nome_fantasia: fields.nome_fantasia,
+            email: fields.email,
+            telefone: fields.telefone,
+            endereco: fields.endereco,
+            numero: fields.numero,
+            complemento: fields.complemento,
+            bairro: fields.bairro,
+            cidade: fields.cidade,
+            uf: fields.uf,
+            cep: fields.cep,
+            ativo: fields.ativo,
+          };
+      console.log('Payload enviado para o Supabase:', payload);
       const { data, error: supaError } = await supabase.from('clients').insert([payload]).select();
       if (supaError) {
         setError(supaError.message);
