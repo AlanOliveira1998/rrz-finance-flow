@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from './useAuth';
 
 export interface Client {
   id: string;
@@ -51,6 +52,7 @@ const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
 export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
+  const { refreshSession } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -194,6 +196,15 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     console.log('Tentando adicionar cliente:', clientData);
     
+    // Verificar autenticação primeiro
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    console.log('Status de autenticação:', { session: !!session, authError });
+    
+    if (!session) {
+      console.error('Usuário não está autenticado');
+      throw new Error('Usuário não está autenticado. Faça login novamente.');
+    }
+    
     // Converter camelCase para snake_case para o Supabase
     const supabaseData = {
       cnpj: clientData.cnpj,
@@ -206,6 +217,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     
     console.log('Dados convertidos para Supabase:', supabaseData);
+    console.log('Usuário autenticado:', session.user.id);
     
     const { data, error } = await supabase.from('clients').insert(supabaseData).select();
     
@@ -213,6 +225,38 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     if (error) {
       console.error('Erro ao adicionar cliente:', error);
+      
+      // Se for erro de RLS, tentar recarregar a sessão
+      if (error.message.includes('new row violates row-level security policy')) {
+        console.log('Erro de RLS detectado, tentando recarregar sessão...');
+        const sessionRefreshed = await refreshSession();
+        if (sessionRefreshed) {
+          console.log('Sessão recarregada, tentando inserção novamente...');
+          const { data: retryData, error: retryError } = await supabase.from('clients').insert(supabaseData).select();
+          if (retryError) {
+            console.error('Erro persistente após recarregar sessão:', retryError);
+            throw retryError;
+          }
+          if (retryData && retryData.length > 0) {
+            console.log('Cliente adicionado com sucesso na segunda tentativa:', retryData[0]);
+            const client = {
+              id: retryData[0].id,
+              cnpj: retryData[0].cnpj,
+              razaoSocial: retryData[0].razao_social,
+              nomeFantasia: retryData[0].nome_fantasia,
+              email: retryData[0].email,
+              telefone: retryData[0].telefone,
+              endereco: retryData[0].endereco,
+              ativo: retryData[0].ativo,
+              created_at: retryData[0].created_at
+            };
+            setClients((prev) => [...prev, client as Client]);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
       throw error;
     }
     
