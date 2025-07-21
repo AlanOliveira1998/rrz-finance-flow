@@ -205,18 +205,38 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw new Error('Usuário não está autenticado. Faça login novamente.');
     }
     
+    // Limpar e validar dados antes de converter
+    const cleanClientData = {
+      cnpj: clientData.cnpj || '',
+      razaoSocial: clientData.razaoSocial || '',
+      nomeFantasia: clientData.nomeFantasia || '',
+      email: clientData.email || '',
+      telefone: clientData.telefone || '',
+      endereco: {
+        logradouro: clientData.endereco?.logradouro || '',
+        numero: clientData.endereco?.numero || '',
+        complemento: clientData.endereco?.complemento || '',
+        bairro: clientData.endereco?.bairro || '',
+        cidade: clientData.endereco?.cidade || '',
+        uf: clientData.endereco?.uf || '',
+        cep: clientData.endereco?.cep || ''
+      },
+      ativo: clientData.ativo ?? true
+    };
+
     // Converter camelCase para snake_case para o Supabase
     const supabaseData = {
-      cnpj: clientData.cnpj,
-      razao_social: clientData.razaoSocial,
-      nome_fantasia: clientData.nomeFantasia,
-      email: clientData.email,
-      telefone: clientData.telefone,
-      endereco: clientData.endereco,
-      ativo: clientData.ativo
+      cnpj: cleanClientData.cnpj,
+      razao_social: cleanClientData.razaoSocial,
+      nome_fantasia: cleanClientData.nomeFantasia,
+      email: cleanClientData.email,
+      telefone: cleanClientData.telefone,
+      endereco: cleanClientData.endereco,
+      ativo: cleanClientData.ativo
     };
     
     console.log('Dados originais:', clientData);
+    console.log('Dados limpos:', cleanClientData);
     console.log('Dados convertidos para Supabase:', supabaseData);
     console.log('Tipo dos dados:', typeof supabaseData);
     console.log('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
