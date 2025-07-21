@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useClients } from '@/hooks/useClients';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Loader2 } from 'lucide-react';
-import { SimpleTest } from '@/components/debug/SimpleTest';
 
 export const ClientForm = () => {
   const { addClient, loading, getClientByCnpj } = useClients();
@@ -335,11 +334,6 @@ export const ClientForm = () => {
           </Card>
         </div>
       </form>
-      
-      {/* Componente de teste temporário */}
-      <div className="mt-8">
-        <SimpleTest />
-      </div>
     </div>
   );
 };
