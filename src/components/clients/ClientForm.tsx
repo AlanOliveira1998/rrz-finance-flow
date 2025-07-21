@@ -125,9 +125,25 @@ export const ClientForm = () => {
         ativo: true
       });
     } catch (e) {
+      console.error('Erro detalhado ao cadastrar cliente:', e);
+      
+      let errorMessage = "Não foi possível cadastrar o cliente.";
+      
+      if (e instanceof Error) {
+        if (e.message.includes('não está autenticado')) {
+          errorMessage = "Sessão expirada. Faça login novamente.";
+        } else if (e.message.includes('row-level security policy')) {
+          errorMessage = "Erro de permissão. Verifique se está logado corretamente.";
+        } else if (e.message.includes('duplicate key')) {
+          errorMessage = "CNPJ já cadastrado no sistema.";
+        } else {
+          errorMessage = e.message;
+        }
+      }
+      
       toast({
         title: "Erro ao cadastrar",
-        description: "Não foi possível cadastrar o cliente.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
