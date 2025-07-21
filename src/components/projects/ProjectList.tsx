@@ -14,8 +14,8 @@ export const ProjectList = () => {
   const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
 
   const filteredProjects = projects.filter(project =>
-    project.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (project.descricao && project.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
+    (project.nome?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (project.descricao?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const handleDelete = async (id: string) => {
