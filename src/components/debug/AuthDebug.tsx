@@ -41,17 +41,23 @@ export const AuthDebug = () => {
         ativo: true
       };
 
+      console.log('Teste - Dados sendo enviados:', testClient);
+      console.log('Teste - JSON dos dados:', JSON.stringify(testClient, null, 2));
+
       const { data, error } = await supabase
         .from('clients')
         .insert(testClient)
         .select();
 
       if (error) {
+        console.error('Teste - Erro detalhado:', error);
         setTestResult(`ERRO: ${error.message}`);
       } else {
+        console.log('Teste - Sucesso:', data);
         setTestResult(`SUCESSO: Cliente inserido com ID ${data?.[0]?.id}`);
       }
     } catch (error) {
+      console.error('Teste - Exceção:', error);
       setTestResult(`EXCEÇÃO: ${error}`);
     }
   };
