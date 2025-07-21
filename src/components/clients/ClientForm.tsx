@@ -89,6 +89,8 @@ export const ClientForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('FormData antes do envio:', formData);
+    
     if (!formData.cnpj || !formData.razaoSocial) {
       toast({
         title: "Campos obrigatórios",
