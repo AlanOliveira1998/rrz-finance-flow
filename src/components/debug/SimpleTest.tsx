@@ -30,7 +30,7 @@ export const SimpleTest = () => {
       
       const { data, error } = await supabase
         .from('clients')
-        .insert(testData)
+        .insert([testData])
         .select();
       
       if (error) {
