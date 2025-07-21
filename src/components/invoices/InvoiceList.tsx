@@ -80,9 +80,9 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   };
 
   const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (invoice.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+    const matchesSearch = (invoice.numero?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (invoice.descricao?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (invoice.cliente?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     const matchesType = typeFilter === 'all' || invoice.tipo === typeFilter;
     const matchesProject = projectFilter === 'all' || invoice.projetoId === projectFilter;
