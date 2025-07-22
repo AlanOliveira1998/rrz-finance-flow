@@ -8,6 +8,7 @@ import { Search, Edit, Trash2, Building } from 'lucide-react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Client } from '@/hooks/useClients';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ClientListProps {
   onEdit?: (client: Client) => void;
@@ -19,12 +20,17 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [clientToDelete, setClientToDelete] = useState<{ id: string, razaoSocial: string } | null>(null);
   const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  const filteredClients = clients.filter(client =>
-    (client.razaoSocial?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    client.cnpj.includes(searchTerm) ||
-    (client.nomeFantasia?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+  const filteredClients = clients.filter(client => {
+    const matchesSearch =
+      (client.razaoSocial?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      client.cnpj.includes(searchTerm) ||
+      (client.nomeFantasia?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' ? true : statusFilter === 'active' ? client.ativo : !client.ativo;
+    return matchesSearch && matchesStatus;
+  });
 
   const formatCNPJ = (cnpj: string) => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -44,11 +50,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Clientes</h2>
-          <p className="text-gray-600">Gerencie seus clientes cadastrados</p>
-        </div>
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -59,6 +61,16 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
               className="pl-10 w-80"
             />
           </div>
+          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
