@@ -12,6 +12,17 @@ export const Reports = () => {
   const { invoices } = useInvoices();
   const { clients } = useClients();
   const { projects } = useProjects();
+  // Estados para os inputs do filtro
+  const [startDateInput, setStartDateInput] = useState('');
+  const [endDateInput, setEndDateInput] = useState('');
+  const [statusFilterInput, setStatusFilterInput] = useState('all');
+  const [typeFilterInput, setTypeFilterInput] = useState('all');
+  const [valorMinInput, setValorMinInput] = useState('');
+  const [valorMaxInput, setValorMaxInput] = useState('');
+  const [clienteFilterInput, setClienteFilterInput] = useState('all');
+  const [projectFilterInput, setProjectFilterInput] = useState('all');
+  const [tipoProjetoFilterInput, setTipoProjetoFilterInput] = useState('all');
+  // Estados de filtro aplicados
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -65,6 +76,33 @@ export const Reports = () => {
     alert('Funcionalidade de exportação para Excel em desenvolvimento');
   };
 
+  // Função para aplicar os filtros
+  const applyFilters = () => {
+    setStartDate(startDateInput);
+    setEndDate(endDateInput);
+    setStatusFilter(statusFilterInput);
+    setTypeFilter(typeFilterInput);
+    setValorMin(valorMinInput);
+    setValorMax(valorMaxInput);
+    setClienteFilter(clienteFilterInput);
+    setProjectFilter(projectFilterInput);
+    setTipoProjetoFilter(tipoProjetoFilterInput);
+  };
+
+  // Função para limpar filtros
+  const clearFilters = () => {
+    setStartDateInput('');
+    setEndDateInput('');
+    setStatusFilterInput('all');
+    setTypeFilterInput('all');
+    setValorMinInput('');
+    setValorMaxInput('');
+    setClienteFilterInput('all');
+    setProjectFilterInput('all');
+    setTipoProjetoFilterInput('all');
+    applyFilters();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -83,8 +121,8 @@ export const Reports = () => {
               <Input
                 id="startDate"
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                value={startDateInput}
+                onChange={(e) => setStartDateInput(e.target.value)}
               />
             </div>
             <div>
@@ -92,13 +130,13 @@ export const Reports = () => {
               <Input
                 id="endDate"
                 type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                value={endDateInput}
+                onChange={(e) => setEndDateInput(e.target.value)}
               />
             </div>
             <div>
               <Label>Status</Label>
-              <select className="w-full border rounded p-2" onChange={e => setStatusFilter(e.target.value)} value={statusFilter}>
+              <select className="w-full border rounded p-2" onChange={e => setStatusFilterInput(e.target.value)} value={statusFilterInput}>
                 <option value="all">Todos os Status</option>
                 <option value="pendente">Pendente</option>
                 <option value="pago">Pago</option>
@@ -107,7 +145,7 @@ export const Reports = () => {
             </div>
             <div>
               <Label>Tipo</Label>
-              <select className="w-full border rounded p-2" onChange={e => setTypeFilter(e.target.value)} value={typeFilter}>
+              <select className="w-full border rounded p-2" onChange={e => setTypeFilterInput(e.target.value)} value={typeFilterInput}>
                 <option value="all">Todos os Tipos</option>
                 <option value="entrada">Entrada</option>
                 <option value="saida">Saída</option>
@@ -115,15 +153,15 @@ export const Reports = () => {
             </div>
             <div>
               <Label>Valor Mínimo</Label>
-              <Input type="number" value={valorMin} onChange={e => setValorMin(e.target.value)} placeholder="Valor mínimo" />
+              <Input type="number" value={valorMinInput} onChange={e => setValorMinInput(e.target.value)} placeholder="Valor mínimo" />
             </div>
             <div>
               <Label>Valor Máximo</Label>
-              <Input type="number" value={valorMax} onChange={e => setValorMax(e.target.value)} placeholder="Valor máximo" />
+              <Input type="number" value={valorMaxInput} onChange={e => setValorMaxInput(e.target.value)} placeholder="Valor máximo" />
             </div>
             <div>
               <Label>Cliente</Label>
-              <select className="w-full border rounded p-2" onChange={e => setClienteFilter(e.target.value)} value={clienteFilter}>
+              <select className="w-full border rounded p-2" onChange={e => setClienteFilterInput(e.target.value)} value={clienteFilterInput}>
                 <option value="all">Todos os Clientes</option>
                 {clients.map(client => (
                   <option key={client.id} value={client.id}>{client.razaoSocial}</option>
@@ -132,7 +170,7 @@ export const Reports = () => {
             </div>
             <div>
               <Label>Projeto</Label>
-              <select className="w-full border rounded p-2" onChange={e => setProjectFilter(e.target.value)} value={projectFilter}>
+              <select className="w-full border rounded p-2" onChange={e => setProjectFilterInput(e.target.value)} value={projectFilterInput}>
                 <option value="all">Todos os Projetos</option>
                 {projects.map(project => (
                   <option key={project.id} value={project.id}>{project.nome}</option>
@@ -141,7 +179,7 @@ export const Reports = () => {
             </div>
             <div>
               <Label>Tipo de Projeto</Label>
-              <select className="w-full border rounded p-2" onChange={e => setTipoProjetoFilter(e.target.value)} value={tipoProjetoFilter}>
+              <select className="w-full border rounded p-2" onChange={e => setTipoProjetoFilterInput(e.target.value)} value={tipoProjetoFilterInput}>
                 <option value="all">Todos os Tipos de Projeto</option>
                 <option value="Escopo Fechado">Escopo Fechado</option>
                 <option value="Assessoria Continua - Banco de Horas">Assessoria Continua - Banco de Horas</option>
@@ -152,6 +190,12 @@ export const Reports = () => {
               </select>
             </div>
             <div className="flex space-x-2 mt-4 md:mt-0">
+              <Button onClick={clearFilters} variant="outline">
+                Limpar Filtros
+              </Button>
+              <Button variant="default" onClick={applyFilters}>
+                Filtrar
+              </Button>
               <Button onClick={exportToPDF} variant="outline">
                 Exportar PDF
               </Button>
