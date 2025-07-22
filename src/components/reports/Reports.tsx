@@ -10,13 +10,21 @@ export const Reports = () => {
   const { invoices } = useInvoices();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [valorMin, setValorMin] = useState('');
+  const [valorMax, setValorMax] = useState('');
 
   const filteredInvoices = invoices.filter(invoice => {
-    if (!startDate && !endDate) return true;
     const invoiceDate = new Date(invoice.dataEmissao);
-    const start = startDate ? new Date(startDate) : new Date(0);
-    const end = endDate ? new Date(endDate) : new Date();
-    return invoiceDate >= start && invoiceDate <= end;
+    const matchesStartDate = startDate ? invoiceDate >= new Date(startDate) : true;
+    const matchesEndDate = endDate ? invoiceDate <= new Date(endDate) : true;
+    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+    const matchesType = typeFilter === 'all' || invoice.tipo === typeFilter;
+    const matchesValorMin = valorMin ? invoice.valorBruto >= parseFloat(valorMin) : true;
+    const matchesValorMax = valorMax ? invoice.valorBruto <= parseFloat(valorMax) : true;
+
+    return matchesStartDate && matchesEndDate && matchesStatus && matchesType && matchesValorMin && matchesValorMax;
   });
 
   const calculateTotals = () => {
@@ -56,7 +64,7 @@ export const Reports = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filtros de Período</CardTitle>
+          <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -78,7 +86,32 @@ export const Reports = () => {
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-            <div className="flex space-x-2">
+            <div>
+              <Label>Status</Label>
+              <select className="w-full border rounded p-2" onChange={e => setStatusFilter(e.target.value)} value={statusFilter}>
+                <option value="all">Todos os Status</option>
+                <option value="pendente">Pendente</option>
+                <option value="pago">Pago</option>
+                <option value="atrasado">Atrasado</option>
+              </select>
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <select className="w-full border rounded p-2" onChange={e => setTypeFilter(e.target.value)} value={typeFilter}>
+                <option value="all">Todos os Tipos</option>
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+            <div>
+              <Label>Valor Mínimo</Label>
+              <Input type="number" value={valorMin} onChange={e => setValorMin(e.target.value)} placeholder="Valor mínimo" />
+            </div>
+            <div>
+              <Label>Valor Máximo</Label>
+              <Input type="number" value={valorMax} onChange={e => setValorMax(e.target.value)} placeholder="Valor máximo" />
+            </div>
+            <div className="flex space-x-2 mt-4 md:mt-0">
               <Button onClick={exportToPDF} variant="outline">
                 Exportar PDF
               </Button>
@@ -86,65 +119,6 @@ export const Reports = () => {
                 Exportar Excel
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Bruto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-600">
-              {formatCurrency(totals.totalBruto)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Recebido</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">
-              {formatCurrency(totals.totalRecebido)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Impostos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-red-600">
-              {formatCurrency(totals.totalImpostos)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Detalhamento por Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {['pago', 'pendente', 'atrasado'].map(status => {
-              const statusInvoices = filteredInvoices.filter(inv => inv.status === status);
-              const statusTotal = statusInvoices.reduce((sum, inv) => sum + inv.valorBruto, 0);
-              
-              return (
-                <div key={status} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="font-medium capitalize">{status}</span>
-                    <span className="text-gray-500 ml-2">({statusInvoices.length} notas)</span>
-                  </div>
-                  <span className="font-bold">{formatCurrency(statusTotal)}</span>
-                </div>
-              );
-            })}
           </div>
         </CardContent>
       </Card>
