@@ -8,6 +8,7 @@ import { ProjectsProvider } from "@/hooks/useProjects";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Dashboard } from './components/dashboard/Dashboard';
+import ResetPassword from '@/pages/ResetPassword';
 
 const App = () => (
   <AuthProvider>
@@ -19,6 +20,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/dashboard/*" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
             </Routes>
           </BrowserRouter>
         </InvoicesProvider>
