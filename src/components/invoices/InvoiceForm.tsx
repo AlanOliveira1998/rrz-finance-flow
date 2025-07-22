@@ -113,6 +113,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     try {
       let uploadedProposalUrl = proposalUrl;
       if (proposalFile) {
+        console.log('Arquivo para upload:', proposalFile.name, proposalFile.size, proposalFile.type);
         const fileExt = proposalFile.name.split('.').pop();
         // Corrigido: não incluir 'propostas/' no nome do arquivo, pois o bucket já é 'propostas'
         const fileName = `${formData.numero || Date.now()}.${fileExt}`;
