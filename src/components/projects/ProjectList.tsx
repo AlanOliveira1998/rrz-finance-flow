@@ -80,23 +80,25 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onEdit }) => {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-center">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                      onClick={() => onEdit && onEdit(project)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                      onClick={() => setProjectToDelete({ id: project.id, nome: project.nome })}
-                      disabled={loadingDelete === project.id}
-                    >
-                      {loadingDelete === project.id ? 'Excluindo...' : 'Excluir'}
-                    </Button>
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => onEdit && onEdit(project)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        onClick={() => setProjectToDelete({ id: project.id, nome: project.nome })}
+                        disabled={loadingDelete === project.id}
+                      >
+                        {loadingDelete === project.id ? 'Excluindo...' : 'Excluir'}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))
