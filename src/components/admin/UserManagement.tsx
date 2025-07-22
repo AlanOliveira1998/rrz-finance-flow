@@ -17,6 +17,9 @@ export const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'leitura' });
   const [formLoading, setFormLoading] = useState(false);
+  const [editUser, setEditUser] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'leitura' });
+  const [editLoading, setEditLoading] = useState(false);
 
   React.useEffect(() => {
     setLoading(true);
@@ -63,6 +66,38 @@ export const UserManagement = () => {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleOpenEditModal = (user: any) => {
+    setEditUser(user);
+    setEditForm({ name: user.name, email: user.email, role: user.role });
+  };
+  const handleCloseEditModal = () => {
+    setEditUser(null);
+    setEditForm({ name: '', email: '', role: 'leitura' });
+  };
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const { error } = await supabase.from('profiles').update({ name: editForm.name, email: editForm.email, role: editForm.role }).eq('id', editUser.id);
+      if (error) throw new Error(error.message);
+      toast({ title: 'Usuário atualizado', description: 'Usuário atualizado com sucesso!' });
+      setEditUser(null);
+      setEditForm({ name: '', email: '', role: 'leitura' });
+      // Atualiza lista
+      setLoading(true);
+      const { data, error: fetchError } = await supabase.from('profiles').select('*');
+      if (!fetchError) setUsers(data || []);
+      setLoading(false);
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -116,7 +151,7 @@ export const UserManagement = () => {
                       <td className="p-4">-</td>
                       <td className="p-4">
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" disabled>
+                          <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(user)}>
                             Editar
                           </Button>
                           <Button variant="destructive" size="sm" disabled>
@@ -164,6 +199,39 @@ export const UserManagement = () => {
               <Button type="button" variant="outline" onClick={handleCloseModal} disabled={formLoading}>Cancelar</Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={formLoading}>
                 {formLoading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de edição de usuário */}
+      <Dialog open={!!editUser} onOpenChange={open => { if (!open) handleCloseEditModal(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Nome</Label>
+              <Input id="edit-name" name="name" value={editForm.name} onChange={handleEditFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="edit-email">Email</Label>
+              <Input id="edit-email" name="email" type="email" value={editForm.email} onChange={handleEditFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="edit-role">Função</Label>
+              <select id="edit-role" name="role" value={editForm.role} onChange={handleEditFormChange} className="w-full border rounded p-2">
+                <option value="admin">Administrador</option>
+                <option value="financeiro">Financeiro</option>
+                <option value="leitura">Leitura</option>
+              </select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseEditModal} disabled={editLoading}>Cancelar</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={editLoading}>
+                {editLoading ? 'Salvando...' : 'Salvar'}
               </Button>
             </DialogFooter>
           </form>
