@@ -5,8 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjects } from '@/hooks/useProjects';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Project } from '@/hooks/useProjects';
+import { Edit } from 'lucide-react';
 
-export const ProjectList = () => {
+interface ProjectListProps {
+  onEdit?: (project: Project) => void;
+}
+
+export const ProjectList: React.FC<ProjectListProps> = ({ onEdit }) => {
   const { projects, deleteProject, loading } = useProjects();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +80,14 @@ export const ProjectList = () => {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-center">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onEdit && onEdit(project)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
