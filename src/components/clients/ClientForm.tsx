@@ -124,27 +124,39 @@ export const ClientForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh] bg-gradient-to-br from-blue-50 to-slate-100 py-8">
-      <Card className="w-full max-w-2xl shadow-2xl rounded-2xl border-0">
+    <div className="min-h-[80vh] bg-gradient-to-br from-blue-50 to-slate-100 py-8 pl-64">
+      <Card className="w-full h-full shadow-2xl rounded-2xl border-0">
         <CardHeader className="pb-2 text-center">
           <Building2 className="mx-auto h-10 w-10 text-blue-600 mb-2" />
           <CardTitle className="text-3xl font-bold text-blue-700">Cadastro de Cliente</CardTitle>
           <p className="text-gray-500 mt-1">Preencha os dados abaixo para cadastrar um novo cliente</p>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardContent className="w-full h-full">
+          <form onSubmit={handleSubmit} className="space-y-6 w-full h-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-1">CNPJ *</label>
-                <span className="absolute left-3 top-9 text-gray-400"><Hash size={18} /></span>
-                <Input
-                  type="text"
-                  value={doc}
-                  onChange={handleDocChange}
-                  placeholder="Digite o CNPJ (apenas números)"
-                  required
-                  className="pl-10 w-full"
-                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Hash size={18} /></span>
+                    <Input
+                      type="text"
+                      value={doc}
+                      onChange={handleDocChange}
+                      placeholder="Digite o CNPJ (apenas números)"
+                      required
+                      className="pl-10 w-full"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleAutoFill}
+                    disabled={autoFillLoading || !isCNPJ(doc)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
+                  >
+                    {autoFillLoading ? 'Buscando...' : 'Buscar'}
+                  </Button>
+                </div>
               </div>
               <div className="relative">
                 <label className="block text-sm font-medium mb-1">Razão Social *</label>
