@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useClients } from '@/hooks/useClients';
+import { useClients, Client } from '@/hooks/useClients';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Phone, Building2, User, MapPin, Landmark, Hash, Home, LocateFixed, Building } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 function isCNPJ(value: string) {
   return value.replace(/\D/g, '').length === 14;
@@ -18,28 +19,33 @@ function isCPF(value: string) {
   return value.replace(/\D/g, '').length === 11;
 }
 
-export const ClientForm = () => {
-  const { addClient } = useClients();
+interface ClientFormProps {
+  client?: Client | null;
+  onBack?: () => void;
+}
+
+export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
+  const { addClient, updateClient } = useClients();
   const { toast } = useToast();
-  const [doc, setDoc] = useState('');
+  const [doc, setDoc] = useState(client?.cnpj || '');
   const [loading, setLoading] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState({
-    cnpj: '',
+    cnpj: client?.cnpj || '',
     cpf: '',
-    razao_social: '',
-    nome_fantasia: '',
-    email: '',
-    telefone: '',
-    endereco: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    uf: '',
-    cep: '',
-    ativo: true,
+    razao_social: client?.razaoSocial || '',
+    nome_fantasia: client?.nomeFantasia || '',
+    email: client?.email || '',
+    telefone: client?.telefone || '',
+    endereco: client?.endereco?.logradouro || '',
+    numero: client?.endereco?.numero || '',
+    complemento: client?.endereco?.complemento || '',
+    bairro: client?.endereco?.bairro || '',
+    cidade: client?.endereco?.cidade || '',
+    uf: client?.endereco?.uf || '',
+    cep: client?.endereco?.cep || '',
+    ativo: client?.ativo ?? true,
   });
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,14 +118,22 @@ export const ClientForm = () => {
         },
         ativo: fields.ativo,
       };
-      await addClient(payload);
-      setFields({
-        cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
-      });
-      setDoc('');
-      toast({ title: 'Cliente cadastrado!', description: 'O cliente foi cadastrado com sucesso.' });
+      if (client) {
+        await updateClient(client.id, payload);
+        toast({ title: 'Cliente atualizado!', description: 'As alterações foram salvas.' });
+      } else {
+        await addClient(payload);
+        toast({ title: 'Cliente cadastrado!', description: 'O cliente foi cadastrado com sucesso.' });
+      }
+      if (onBack) onBack();
+      if (!client) {
+        setFields({
+          cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
+        });
+        setDoc('');
+      }
     } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar cliente.');
+      setError(err.message || 'Erro ao salvar cliente.');
     }
     setLoading(false);
   };
@@ -128,8 +142,8 @@ export const ClientForm = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Novo Cliente</h2>
-          <p className="text-gray-600">Preencha os dados do cliente</p>
+          <h2 className="text-3xl font-bold text-gray-900">{client ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+          <p className="text-gray-600">{client ? 'Altere os dados do cliente' : 'Preencha os dados do cliente'}</p>
         </div>
         <Button variant="outline" type="button" onClick={() => window.history.back()}>
           Cancelar
@@ -182,6 +196,16 @@ export const ClientForm = () => {
                 <Label>Telefone</Label>
                 <Input name="telefone" value={fields.telefone} onChange={handleFieldChange} placeholder="Telefone" />
               </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Switch
+                    checked={fields.ativo}
+                    onCheckedChange={checked => setFields({ ...fields, ativo: checked })}
+                    id="ativo"
+                  />
+                  Cliente Ativo
+                </Label>
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -232,7 +256,7 @@ export const ClientForm = () => {
             Cancelar
           </Button>
           <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
-            {loading ? 'Cadastrando...' : 'Cadastrar Cliente'}
+            {loading ? (client ? 'Salvando...' : 'Cadastrando...') : (client ? 'Salvar Alterações' : 'Cadastrar Cliente')}
           </Button>
         </div>
       </form>
