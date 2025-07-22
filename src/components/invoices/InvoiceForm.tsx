@@ -16,6 +16,13 @@ interface InvoiceFormProps {
   onBack: () => void;
 }
 
+// Função para sanitizar o nome do arquivo
+function sanitizeFileName(name: string) {
+  return name
+    .normalize('NFD').replace(/[ 0-\u036f]/g, '') // remove acentos
+    .replace(/[^a-zA-Z0-9._-]/g, '_'); // só permite letras, números, ponto, underline e hífen
+}
+
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => {
   const { addInvoice, updateInvoice, loading } = useInvoices();
   const { clients } = useClients();
@@ -115,8 +122,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       if (proposalFile) {
         console.log('Arquivo para upload:', proposalFile.name, proposalFile.size, proposalFile.type);
         const fileExt = proposalFile.name.split('.').pop();
-        // Nome único: número da nota + timestamp
-        const fileName = `${formData.numero || Date.now()}-${Date.now()}.${fileExt}`;
+        const baseName = sanitizeFileName(formData.numero ? String(formData.numero) : Date.now().toString());
+        const fileName = `${baseName}-${Date.now()}.${fileExt}`;
         const { data, error } = await supabase.storage.from('propostas').upload(fileName, proposalFile, { upsert: true });
         if (error) throw new Error(`Erro ao fazer upload da proposta: ${error.message}`);
         const { data: publicUrlData } = supabase.storage.from('propostas').getPublicUrl(fileName);
