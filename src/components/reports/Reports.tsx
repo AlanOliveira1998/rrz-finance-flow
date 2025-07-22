@@ -115,14 +115,29 @@ export const Reports = () => {
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex justify-end space-x-2 mb-4">
+            <Button onClick={clearFilters} variant="outline">
+              Limpar Filtros
+            </Button>
+            <Button variant="default" onClick={applyFilters}>
+              Filtrar
+            </Button>
+            <Button onClick={exportToPDF} variant="outline">
+              Exportar PDF
+            </Button>
+            <Button onClick={exportToExcel} variant="outline">
+              Exportar Excel
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            {/* Campos de filtro aqui (inputs/selects) */}
             <div>
               <Label htmlFor="startDate">Data Inicial</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDateInput}
-                onChange={(e) => setStartDateInput(e.target.value)}
+                onChange={e => setStartDateInput(e.target.value)}
               />
             </div>
             <div>
@@ -131,7 +146,7 @@ export const Reports = () => {
                 id="endDate"
                 type="date"
                 value={endDateInput}
-                onChange={(e) => setEndDateInput(e.target.value)}
+                onChange={e => setEndDateInput(e.target.value)}
               />
             </div>
             <div>
@@ -188,20 +203,6 @@ export const Reports = () => {
                 <option value="Offshore">Offshore</option>
                 <option value="Não Financeiro">Não Financeiro</option>
               </select>
-            </div>
-            <div className="flex space-x-2 mt-4 md:mt-0">
-              <Button onClick={clearFilters} variant="outline">
-                Limpar Filtros
-              </Button>
-              <Button variant="default" onClick={applyFilters}>
-                Filtrar
-              </Button>
-              <Button onClick={exportToPDF} variant="outline">
-                Exportar PDF
-              </Button>
-              <Button onClick={exportToExcel} variant="outline">
-                Exportar Excel
-              </Button>
             </div>
           </div>
         </CardContent>
