@@ -148,14 +148,34 @@ export const UserManagement = () => {
                           {user.role}
                         </span>
                       </td>
-                      <td className="p-4">-</td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                          {user.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
                       <td className="p-4">
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(user)}>
                             Editar
                           </Button>
-                          <Button variant="destructive" size="sm" disabled>
-                            Desativar
+                          <Button
+                            variant={user.ativo ? 'destructive' : 'outline'}
+                            size="sm"
+                            onClick={async () => {
+                              const { error } = await supabase.from('profiles').update({ ativo: !user.ativo }).eq('id', user.id);
+                              if (!error) {
+                                setLoading(true);
+                                const { data, error: fetchError } = await supabase.from('profiles').select('*');
+                                if (!fetchError) setUsers(data || []);
+                                setLoading(false);
+                                toast({ title: user.ativo ? 'Usuário desativado' : 'Usuário ativado', description: `Usuário ${user.ativo ? 'desativado' : 'ativado'} com sucesso!` });
+                              } else {
+                                toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+                              }
+                            }}
+                            disabled={loading}
+                          >
+                            {user.ativo ? 'Desativar' : 'Ativar'}
                           </Button>
                         </div>
                       </td>
