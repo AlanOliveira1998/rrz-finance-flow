@@ -13,6 +13,7 @@ import { Invoice } from '@/hooks/useInvoices';
 import { ProjectList } from '@/components/projects/ProjectList';
 import { ProjectForm } from '@/components/projects/ProjectForm';
 import { TaxesList } from '@/components/taxes/TaxesList';
+import { Client } from '@/hooks/useClients';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -60,10 +61,21 @@ const LogsPanel = () => {
 export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setActiveTab('new-invoice');
+  };
+
+  const handleEditClient = (client: Client) => {
+    setSelectedClient(client);
+    setActiveTab('new-client');
+  };
+
+  const handleBackToClients = () => {
+    setSelectedClient(null);
+    setActiveTab('clients');
   };
 
   const renderContent = () => {
@@ -75,9 +87,9 @@ export const Dashboard = () => {
       case 'new-invoice':
         return <InvoiceForm invoice={selectedInvoice} onBack={() => setActiveTab('invoices')} />;
       case 'clients':
-        return <ClientList />;
+        return <ClientList onEdit={handleEditClient} />;
       case 'new-client':
-        return <ClientForm />;
+        return <ClientForm client={selectedClient} onBack={handleBackToClients} />;
       case 'projects':
         return <ProjectList />;
       case 'new-project':
