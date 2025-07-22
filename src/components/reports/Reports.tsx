@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
+import { Filter, X, FileText, FileSpreadsheet } from 'lucide-react';
 
 export const Reports = () => {
   const { invoices } = useInvoices();
@@ -117,15 +118,19 @@ export const Reports = () => {
         <CardContent>
           <div className="flex justify-end space-x-2 mb-4">
             <Button onClick={clearFilters} variant="outline">
+              <X className="mr-2 h-4 w-4" />
               Limpar Filtros
             </Button>
-            <Button variant="default" onClick={applyFilters}>
+            <Button variant="outline" onClick={applyFilters}>
+              <Filter className="mr-2 h-4 w-4" />
               Filtrar
             </Button>
             <Button onClick={exportToPDF} variant="outline">
+              <FileText className="mr-2 h-4 w-4" />
               Exportar PDF
             </Button>
             <Button onClick={exportToExcel} variant="outline">
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
               Exportar Excel
             </Button>
           </div>
