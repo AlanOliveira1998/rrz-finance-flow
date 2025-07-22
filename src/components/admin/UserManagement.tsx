@@ -127,6 +127,32 @@ export const UserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) return;
+    setLoading(true);
+    try {
+      // Exclui do Auth (API serverless)
+      const res = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao excluir usuário do Auth');
+      // Exclui da tabela profiles
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      if (error) throw new Error(error.message);
+      toast({ title: 'Usuário excluído', description: 'Usuário excluído com sucesso!' });
+      // Atualiza lista
+      const { data: usersData, error: fetchError } = await supabase.from('profiles').select('*');
+      if (!fetchError) setUsers(usersData || []);
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -202,6 +228,14 @@ export const UserManagement = () => {
                             disabled={loading}
                           >
                             {user.ativo ? 'Desativar' : 'Ativar'}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={loading}
+                          >
+                            Excluir
                           </Button>
                         </div>
                       </td>
