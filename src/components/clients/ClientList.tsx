@@ -7,8 +7,13 @@ import { useClients } from '@/hooks/useClients';
 import { Search, Edit, Trash2, Building } from 'lucide-react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Client } from '@/hooks/useClients';
 
-export const ClientList = () => {
+interface ClientListProps {
+  onEdit?: (client: Client) => void;
+}
+
+export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
   const { clients, deleteClient, loading } = useClients();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +95,7 @@ export const ClientList = () => {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-center">
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => onEdit && onEdit(client)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
