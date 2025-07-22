@@ -18,7 +18,7 @@ export const UserManagement = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'leitura' });
   const [formLoading, setFormLoading] = useState(false);
   const [editUser, setEditUser] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'leitura' });
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'leitura', password: '' });
   const [editLoading, setEditLoading] = useState(false);
 
   React.useEffect(() => {
@@ -71,11 +71,11 @@ export const UserManagement = () => {
 
   const handleOpenEditModal = (user: any) => {
     setEditUser(user);
-    setEditForm({ name: user.name, email: user.email, role: user.role });
+    setEditForm({ name: user.name, email: user.email, role: user.role, password: '' });
   };
   const handleCloseEditModal = () => {
     setEditUser(null);
-    setEditForm({ name: '', email: '', role: 'leitura' });
+    setEditForm({ name: '', email: '', role: 'leitura', password: '' });
   };
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
@@ -84,11 +84,17 @@ export const UserManagement = () => {
     e.preventDefault();
     setEditLoading(true);
     try {
+      // Atualiza dados do profile
       const { error } = await supabase.from('profiles').update({ name: editForm.name, email: editForm.email, role: editForm.role }).eq('id', editUser.id);
       if (error) throw new Error(error.message);
+      // Atualiza senha se preenchida
+      if (editForm.password) {
+        const { error: passError } = await supabase.auth.admin.updateUserById(editUser.id, { password: editForm.password });
+        if (passError) throw new Error('Erro ao atualizar senha: ' + passError.message);
+      }
       toast({ title: 'Usuário atualizado', description: 'Usuário atualizado com sucesso!' });
       setEditUser(null);
-      setEditForm({ name: '', email: '', role: 'leitura' });
+      setEditForm({ name: '', email: '', role: 'leitura', password: '' });
       // Atualiza lista
       setLoading(true);
       const { data, error: fetchError } = await supabase.from('profiles').select('*');
@@ -247,6 +253,10 @@ export const UserManagement = () => {
                 <option value="financeiro">Financeiro</option>
                 <option value="leitura">Leitura</option>
               </select>
+            </div>
+            <div>
+              <Label htmlFor="edit-password">Nova Senha</Label>
+              <Input id="edit-password" name="password" type="password" value={editForm.password} onChange={handleEditFormChange} placeholder="Deixe em branco para não alterar" />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseEditModal} disabled={editLoading}>Cancelar</Button>
