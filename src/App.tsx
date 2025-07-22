@@ -7,6 +7,7 @@ import { ClientsProvider } from "@/hooks/useClients";
 import { ProjectsProvider } from "@/hooks/useProjects";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { Dashboard } from './components/dashboard/Dashboard';
 
 const App = () => (
   <AuthProvider>
@@ -16,6 +17,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/dashboard/*" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
