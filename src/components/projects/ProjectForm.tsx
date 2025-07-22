@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
 
 export const ProjectForm = () => {
   const { addProject, loading } = useProjects();
@@ -71,14 +72,14 @@ export const ProjectForm = () => {
               />
             </div>
             <div>
-              <Label htmlFor="ativo">Ativo</Label>
-              <input
-                id="ativo"
-                type="checkbox"
-                checked={formData.ativo}
-                onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                className="ml-2"
-              />
+              <Label className="flex items-center gap-2">
+                <Switch
+                  checked={formData.ativo}
+                  onCheckedChange={checked => setFormData({ ...formData, ativo: checked })}
+                  id="ativo"
+                />
+                Projeto Ativo
+              </Label>
             </div>
           </CardContent>
         </Card>
