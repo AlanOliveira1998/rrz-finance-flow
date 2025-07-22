@@ -123,11 +123,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       }
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
-      // No envio dos dados (handleSubmit), envie os valores de pis e cofins conforme o checkbox:
+      // No envio dos dados (handleSubmit), envie os valores de pis e cofins conforme o checkbox e os demais campos de impostos de calculatedValues:
       const invoiceData = {
         ...formData,
-        pis,
-        cofins,
+        irrf: calculatedValues.irrf,
+        csll: calculatedValues.csll,
+        pis: visualPis,
+        cofins: visualCofins,
+        valorEmitido: calculatedValues.valorEmitido,
+        valorRecebido: calculatedValues.valorRecebido,
+        valorLivreImpostos: calculatedValues.valorLivreImpostos,
+        valorLivre: calculatedValues.valorLivre,
         cliente: selectedClient?.razaoSocial || '',
         projeto: selectedProject?.nome || '',
         tipoProjeto: formData.tipoProjeto,
@@ -171,6 +177,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       currency: 'BRL'
     }).format(value);
   };
+
+  // No cálculo automático, use o valor do checkbox para exibir PIS e COFINS como zero se desmarcado
+  const visualPis = deduzirPisCofins ? calculatedValues.pis : 0;
+  const visualCofins = deduzirPisCofins ? calculatedValues.cofins : 0;
+  const visualTotalImpostos = calculatedValues.irrf + calculatedValues.csll + visualPis + visualCofins;
 
   return (
     <div className="space-y-6">
@@ -393,13 +404,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                 <div>
                   <Label>PIS (0,65%)</Label>
                   <div className="p-2 bg-gray-50 rounded">
-                    {formatCurrency(calculatedValues.pis)}
+                    {formatCurrency(visualPis)}
                   </div>
                 </div>
                 <div>
                   <Label>COFINS (3%)</Label>
                   <div className="p-2 bg-gray-50 rounded">
-                    {formatCurrency(calculatedValues.cofins)}
+                    {formatCurrency(visualCofins)}
                   </div>
                 </div>
               </div>
@@ -417,7 +428,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                 <div className="flex justify-between">
                   <span className="font-medium text-lg">Total de Impostos:</span>
                   <span className="font-bold text-red-600 text-lg">
-                    {formatCurrency(calculatedValues.totalImpostos)}
+                    {formatCurrency(visualTotalImpostos)}
                   </span>
                 </div>
                 <div className="flex justify-between">
