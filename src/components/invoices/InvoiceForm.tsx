@@ -247,12 +247,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
               </div>
               
               <div>
-                <Label htmlFor="descricao">Descrição</Label>
+                <Label htmlFor="descricao">Observação</Label>
                 <Input
                   id="descricao"
                   value={formData.descricao}
                   onChange={(e) => handleInputChange('descricao', e.target.value)}
-                  required
+                  placeholder="Observação (opcional)"
                 />
               </div>
 
