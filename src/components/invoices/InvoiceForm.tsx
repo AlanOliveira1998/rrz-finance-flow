@@ -205,7 +205,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                       <SelectValue placeholder="Selecione um cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      {clients.map((client) => (
+                      {clients.filter(client => client.ativo).map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.razaoSocial}
                         </SelectItem>
