@@ -122,7 +122,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       if (proposalFile) {
         console.log('Arquivo para upload:', proposalFile.name, proposalFile.size, proposalFile.type);
         const fileExt = proposalFile.name.split('.').pop();
-        const baseName = sanitizeFileName(formData.numero ? String(formData.numero) : Date.now().toString());
+        const baseName = sanitizeFileName(formData.numero ? String(formData.numero) : 'nota');
         const fileName = `${baseName}-${Date.now()}.${fileExt}`;
         const { data, error } = await supabase.storage.from('propostas').upload(fileName, proposalFile, { upsert: true });
         if (error) throw new Error(`Erro ao fazer upload da proposta: ${error.message}`);
