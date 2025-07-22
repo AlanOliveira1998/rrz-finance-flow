@@ -5,15 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useClients } from '@/hooks/useClients';
+import { useProjects } from '@/hooks/useProjects';
 
 export const Reports = () => {
   const { invoices } = useInvoices();
+  const { clients } = useClients();
+  const { projects } = useProjects();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [valorMin, setValorMin] = useState('');
   const [valorMax, setValorMax] = useState('');
+  const [clienteFilter, setClienteFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
+  const [tipoProjetoFilter, setTipoProjetoFilter] = useState('all');
 
   const filteredInvoices = invoices.filter(invoice => {
     const invoiceDate = new Date(invoice.dataEmissao);
@@ -23,8 +30,11 @@ export const Reports = () => {
     const matchesType = typeFilter === 'all' || invoice.tipo === typeFilter;
     const matchesValorMin = valorMin ? invoice.valorBruto >= parseFloat(valorMin) : true;
     const matchesValorMax = valorMax ? invoice.valorBruto <= parseFloat(valorMax) : true;
+    const matchesCliente = clienteFilter === 'all' || invoice.clienteId === clienteFilter;
+    const matchesProject = projectFilter === 'all' || invoice.projetoId === projectFilter;
+    const matchesTipoProjeto = tipoProjetoFilter === 'all' || invoice.tipoProjeto === tipoProjetoFilter;
 
-    return matchesStartDate && matchesEndDate && matchesStatus && matchesType && matchesValorMin && matchesValorMax;
+    return matchesStartDate && matchesEndDate && matchesStatus && matchesType && matchesValorMin && matchesValorMax && matchesCliente && matchesProject && matchesTipoProjeto;
   });
 
   const calculateTotals = () => {
@@ -110,6 +120,36 @@ export const Reports = () => {
             <div>
               <Label>Valor Máximo</Label>
               <Input type="number" value={valorMax} onChange={e => setValorMax(e.target.value)} placeholder="Valor máximo" />
+            </div>
+            <div>
+              <Label>Cliente</Label>
+              <select className="w-full border rounded p-2" onChange={e => setClienteFilter(e.target.value)} value={clienteFilter}>
+                <option value="all">Todos os Clientes</option>
+                {clients.map(client => (
+                  <option key={client.id} value={client.id}>{client.razaoSocial}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Projeto</Label>
+              <select className="w-full border rounded p-2" onChange={e => setProjectFilter(e.target.value)} value={projectFilter}>
+                <option value="all">Todos os Projetos</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.nome}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Tipo de Projeto</Label>
+              <select className="w-full border rounded p-2" onChange={e => setTipoProjetoFilter(e.target.value)} value={tipoProjetoFilter}>
+                <option value="all">Todos os Tipos de Projeto</option>
+                <option value="Escopo Fechado">Escopo Fechado</option>
+                <option value="Assessoria Continua - Banco de Horas">Assessoria Continua - Banco de Horas</option>
+                <option value="Assessoria Continua - Por Demanda">Assessoria Continua - Por Demanda</option>
+                <option value="Processos e Controles">Processos e Controles</option>
+                <option value="Offshore">Offshore</option>
+                <option value="Não Financeiro">Não Financeiro</option>
+              </select>
             </div>
             <div className="flex space-x-2 mt-4 md:mt-0">
               <Button onClick={exportToPDF} variant="outline">
