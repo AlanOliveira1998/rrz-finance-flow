@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useClients } from '@/hooks/useClients';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 function isCNPJ(value: string) {
   return value.replace(/\D/g, '').length === 14;
@@ -35,6 +36,7 @@ export const ClientForm = () => {
     cep: '',
     ativo: true,
   });
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDoc(e.target.value);
@@ -111,7 +113,7 @@ export const ClientForm = () => {
         cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
       });
       setDoc('');
-      alert('Cliente cadastrado com sucesso!');
+      setSuccessModalOpen(true);
     } catch (err: any) {
       setError(err.message || 'Erro ao cadastrar cliente.');
     }
@@ -189,6 +191,19 @@ export const ClientForm = () => {
           {loading ? 'Cadastrando...' : 'Cadastrar Cliente'}
         </Button>
       </form>
+      <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cliente cadastrado!</DialogTitle>
+            <DialogDescription>O cliente foi cadastrado com sucesso.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button onClick={() => setSuccessModalOpen(false)}>Fechar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
