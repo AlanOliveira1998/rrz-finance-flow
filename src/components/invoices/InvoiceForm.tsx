@@ -114,9 +114,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       let uploadedProposalUrl = proposalUrl;
       if (proposalFile) {
         const fileExt = proposalFile.name.split('.').pop();
-        const fileName = `propostas/${formData.numero || Date.now()}.${fileExt}`;
+        // Corrigido: não incluir 'propostas/' no nome do arquivo, pois o bucket já é 'propostas'
+        const fileName = `${formData.numero || Date.now()}.${fileExt}`;
         const { data, error } = await supabase.storage.from('propostas').upload(fileName, proposalFile, { upsert: true });
-        if (error) throw new Error('Erro ao fazer upload da proposta');
+        if (error) throw new Error(`Erro ao fazer upload da proposta: ${error.message}`);
         const { data: publicUrlData } = supabase.storage.from('propostas').getPublicUrl(fileName);
         uploadedProposalUrl = publicUrlData.publicUrl;
         setProposalUrl(uploadedProposalUrl);
