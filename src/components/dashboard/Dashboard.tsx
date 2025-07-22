@@ -109,7 +109,7 @@ export const Dashboard = () => {
 
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
-    // setActiveTab('new-client'); // Removed
+    navigate('/dashboard/new-client');
   };
 
   const handleBackToClients = () => {
