@@ -22,14 +22,20 @@ export const UserManagement = () => {
   const [editLoading, setEditLoading] = useState(false);
 
   React.useEffect(() => {
-    setLoading(true);
-    supabase.from('profiles').select('*').then(({ data, error }) => {
-      if (error) {
-        toast({ title: 'Erro', description: 'Não foi possível carregar usuários', variant: 'destructive' });
-      } else {
-        setUsers(data || []);
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) {
+          toast({ title: 'Erro', description: 'Não foi possível carregar usuários', variant: 'destructive' });
+        } else {
+          setUsers(data || []);
+        }
+      } finally {
+        setLoading(false);
       }
-    }).finally(() => setLoading(false));
+    };
+    fetchUsers();
   }, [showModal]);
 
   if (user?.role !== 'admin') {
@@ -100,6 +106,20 @@ export const UserManagement = () => {
       const { data, error: fetchError } = await supabase.from('profiles').select('*');
       if (!fetchError) setUsers(data || []);
       setLoading(false);
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!editForm.email) return;
+    setEditLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(editForm.email);
+      if (error) throw new Error(error.message);
+      toast({ title: 'E-mail enviado', description: 'E-mail de redefinição de senha enviado com sucesso!' });
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
@@ -254,14 +274,13 @@ export const UserManagement = () => {
                 <option value="leitura">Leitura</option>
               </select>
             </div>
-            <div>
-              <Label htmlFor="edit-password">Nova Senha</Label>
-              <Input id="edit-password" name="password" type="password" value={editForm.password} onChange={handleEditFormChange} placeholder="Deixe em branco para não alterar" />
-            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseEditModal} disabled={editLoading}>Cancelar</Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={editLoading}>
                 {editLoading ? 'Salvando...' : 'Salvar'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleResetPassword} disabled={editLoading}>
+                Enviar e-mail de redefinição de senha
               </Button>
             </DialogFooter>
           </form>
