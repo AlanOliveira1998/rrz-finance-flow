@@ -1,12 +1,11 @@
-// api/delete-user.js
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // ATENÇÃO: nunca exponha essa key no frontend!
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
@@ -17,8 +16,6 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'userId obrigatório' });
   }
 
-  // (Opcional) Adicione autenticação para garantir que só admins possam usar essa rota
-
   const { error } = await supabase.auth.admin.deleteUser(userId);
 
   if (error) {
@@ -26,4 +23,4 @@ module.exports = async (req, res) => {
   }
 
   return res.status(200).json({ success: true });
-};
+}
