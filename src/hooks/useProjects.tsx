@@ -40,7 +40,12 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateProject = async (id: string, projectData: Partial<Project>) => {
     setLoading(true);
-    const { data, error } = await supabase.from('projects').update(projectData).eq('id', id).select();
+    // Garante que o campo 'ativo' seja enviado explicitamente se existir
+    const updateData = { ...projectData };
+    if ('ativo' in projectData) {
+      updateData.ativo = projectData.ativo;
+    }
+    const { data, error } = await supabase.from('projects').update(updateData).eq('id', id).select();
     if (!error && data) setProjects((prev) => prev.map(p => p.id === id ? { ...p, ...data[0] } : p));
     setLoading(false);
   };
