@@ -15,6 +15,7 @@ import { ProjectForm } from '@/components/projects/ProjectForm';
 import { TaxesList } from '@/components/taxes/TaxesList';
 import { Client } from '@/hooks/useClients';
 import { Project } from '@/hooks/useProjects';
+import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -60,68 +61,94 @@ const LogsPanel = () => {
 };
 
 export const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Map URL path to tab
+  const path = location.pathname.replace(/^\/dashboard\/?/, '') || 'dashboard';
+
+  // Função para navegar ao trocar de aba
+  const handleTabChange = (tab: string) => {
+    switch (tab) {
+      case 'dashboard':
+        navigate('/dashboard'); break;
+      case 'clients':
+        navigate('/dashboard/clients'); break;
+      case 'new-client':
+        navigate('/dashboard/new-client'); break;
+      case 'projects':
+        navigate('/dashboard/projects'); break;
+      case 'new-project':
+        navigate('/dashboard/new-project'); break;
+      case 'invoices':
+        navigate('/dashboard/invoices'); break;
+      case 'new-invoice':
+        navigate('/dashboard/new-invoice'); break;
+      case 'reports':
+        navigate('/dashboard/reports'); break;
+      case 'users':
+        navigate('/dashboard/users'); break;
+      case 'taxes':
+        navigate('/dashboard/taxes'); break;
+      case 'logs':
+        navigate('/dashboard/logs'); break;
+      default:
+        navigate('/dashboard');
+    }
+  };
+
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    setActiveTab('new-invoice');
+    // setActiveTab('new-invoice'); // Removed
   };
 
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
-    setActiveTab('new-client');
+    // setActiveTab('new-client'); // Removed
   };
 
   const handleBackToClients = () => {
     setSelectedClient(null);
-    setActiveTab('clients');
+    // setActiveTab('clients'); // Removed
   };
 
   const handleEditProject = (project: Project) => {
     setSelectedProject(project);
-    setActiveTab('new-project');
+    // setActiveTab('new-project'); // Removed
   };
 
   const handleBackToProjects = () => {
     setSelectedProject(null);
-    setActiveTab('projects');
+    // setActiveTab('projects'); // Removed
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <DashboardOverview />;
-      case 'invoices':
-        return <InvoiceList onEdit={handleEditInvoice} />;
-      case 'new-invoice':
-        return <InvoiceForm invoice={selectedInvoice} onBack={() => setActiveTab('invoices')} />;
-      case 'clients':
-        return <ClientList onEdit={handleEditClient} />;
-      case 'new-client':
-        return <ClientForm client={selectedClient} onBack={handleBackToClients} />;
-      case 'projects':
-        return <ProjectList onEdit={handleEditProject} />;
-      case 'new-project':
-        return <ProjectForm project={selectedProject} onBack={handleBackToProjects} />;
-      case 'reports':
-        return <Reports />;
-      case 'users':
-        return <UserManagement />;
-      case 'taxes':
-        return <TaxesList />;
-      case 'logs':
-        return <LogsPanel />;
-      default:
-        return <DashboardOverview />;
-    }
+    // Removed switch statement based on activeTab
+    return (
+      <Routes>
+        <Route path="" element={<DashboardOverview />} />
+        <Route path="clients" element={<ClientList onEdit={handleEditClient} />} />
+        <Route path="new-client" element={<ClientForm client={selectedClient} onBack={handleBackToClients} />} />
+        <Route path="projects" element={<ProjectList onEdit={handleEditProject} />} />
+        <Route path="new-project" element={<ProjectForm project={selectedProject} onBack={handleBackToProjects} />} />
+        <Route path="invoices" element={<InvoiceList onEdit={handleEditInvoice} />} />
+        <Route path="new-invoice" element={<InvoiceForm invoice={selectedInvoice} onBack={() => navigate('/dashboard/invoices')} />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="taxes" element={<TaxesList />} />
+        <Route path="logs" element={<LogsPanel />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    );
   };
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={path} onTabChange={handleTabChange} />
       <div className="flex-1 flex flex-col overflow-hidden ml-64">
         <Header />
         <main className="flex-1 overflow-y-auto p-6">
