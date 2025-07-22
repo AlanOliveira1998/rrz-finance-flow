@@ -53,6 +53,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
 
   const [proposalFile, setProposalFile] = useState<File | null>(null);
   const [proposalUrl, setProposalUrl] = useState<string | null>(invoice?.proposalUrl || null);
+  // Adicionar estado para o checkbox
+  const [deduzirPisCofins, setDeduzirPisCofins] = useState(true);
 
   useEffect(() => {
     if (invoice) {
@@ -82,8 +84,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     const valorBruto = formData.valorBruto;
     const irrf = valorBruto * 0.015; // 1,5%
     const csll = valorBruto * 0.01; // 1%
-    const pis = valorBruto * 0.0065; // 0,65%
-    const cofins = valorBruto * 0.03; // 3%
+    // No cálculo dos impostos, use o estado do checkbox:
+    const pis = deduzirPisCofins ? formData.valorBruto * 0.0065 : 0;
+    const cofins = deduzirPisCofins ? formData.valorBruto * 0.03 : 0;
     
     const totalImpostos = irrf + csll + pis + cofins;
     const valorEmitido = valorBruto - totalImpostos;
@@ -120,9 +123,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       }
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
+      // No envio dos dados (handleSubmit), envie os valores de pis e cofins conforme o checkbox:
       const invoiceData = {
         ...formData,
-        ...calculatedValues,
+        pis,
+        cofins,
         cliente: selectedClient?.razaoSocial || '',
         projeto: selectedProject?.nome || '',
         tipoProjeto: formData.tipoProjeto,
@@ -400,6 +405,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
               </div>
 
               <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={deduzirPisCofins}
+                    onChange={e => setDeduzirPisCofins(e.target.checked)}
+                    id="deduzir-pis-cofins"
+                  />
+                  <label htmlFor="deduzir-pis-cofins" className="text-sm">Deduzir PIS e COFINS</label>
+                </div>
                 <div className="flex justify-between">
                   <span className="font-medium text-lg">Total de Impostos:</span>
                   <span className="font-bold text-red-600 text-lg">
