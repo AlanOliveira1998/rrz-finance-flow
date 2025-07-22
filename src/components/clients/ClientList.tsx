@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { useToast } from '@/hooks/use-toast';
 import { Client } from '@/hooks/useClients';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/lib/supabaseClient';
 
 interface ClientListProps {
   onEdit?: (client: Client) => void;
@@ -71,6 +72,34 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
               <SelectItem value="inactive">Inativos</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const { error } = await supabase.from('clients').update({ ativo: true }).neq('ativo', true);
+              if (!error) {
+                toast({ title: 'Todos os clientes ativados!' });
+                // Atualiza lista
+                window.location.reload();
+              } else {
+                toast({ title: 'Erro ao ativar todos', description: error.message, variant: 'destructive' });
+              }
+            }}
+          >Ativar todos</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const { error } = await supabase.from('clients').update({ ativo: false }).neq('ativo', false);
+              if (!error) {
+                toast({ title: 'Todos os clientes inativados!' });
+                // Atualiza lista
+                window.location.reload();
+              } else {
+                toast({ title: 'Erro ao inativar todos', description: error.message, variant: 'destructive' });
+              }
+            }}
+          >Inativar todos</Button>
         </div>
       </div>
 
