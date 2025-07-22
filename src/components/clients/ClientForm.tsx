@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-console.log('Supabase client version:', supabase.constructor?.version);
+import { useClients } from '@/hooks/useClients';
 
 function isCNPJ(value: string) {
   return value.replace(/\D/g, '').length === 14;
@@ -15,6 +14,7 @@ function isCPF(value: string) {
 }
 
 export const ClientForm = () => {
+  const { addClient } = useClients();
   const [doc, setDoc] = useState('');
   const [loading, setLoading] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
@@ -88,54 +88,32 @@ export const ClientForm = () => {
     setLoading(true);
     setError(null);
     try {
-      const payload = isCNPJ(doc)
-        ? {
-            cnpj: doc.replace(/\D/g, ''),
-            razao_social: fields.razao_social,
-            nome_fantasia: fields.nome_fantasia,
-            email: fields.email,
-            telefone: fields.telefone,
-            endereco: {
-              logradouro: fields.endereco,
-              numero: fields.numero,
-              complemento: fields.complemento,
-              bairro: fields.bairro,
-              cidade: fields.cidade,
-              uf: fields.uf,
-              cep: fields.cep,
-            },
-            ativo: fields.ativo,
-          }
-        : {
-            cpf: doc.replace(/\D/g, ''),
-            razao_social: fields.razao_social,
-            nome_fantasia: fields.nome_fantasia,
-            email: fields.email,
-            telefone: fields.telefone,
-            endereco: {
-              logradouro: fields.endereco,
-              numero: fields.numero,
-              complemento: fields.complemento,
-              bairro: fields.bairro,
-              cidade: fields.cidade,
-              uf: fields.uf,
-              cep: fields.cep,
-            },
-            ativo: fields.ativo,
-          };
-      console.log('Payload enviado para o Supabase:', payload);
-      const { data, error: supaError } = await supabase.from('clients').insert([payload]).select();
-      if (supaError) {
-        setError(supaError.message);
-      } else {
-        setFields({
-          cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
-        });
-        setDoc('');
-        alert('Cliente cadastrado com sucesso!');
-      }
-    } catch (err) {
-      setError('Erro ao cadastrar cliente.');
+      const isCnpjDoc = isCNPJ(doc);
+      const payload = {
+        cnpj: isCnpjDoc ? doc.replace(/\D/g, '') : '',
+        razaoSocial: fields.razao_social,
+        nomeFantasia: fields.nome_fantasia,
+        email: fields.email,
+        telefone: fields.telefone,
+        endereco: {
+          logradouro: fields.endereco,
+          numero: fields.numero,
+          complemento: fields.complemento,
+          bairro: fields.bairro,
+          cidade: fields.cidade,
+          uf: fields.uf,
+          cep: fields.cep,
+        },
+        ativo: fields.ativo,
+      };
+      await addClient(payload);
+      setFields({
+        cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
+      });
+      setDoc('');
+      alert('Cliente cadastrado com sucesso!');
+    } catch (err: any) {
+      setError(err.message || 'Erro ao cadastrar cliente.');
     }
     setLoading(false);
   };
