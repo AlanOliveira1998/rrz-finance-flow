@@ -3,17 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useProjects } from '@/hooks/useProjects';
+import { Project, useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 
-export const ProjectForm = () => {
-  const { addProject, loading } = useProjects();
+interface ProjectFormProps {
+  project?: Project | null;
+  onBack?: () => void;
+}
+
+export const ProjectForm: React.FC<ProjectFormProps> = ({ project, onBack }) => {
+  const { addProject, updateProject, loading } = useProjects();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
-    ativo: true
+    nome: project?.nome || '',
+    descricao: project?.descricao || '',
+    ativo: project?.ativo ?? true
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,16 +32,19 @@ export const ProjectForm = () => {
       return;
     }
     try {
-      await addProject(formData);
-      toast({
-        title: 'Projeto cadastrado',
-        description: 'Projeto cadastrado com sucesso.',
-      });
-      setFormData({ nome: '', descricao: '', ativo: true });
+      if (project) {
+        await updateProject(project.id, formData);
+        toast({ title: 'Projeto atualizado', description: 'Projeto atualizado com sucesso.' });
+      } else {
+        await addProject(formData);
+        toast({ title: 'Projeto cadastrado', description: 'Projeto cadastrado com sucesso.' });
+      }
+      if (onBack) onBack();
+      if (!project) setFormData({ nome: '', descricao: '', ativo: true });
     } catch (e) {
       toast({
-        title: 'Erro ao cadastrar',
-        description: 'Não foi possível cadastrar o projeto.',
+        title: project ? 'Erro ao atualizar' : 'Erro ao cadastrar',
+        description: project ? 'Não foi possível atualizar o projeto.' : 'Não foi possível cadastrar o projeto.',
         variant: 'destructive',
       });
     }
@@ -45,8 +53,8 @@ export const ProjectForm = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Cadastro de Projetos</h2>
-        <p className="text-gray-600">Cadastre novos projetos</p>
+        <h2 className="text-3xl font-bold text-gray-900">{project ? 'Editar Projeto' : 'Cadastro de Projetos'}</h2>
+        <p className="text-gray-600">{project ? 'Altere os dados do projeto' : 'Cadastre novos projetos'}</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -84,8 +92,8 @@ export const ProjectForm = () => {
           </CardContent>
         </Card>
         <div className="flex justify-end space-x-4">
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} aria-label="Cadastrar Projeto">
-            {loading ? 'Cadastrando...' : 'Cadastrar Projeto'}
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} aria-label={project ? 'Salvar Projeto' : 'Cadastrar Projeto'}>
+            {loading ? (project ? 'Salvando...' : 'Cadastrando...') : (project ? 'Salvar Alterações' : 'Cadastrar Projeto')}
           </Button>
         </div>
       </form>
