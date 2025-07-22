@@ -121,11 +121,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
       if (client) {
         await updateClient(client.id, payload);
         toast({ title: 'Cliente atualizado!', description: 'As alterações foram salvas.' });
+        if (onBack) onBack();
       } else {
         await addClient(payload);
         toast({ title: 'Cliente cadastrado!', description: 'O cliente foi cadastrado com sucesso.' });
+        if (onBack) onBack();
       }
-      if (onBack) onBack();
       if (!client) {
         setFields({
           cnpj: '', cpf: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
