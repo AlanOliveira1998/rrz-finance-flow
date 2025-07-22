@@ -48,23 +48,32 @@ export const ProjectList = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          <div className="text-center py-8">Carregando...</div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-8">Nenhum projeto cadastrado.</div>
-        ) : (
-          filteredProjects.map((project) => (
-            <Card key={project.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{project.nome}</CardTitle>
-                    {project.descricao && (
-                      <p className="text-sm text-gray-600">{project.descricao}</p>
-                    )}
-                  </div>
-                  <div className="flex space-x-1">
+      <div className="overflow-x-auto rounded-lg shadow bg-white">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr><td colSpan={4} className="text-center py-8">Carregando...</td></tr>
+            ) : projects.length === 0 ? (
+              <tr><td colSpan={4} className="text-center py-8">Nenhum projeto cadastrado.</td></tr>
+            ) : (
+              filteredProjects.map((project) => (
+                <tr key={project.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-2 font-medium text-gray-900">{project.nome}</td>
+                  <td className="px-4 py-2 text-gray-700">{project.descricao || '-'}</td>
+                  <td className="px-4 py-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {project.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-center">
                     <Button
                       size="sm"
                       variant="ghost"
@@ -74,23 +83,12 @@ export const ProjectList = () => {
                     >
                       {loadingDelete === project.id ? 'Excluindo...' : 'Excluir'}
                     </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="pt-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    project.ativo 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {project.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
       {filteredProjects.length === 0 && (
         <div className="text-center py-12">
