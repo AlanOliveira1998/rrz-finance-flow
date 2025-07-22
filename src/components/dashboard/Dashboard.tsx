@@ -104,7 +104,7 @@ export const Dashboard = () => {
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    // setActiveTab('new-invoice'); // Removed
+    navigate('/dashboard/new-invoice');
   };
 
   const handleEditClient = (client: Client) => {
