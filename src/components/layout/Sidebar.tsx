@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               <Button
                 key="boletos-cadastro"
                 variant={activeTab === 'boletos-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-yellow-300 hover:text-white hover:bg-blue-800'}`}
+                className={`w-full justify-start text-left mb-2 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
                 onClick={() => onTabChange('boletos-cadastro')}
                 aria-label="Cadastrar Boleto"
               >
@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               <Button
                 key="fornecedor-lista"
                 variant={activeTab === 'fornecedor-lista' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-amber-200 hover:text-white hover:bg-blue-800'}`}
+                className={`w-full justify-start text-left mb-2 ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
                 onClick={() => onTabChange('fornecedor-lista')}
                 aria-label="Fornecedores RRZ"
               >
@@ -67,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               <Button
                 key="fornecedor-cadastro"
                 variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-cyan-200 hover:text-white hover:bg-blue-800'}`}
+                className={`w-full justify-start text-left ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
                 onClick={() => onTabChange('fornecedor-cadastro')}
                 aria-label="Cadastro de Fornecedores"
               >
