@@ -490,6 +490,10 @@ export const Dashboard = () => {
   // Map URL path to tab
   const path = location.pathname.replace(/^\/dashboard\/?/, '') || 'dashboard';
 
+  // Extrair valor de sub da query string
+  const searchParams = new URLSearchParams(location.search);
+  const sub = searchParams.get('sub');
+
   // Função para navegar ao trocar de aba
   const handleTabChange = (tab: string) => {
     switch (tab) {
@@ -642,7 +646,7 @@ export const Dashboard = () => {
   }
 
   // Renderizar SupplierForm na aba de cadastro de fornecedores
-  if (location.search.includes('tab=pagar') && location.search.includes('sub=fornecedor-cadastro')) {
+  if (location.search.includes('tab=pagar') && sub === 'fornecedor-cadastro') {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={path} onTabChange={handleTabChange} />
@@ -657,7 +661,7 @@ export const Dashboard = () => {
   }
 
   // Renderizar SupplierList na aba de lista de fornecedores
-  if (location.search.includes('tab=pagar') && location.search.includes('sub=fornecedor-lista')) {
+  if (location.search.includes('tab=pagar') && sub === 'fornecedor-lista') {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={path} onTabChange={handleTabChange} />
