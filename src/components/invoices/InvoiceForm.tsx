@@ -16,13 +16,6 @@ interface InvoiceFormProps {
   onBack: () => void;
 }
 
-// Função para sanitizar o nome do arquivo
-function sanitizeFileName(name: string) {
-  return name
-    .normalize('NFD').replace(/[ 0-\u036f]/g, '') // remove acentos
-    .replace(/[^a-zA-Z0-9._-]/g, '_'); // só permite letras, números, ponto, underline e hífen
-}
-
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => {
   const { addInvoice, updateInvoice, loading } = useInvoices();
   const { clients } = useClients();
@@ -366,7 +359,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                   />
                 </div>
               </div>
-              {/* Remover campo de upload de proposta do formulário */}
             </CardContent>
           </Card>
 
