@@ -123,12 +123,6 @@ BEGIN
         ALTER TABLE invoices ADD COLUMN tipo_projeto VARCHAR(100);
     END IF;
     
-    -- Adicionar proposal_url se não existir
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'invoices' AND column_name = 'proposal_url') THEN
-        ALTER TABLE invoices ADD COLUMN proposal_url TEXT;
-    END IF;
-    
     -- Adicionar updated_at se não existir
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name = 'invoices' AND column_name = 'updated_at') THEN
