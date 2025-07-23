@@ -494,6 +494,9 @@ export const Dashboard = () => {
   const searchParams = new URLSearchParams(location.search);
   const sub = searchParams.get('sub');
 
+  // Definir activeTab corretamente para o Sidebar
+  const activeTab = location.search.includes('tab=pagar') ? (sub || 'pagar-home') : path;
+
   // Função para navegar ao trocar de aba
   const handleTabChange = (tab: string) => {
     switch (tab) {
@@ -649,7 +652,7 @@ export const Dashboard = () => {
   if (location.search.includes('tab=pagar') && sub === 'fornecedor-cadastro') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar activeTab={path} onTabChange={handleTabChange} />
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex flex-col overflow-hidden ml-64">
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
@@ -664,7 +667,7 @@ export const Dashboard = () => {
   if (location.search.includes('tab=pagar') && sub === 'fornecedor-lista') {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar activeTab={path} onTabChange={handleTabChange} />
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex flex-col overflow-hidden ml-64">
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
