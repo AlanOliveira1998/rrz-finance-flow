@@ -63,6 +63,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <span className="mr-3">➕</span>
                 Nova Conta a Pagar
               </Button>
+              <Button
+                key="fornecedor-cadastro"
+                variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left mt-4 ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('fornecedor-cadastro')}
+                aria-label="Cadastro de Fornecedores"
+              >
+                <span className="mr-3">🏢</span>
+                Cadastro de Fornecedores
+              </Button>
+              <Button
+                key="fornecedor-lista"
+                variant={activeTab === 'fornecedor-lista' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('fornecedor-lista')}
+                aria-label="Fornecedores RRZ"
+              >
+                <span className="mr-3">📋</span>
+                Fornecedores RRZ
+              </Button>
             </div>
           </nav>
         </div>
