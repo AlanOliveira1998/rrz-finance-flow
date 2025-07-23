@@ -18,6 +18,7 @@ import { Project } from '@/hooks/useProjects';
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -63,7 +64,7 @@ const LogsPanel = () => {
 };
 
 // Novo componente de cadastro de fornecedores
-const SupplierForm = () => {
+const SupplierForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const [doc, setDoc] = useState('');
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +172,7 @@ const SupplierForm = () => {
         setFields({
           cnpj: '', razao_social: '', nome_fantasia: '', email: '', telefone: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', ativo: true
         });
+        if (onSuccess) onSuccess();
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar fornecedor.');
@@ -283,6 +285,7 @@ const SupplierList = () => {
   const [editFields, setEditFields] = useState<any>({});
   const [editLoading, setEditLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
   useEffect(() => {
     fetchSuppliers();
@@ -356,8 +359,27 @@ const SupplierList = () => {
   };
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
-      <p className="text-gray-600">Lista de fornecedores cadastrados</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
+          <p className="text-gray-600">Lista de fornecedores cadastrados</p>
+        </div>
+        <button onClick={() => setShowModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">Novo Fornecedor</button>
+      </div>
+      {/* Modal de cadastro de fornecedor */}
+      {showModal && (
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Fornecedor</DialogTitle>
+            </DialogHeader>
+            <SupplierForm onSuccess={() => { setShowModal(false); fetchSuppliers(); }} />
+            <DialogFooter>
+              <button onClick={() => setShowModal(false)} className="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded">Fechar</button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
         <input
           type="text"
@@ -627,7 +649,7 @@ export const Dashboard = () => {
         <div className="flex-1 flex flex-col overflow-hidden ml-64">
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
-            <SupplierForm />
+            <SupplierForm onSuccess={() => { navigate('/dashboard?tab=pagar&sub=fornecedor-lista'); }} />
           </main>
         </div>
       </div>
