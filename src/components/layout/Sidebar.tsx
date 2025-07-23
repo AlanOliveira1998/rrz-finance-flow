@@ -63,6 +63,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <span className="mr-3">📋</span>
                 Fornecedores RRZ
               </Button>
+              <Button
+                key="boletos-cadastro"
+                variant={activeTab === 'boletos-cadastro' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left mt-4 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('boletos-cadastro')}
+                aria-label="Boletos"
+              >
+                <span className="mr-3">💳</span>
+                Boletos
+              </Button>
             </div>
           </nav>
         </div>
