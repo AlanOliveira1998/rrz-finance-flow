@@ -12,11 +12,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
   const location = window.location;
 
-  // Sidebar vazio para Rotinas
+  // Sidebar vazio para Rotinas, mas mantendo o logo
   if (location.search.includes('tab=rotinas')) {
     return (
       <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
-        {/* Sidebar vazio para a aba Rotinas */}
+        <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg leading-tight">
+                Sistema<br />Financeiro
+              </h2>
+              <p className="text-sm text-gray-400">RRZ Consultoria</p>
+            </div>
+          </div>
+        </div>
+        {/* Nenhum menu ou botão abaixo */}
       </aside>
     );
   }
