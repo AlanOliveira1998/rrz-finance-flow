@@ -360,22 +360,44 @@ const SupplierList = () => {
   };
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
-        <p className="text-gray-600">Lista de fornecedores cadastrados</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cyan-100 text-cyan-700 shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m0-4a4 4 0 100-8 4 4 0 000 8zm8 0a4 4 0 100-8 4 4 0 000 8z" />
+            </svg>
+          </span>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
+            <p className="text-gray-500 text-base">Gerencie todos os fornecedores cadastrados</p>
+          </div>
+        </div>
+        <button
+          className="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold px-6 py-2 rounded-lg shadow flex items-center gap-2 transition"
+          onClick={() => window.location.search = '?tab=pagar&sub=fornecedor-cadastro'}
+        >
+          <span className="text-lg">+</span> Novo Fornecedor
+        </button>
       </div>
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-        <input
-          type="text"
-          placeholder="Buscar por CNPJ, razão social, e-mail..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border rounded px-2 py-1 w-full md:w-64"
-        />
+        <div className="relative w-full md:w-64">
+          <span className="absolute left-2 top-1.5 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar por CNPJ, razão social, e-mail..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="border rounded pl-8 pr-2 py-1 w-full focus:ring-2 focus:ring-cyan-300"
+          />
+        </div>
         <select
           value={filterAtivo}
           onChange={e => setFilterAtivo(e.target.value)}
-          className="border rounded px-2 py-1"
+          className="border rounded px-2 py-1 focus:ring-2 focus:ring-cyan-300"
         >
           <option value="all">Todos</option>
           <option value="ativo">Ativos</option>
@@ -383,55 +405,65 @@ const SupplierList = () => {
         </select>
       </div>
       {loading ? (
-        <div className="text-center py-8">Carregando...</div>
+        <div className="text-center py-12 text-cyan-700 animate-pulse flex flex-col items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 animate-spin">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+          </svg>
+          Carregando fornecedores...
+        </div>
       ) : error ? (
         <div className="text-red-600 text-center py-4">{error}</div>
       ) : filteredSuppliers.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">Nenhum fornecedor encontrado.</div>
+        <div className="text-center py-12 text-gray-400 flex flex-col items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 8c0-2.21-1.79-4-4-4s-4 1.79-4 4m8 0v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8m16 0a2 2 0 00-2-2m2 2a2 2 0 01-2 2m-8 0a2 2 0 012-2m-2 2a2 2 0 002 2" />
+          </svg>
+          Nenhum fornecedor encontrado.
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm bg-white rounded shadow">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg shadow-lg bg-white">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-cyan-50 sticky top-0 z-10">
               <tr>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">CNPJ</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Razão Social</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Nome Fantasia</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">E-mail</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Telefone</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Ativo</th>
-                <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase whitespace-nowrap">Ações</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">CNPJ</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">Razão Social</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">Nome Fantasia</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">E-mail</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">Telefone</th>
+                <th className="px-4 py-2 text-left font-semibold text-cyan-700 uppercase whitespace-nowrap">Ativo</th>
+                <th className="px-4 py-2 text-center font-semibold text-cyan-700 uppercase whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {filteredSuppliers.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-2 whitespace-nowrap">{s.cnpj}</td>
+                <tr key={s.id} className="hover:bg-cyan-50 transition">
+                  <td className="px-4 py-2 whitespace-nowrap font-mono text-cyan-900">{s.cnpj}</td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="razao_social" value={editFields.razao_social || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
-                      s.razao_social
+                      <span className="font-semibold text-gray-900">{s.razao_social}</span>
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="nome_fantasia" value={editFields.nome_fantasia || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
-                      s.nome_fantasia
+                      <span className="text-gray-700">{s.nome_fantasia}</span>
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="email" value={editFields.email || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
-                      s.email
+                      <span className="text-gray-700">{s.email}</span>
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="telefone" value={editFields.telefone || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-24" />
                     ) : (
-                      s.telefone
+                      <span className="text-gray-700">{s.telefone}</span>
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
@@ -441,19 +473,26 @@ const SupplierList = () => {
                         <option value="false">Não</option>
                       </select>
                     ) : (
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${s.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{s.ativo ? 'Sim' : 'Não'}</span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${s.ativo ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-200 text-gray-500 border border-gray-300'}`}>
+                        {s.ativo ? (
+                          <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" /></svg>
+                        ) : (
+                          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        )}
+                        {s.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-center">
                     {editId === s.id ? (
                       <>
-                        <button onClick={handleEditSave} className="inline-flex items-center justify-center text-blue-600 hover:text-blue-800 font-semibold mr-2" disabled={editLoading} title="Salvar"><Pencil size={18} /></button>
+                        <button onClick={handleEditSave} className="inline-flex items-center justify-center text-cyan-700 hover:text-cyan-900 font-semibold mr-2" disabled={editLoading} title="Salvar"><Pencil size={18} /></button>
                         <button onClick={() => setEditId(null)} className="inline-flex items-center justify-center text-gray-500 hover:text-gray-700" title="Cancelar"><span className="sr-only">Cancelar</span>✖️</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEdit(s)} className="inline-flex items-center justify-center text-blue-600 hover:text-blue-800 mr-2" title="Editar"><Pencil size={18} /></button>
-                        <button onClick={() => handleDelete(s.id)} className="inline-flex items-center justify-center text-red-600 hover:text-red-800" disabled={deleteId === s.id} title="Excluir"><Trash2 size={18} />{deleteId === s.id && <span className="ml-1 text-xs">...</span>}</button>
+                        <button onClick={() => handleEdit(s)} className="inline-flex items-center justify-center text-cyan-700 hover:text-cyan-900 mr-2 transition" title="Editar"><Pencil size={18} /></button>
+                        <button onClick={() => handleDelete(s.id)} className="inline-flex items-center justify-center text-red-600 hover:text-red-800 transition" disabled={deleteId === s.id} title="Excluir"><Trash2 size={18} />{deleteId === s.id && <span className="ml-1 text-xs">...</span>}</button>
                       </>
                     )}
                   </td>
