@@ -466,6 +466,98 @@ const SupplierList = () => {
   );
 };
 
+// Novo formulário de cadastro de boletos
+const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const [fornecedores, setFornecedores] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fields, setFields] = useState({
+    fornecedor_id: '',
+    mes_referencia: '',
+    data_vencimento: '',
+    data_pagamento: '',
+    categoria: '',
+  });
+  const { toast } = useToast();
+  useEffect(() => {
+    supabase.from('suppliers').select('id, razao_social').then(({ data }) => {
+      setFornecedores(data || []);
+    });
+  }, []);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFields({ ...fields, [e.target.name]: e.target.value });
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Usuário não autenticado.');
+        setLoading(false);
+        return;
+      }
+      const payload = {
+        fornecedor_id: fields.fornecedor_id,
+        mes_referencia: fields.mes_referencia,
+        data_vencimento: fields.data_vencimento,
+        data_pagamento: fields.data_pagamento,
+        categoria: fields.categoria,
+      };
+      const { error: supaError } = await supabase.from('pay_bills').insert([payload]);
+      if (supaError) {
+        setError(supaError.message);
+        toast({ title: 'Erro ao cadastrar boleto', description: supaError.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Boleto cadastrado!', description: 'O boleto foi cadastrado com sucesso.' });
+        setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '' });
+        if (onSuccess) onSuccess();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar boleto.');
+      toast({ title: 'Erro ao cadastrar boleto', description: err.message, variant: 'destructive' });
+    }
+    setLoading(false);
+  };
+  return (
+    <div className="space-y-6 max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-900">Cadastro de Boleto</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Fornecedor *</label>
+          <select name="fornecedor_id" value={fields.fornecedor_id} onChange={handleChange} required className="border rounded px-2 py-1 w-full">
+            <option value="">Selecione o fornecedor</option>
+            {fornecedores.map(f => (
+              <option key={f.id} value={f.id}>{f.razao_social}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Mês de Referência *</label>
+          <input name="mes_referencia" type="month" value={fields.mes_referencia} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Data de Vencimento *</label>
+          <input name="data_vencimento" type="date" value={fields.data_vencimento} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Data de Pagamento</label>
+          <input name="data_pagamento" type="date" value={fields.data_pagamento} onChange={handleChange} className="border rounded px-2 py-1 w-full" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Categoria *</label>
+          <input name="categoria" type="text" value={fields.categoria} onChange={handleChange} required className="border rounded px-2 py-1 w-full" placeholder="Ex: Energia, Internet, Aluguel..." />
+        </div>
+        {error && <div className="text-red-600 text-sm font-semibold text-center border border-red-200 bg-red-50 rounded-md py-2">{error}</div>}
+        <div className="flex justify-end">
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded" disabled={loading}>{loading ? 'Salvando...' : 'Cadastrar Boleto'}</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 export const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -516,6 +608,8 @@ export const Dashboard = () => {
         navigate('/dashboard?tab=pagar&sub=fornecedor-cadastro'); break;
       case 'fornecedor-lista':
         navigate('/dashboard?tab=pagar&sub=fornecedor-lista'); break;
+      case 'boletos-cadastro':
+        navigate('/dashboard?tab=pagar&sub=boletos-cadastro'); break;
       default:
         navigate('/dashboard');
     }
@@ -594,6 +688,21 @@ export const Dashboard = () => {
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
             <SupplierList />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Renderizar PayBillForm na aba de cadastro de boletos
+  if (location.search.includes('tab=pagar') && sub === 'boletos-cadastro') {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            <PayBillForm />
           </main>
         </div>
       </div>
