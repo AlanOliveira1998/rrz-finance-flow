@@ -27,7 +27,6 @@ export interface Invoice {
   projetoId?: string;
   projeto?: string;
   tipoProjeto?: string;
-  proposalUrl?: string;
 }
 
 interface InvoicesContextType {
@@ -77,8 +76,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           totalParcelas: invoice.total_parcelas,
           projetoId: invoice.projeto_id,
           projeto: invoice.projeto,
-          tipoProjeto: invoice.tipo_projeto,
-          proposalUrl: invoice.proposal_url
+          tipoProjeto: invoice.tipo_projeto
         }));
         setInvoices(convertedInvoices as Invoice[]);
       }
@@ -114,8 +112,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       total_parcelas: invoiceData.totalParcelas,
       projeto_id: invoiceData.projetoId,
       projeto: invoiceData.projeto,
-      tipo_projeto: invoiceData.tipoProjeto,
-      proposal_url: invoiceData.proposalUrl
+      tipo_projeto: invoiceData.tipoProjeto
     };
     
     const { data, error } = await supabase.from('invoices').insert(supabaseData).select();
@@ -150,8 +147,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         totalParcelas: data[0].total_parcelas,
         projetoId: data[0].projeto_id,
         projeto: data[0].projeto,
-        tipoProjeto: data[0].tipo_projeto,
-        proposalUrl: data[0].proposal_url
+        tipoProjeto: data[0].tipo_projeto
       };
       setInvoices((prev) => [...prev, newInvoice as Invoice]);
     }
@@ -187,7 +183,6 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (invoiceData.projetoId !== undefined) supabaseData.projeto_id = invoiceData.projetoId;
     if (invoiceData.projeto !== undefined) supabaseData.projeto = invoiceData.projeto;
     if (invoiceData.tipoProjeto !== undefined) supabaseData.tipo_projeto = invoiceData.tipoProjeto;
-    if (invoiceData.proposalUrl !== undefined) supabaseData.proposal_url = invoiceData.proposalUrl;
     
     const { data, error } = await supabase.from('invoices').update(supabaseData).eq('id', id).select();
     if (error) {
@@ -221,8 +216,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         totalParcelas: data[0].total_parcelas,
         projetoId: data[0].projeto_id,
         projeto: data[0].projeto,
-        tipoProjeto: data[0].tipo_projeto,
-        proposalUrl: data[0].proposal_url
+        tipoProjeto: data[0].tipo_projeto
       };
       setInvoices((prev) => prev.map(inv => inv.id === id ? updatedInvoice : inv));
     }
