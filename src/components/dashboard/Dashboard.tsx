@@ -146,6 +146,21 @@ export const Dashboard = () => {
     );
   };
 
+  // Adicionar lógica para exibir DashboardOverview na aba Contas a Receber
+  if (location.search.includes('tab=receber')) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={path} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            <DashboardOverview />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={path} onTabChange={handleTabChange} />
