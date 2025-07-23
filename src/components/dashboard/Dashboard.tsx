@@ -493,6 +493,17 @@ export const Dashboard = () => {
         navigate('/dashboard/taxes'); break;
       case 'logs':
         navigate('/dashboard/logs'); break;
+      // Corrigir navegação para abas de contas a pagar e fornecedores
+      case 'pagar-home':
+        navigate('/dashboard?tab=pagar'); break;
+      case 'pagar-lista':
+        navigate('/dashboard?tab=pagar&sub=lista'); break;
+      case 'pagar-nova':
+        navigate('/dashboard?tab=pagar&sub=nova'); break;
+      case 'fornecedor-cadastro':
+        navigate('/dashboard?tab=pagar&sub=fornecedor-cadastro'); break;
+      case 'fornecedor-lista':
+        navigate('/dashboard?tab=pagar&sub=fornecedor-lista'); break;
       default:
         navigate('/dashboard');
     }
@@ -609,7 +620,7 @@ export const Dashboard = () => {
   }
 
   // Renderizar SupplierForm na aba de cadastro de fornecedores
-  if (location.search.includes('tab=pagar') && path === 'fornecedor-cadastro') {
+  if (location.search.includes('tab=pagar') && location.search.includes('sub=fornecedor-cadastro')) {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={path} onTabChange={handleTabChange} />
@@ -624,7 +635,7 @@ export const Dashboard = () => {
   }
 
   // Renderizar SupplierList na aba de lista de fornecedores
-  if (location.search.includes('tab=pagar') && path === 'fornecedor-lista') {
+  if (location.search.includes('tab=pagar') && location.search.includes('sub=fornecedor-lista')) {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={path} onTabChange={handleTabChange} />
