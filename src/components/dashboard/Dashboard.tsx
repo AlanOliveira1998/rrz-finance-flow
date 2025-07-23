@@ -523,15 +523,15 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     setLoading(false);
   };
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Cadastro de Boleto</h2>
           <p className="text-gray-600">Preencha os dados do boleto a pagar</p>
         </div>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <div className="bg-white rounded shadow p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Fornecedor *</label>
