@@ -752,15 +752,17 @@ export const Dashboard = () => {
     const [fornecedores, setFornecedores] = React.useState<any[]>([]);
 
     React.useEffect(() => {
-      setLoadingBills(true);
-      supabase.from('pay_bills').select('*').then(({ data }) => {
-        setBills(data || []);
-        setLoadingBills(false);
-      });
-      supabase.from('suppliers').select('id, razao_social').then(({ data }) => {
-        setFornecedores(data || []);
-      });
-    }, []);
+      if (location.search.includes('tab=pagar')) {
+        setLoadingBills(true);
+        supabase.from('pay_bills').select('*').then(({ data }) => {
+          setBills(data || []);
+          setLoadingBills(false);
+        });
+        supabase.from('suppliers').select('id, razao_social').then(({ data }) => {
+          setFornecedores(data || []);
+        });
+      }
+    }, [location.search]);
 
     const handleEditField = (id: string, field: string, value: any) => {
       setEditFields((prev: any) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
@@ -783,6 +785,7 @@ export const Dashboard = () => {
     };
 
     const getFornecedorNome = (id: string) => fornecedores.find(f => f.id === id)?.razao_social || '-';
+    // --- FIM NOVO CONTROLE DE BOLETOS ---
 
     return (
       <div className="flex h-screen bg-gray-50">
