@@ -16,7 +16,6 @@ import { TaxesList } from '@/components/taxes/TaxesList';
 import { Client } from '@/hooks/useClients';
 import { Project } from '@/hooks/useProjects';
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
-import ProposalList from '../proposals/ProposalList';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -142,7 +141,6 @@ export const Dashboard = () => {
         <Route path="users" element={<UserManagement />} />
         <Route path="taxes" element={<TaxesList />} />
         <Route path="logs" element={<LogsPanel />} />
-        <Route path="proposals" element={<ProposalList />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     );
