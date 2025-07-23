@@ -41,20 +41,18 @@ BEGIN
         ALTER TABLE invoices DROP COLUMN parcelas;
     END IF;
     
-    -- Remover proposalurl (usar proposal_url)
-    IF EXISTS (SELECT 1 FROM information_schema.columns 
-               WHERE table_name = 'invoices' AND column_name = 'proposalurl') THEN
-        -- Migrar dados se necessário
-        UPDATE invoices SET proposal_url = proposalurl WHERE proposal_url IS NULL AND proposalurl IS NOT NULL;
-        ALTER TABLE invoices DROP COLUMN proposalurl;
-    END IF;
-    
     -- Remover valor_liquido (usar valor_livre_impostos)
     IF EXISTS (SELECT 1 FROM information_schema.columns 
                WHERE table_name = 'invoices' AND column_name = 'valor_liquido') THEN
         -- Migrar dados se necessário
         UPDATE invoices SET valor_livre_impostos = valor_liquido WHERE valor_livre_impostos IS NULL AND valor_liquido IS NOT NULL;
         ALTER TABLE invoices DROP COLUMN valor_liquido;
+    END IF;
+    
+    -- Remover proposal_url
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'invoices' AND column_name = 'proposal_url') THEN
+        ALTER TABLE invoices DROP COLUMN proposal_url;
     END IF;
     
     -- Adicionar colunas faltantes
