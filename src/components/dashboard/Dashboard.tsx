@@ -277,7 +277,18 @@ const SupplierList = () => {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filterAtivo, setFilterAtivo] = useState('all');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editFields, setEditFields] = useState<any>({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { toast } = useToast();
   useEffect(() => {
+    fetchSuppliers();
+    // eslint-disable-next-line
+  }, []);
+  const fetchSuppliers = () => {
     setLoading(true);
     setError(null);
     supabase.from('suppliers').select('*').then(({ data, error }) => {
@@ -285,17 +296,92 @@ const SupplierList = () => {
       else setSuppliers(data || []);
       setLoading(false);
     });
-  }, []);
+  };
+  const filteredSuppliers = suppliers.filter(s => {
+    const matchesSearch =
+      s.cnpj?.toLowerCase().includes(search.toLowerCase()) ||
+      s.razao_social?.toLowerCase().includes(search.toLowerCase()) ||
+      s.nome_fantasia?.toLowerCase().includes(search.toLowerCase()) ||
+      s.email?.toLowerCase().includes(search.toLowerCase()) ||
+      s.telefone?.toLowerCase().includes(search.toLowerCase());
+    const matchesAtivo = filterAtivo === 'all' || (filterAtivo === 'ativo' ? s.ativo : !s.ativo);
+    return matchesSearch && matchesAtivo;
+  });
+  const handleEdit = (s: any) => {
+    setEditId(s.id);
+    setEditFields({ ...s, ...JSON.parse(s.endereco || '{}') });
+  };
+  const handleEditField = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFields({ ...editFields, [e.target.name]: e.target.value });
+  };
+  const handleEditSave = async () => {
+    setEditLoading(true);
+    const payload = {
+      razao_social: editFields.razao_social,
+      nome_fantasia: editFields.nome_fantasia,
+      email: editFields.email,
+      telefone: editFields.telefone,
+      ativo: editFields.ativo,
+      endereco: JSON.stringify({
+        logradouro: editFields.logradouro,
+        numero: editFields.numero,
+        complemento: editFields.complemento,
+        bairro: editFields.bairro,
+        cidade: editFields.cidade,
+        uf: editFields.uf,
+        cep: editFields.cep,
+      })
+    };
+    const { error } = await supabase.from('suppliers').update(payload).eq('id', editId).select();
+    if (error) {
+      toast({ title: 'Erro ao editar fornecedor', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Fornecedor atualizado!', description: 'Alterações salvas.' });
+      setEditId(null);
+      fetchSuppliers();
+    }
+    setEditLoading(false);
+  };
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este fornecedor?')) return;
+    setDeleteId(id);
+    const { error } = await supabase.from('suppliers').delete().eq('id', id);
+    if (error) {
+      toast({ title: 'Erro ao excluir fornecedor', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Fornecedor excluído!', description: 'Fornecedor removido com sucesso.' });
+      fetchSuppliers();
+    }
+    setDeleteId(null);
+  };
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
       <p className="text-gray-600">Lista de fornecedores cadastrados</p>
+      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+        <input
+          type="text"
+          placeholder="Buscar por CNPJ, razão social, e-mail..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="border rounded px-2 py-1 w-full md:w-64"
+        />
+        <select
+          value={filterAtivo}
+          onChange={e => setFilterAtivo(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
+          <option value="all">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+        </select>
+      </div>
       {loading ? (
         <div className="text-center py-8">Carregando...</div>
       ) : error ? (
         <div className="text-red-600 text-center py-4">{error}</div>
-      ) : suppliers.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">Nenhum fornecedor cadastrado.</div>
+      ) : filteredSuppliers.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">Nenhum fornecedor encontrado.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -307,17 +393,64 @@ const SupplierList = () => {
                 <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">E-mail</th>
                 <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Telefone</th>
                 <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Ativo</th>
+                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {suppliers.map((s) => (
+              {filteredSuppliers.map((s) => (
                 <tr key={s.id}>
                   <td className="px-2 py-1 whitespace-nowrap">{s.cnpj}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.razao_social}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.nome_fantasia}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.email}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.telefone}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.ativo ? 'Sim' : 'Não'}</td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <input name="razao_social" value={editFields.razao_social || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
+                    ) : (
+                      s.razao_social
+                    )}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <input name="nome_fantasia" value={editFields.nome_fantasia || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
+                    ) : (
+                      s.nome_fantasia
+                    )}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <input name="email" value={editFields.email || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
+                    ) : (
+                      s.email
+                    )}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <input name="telefone" value={editFields.telefone || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-24" />
+                    ) : (
+                      s.telefone
+                    )}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <select name="ativo" value={editFields.ativo ? 'true' : 'false'} onChange={e => setEditFields({ ...editFields, ativo: e.target.value === 'true' })} className="border rounded px-1 py-0.5">
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
+                      </select>
+                    ) : (
+                      s.ativo ? 'Sim' : 'Não'
+                    )}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap">
+                    {editId === s.id ? (
+                      <>
+                        <button onClick={handleEditSave} className="text-blue-600 font-semibold mr-2" disabled={editLoading}>{editLoading ? 'Salvando...' : 'Salvar'}</button>
+                        <button onClick={() => setEditId(null)} className="text-gray-500">Cancelar</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => handleEdit(s)} className="text-blue-600 font-semibold mr-2">Editar</button>
+                        <button onClick={() => handleDelete(s.id)} className="text-red-600 font-semibold" disabled={deleteId === s.id}>{deleteId === s.id ? 'Excluindo...' : 'Excluir'}</button>
+                      </>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
