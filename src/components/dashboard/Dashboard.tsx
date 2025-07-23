@@ -503,8 +503,8 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       const payload = {
         fornecedor_id: fields.fornecedor_id,
         mes_referencia: fields.mes_referencia,
-        data_vencimento: fields.data_vencimento,
-        data_pagamento: fields.data_pagamento,
+        data_vencimento: fields.data_vencimento || null,
+        data_pagamento: fields.data_pagamento || null,
         categoria: fields.categoria,
         valor: fields.valor,
       };
