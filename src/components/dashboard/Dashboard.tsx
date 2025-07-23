@@ -19,6 +19,7 @@ import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -388,70 +389,70 @@ const SupplierList = () => {
         <div className="text-center py-8 text-gray-500">Nenhum fornecedor encontrado.</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead>
+          <table className="min-w-full divide-y divide-gray-200 text-sm bg-white rounded shadow">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">CNPJ</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Razão Social</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nome Fantasia</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">E-mail</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Telefone</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Ativo</th>
-                <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Ações</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">CNPJ</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Razão Social</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Nome Fantasia</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">E-mail</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Telefone</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase whitespace-nowrap">Ativo</th>
+                <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase whitespace-nowrap">Ações</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {filteredSuppliers.map((s) => (
-                <tr key={s.id}>
-                  <td className="px-2 py-1 whitespace-nowrap">{s.cnpj}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                <tr key={s.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-2 whitespace-nowrap">{s.cnpj}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="razao_social" value={editFields.razao_social || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
                       s.razao_social
                     )}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="nome_fantasia" value={editFields.nome_fantasia || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
                       s.nome_fantasia
                     )}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="email" value={editFields.email || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-32" />
                     ) : (
                       s.email
                     )}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <input name="telefone" value={editFields.telefone || ''} onChange={handleEditField} className="border rounded px-1 py-0.5 w-24" />
                     ) : (
                       s.telefone
                     )}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {editId === s.id ? (
                       <select name="ativo" value={editFields.ativo ? 'true' : 'false'} onChange={e => setEditFields({ ...editFields, ativo: e.target.value === 'true' })} className="border rounded px-1 py-0.5">
                         <option value="true">Sim</option>
                         <option value="false">Não</option>
                       </select>
                     ) : (
-                      s.ativo ? 'Sim' : 'Não'
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${s.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{s.ativo ? 'Sim' : 'Não'}</span>
                     )}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap text-center">
                     {editId === s.id ? (
                       <>
-                        <button onClick={handleEditSave} className="text-blue-600 font-semibold mr-2" disabled={editLoading}>{editLoading ? 'Salvando...' : 'Salvar'}</button>
-                        <button onClick={() => setEditId(null)} className="text-gray-500">Cancelar</button>
+                        <button onClick={handleEditSave} className="inline-flex items-center justify-center text-blue-600 hover:text-blue-800 font-semibold mr-2" disabled={editLoading} title="Salvar"><Pencil size={18} /></button>
+                        <button onClick={() => setEditId(null)} className="inline-flex items-center justify-center text-gray-500 hover:text-gray-700" title="Cancelar"><span className="sr-only">Cancelar</span>✖️</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEdit(s)} className="text-blue-600 font-semibold mr-2">Editar</button>
-                        <button onClick={() => handleDelete(s.id)} className="text-red-600 font-semibold" disabled={deleteId === s.id}>{deleteId === s.id ? 'Excluindo...' : 'Excluir'}</button>
+                        <button onClick={() => handleEdit(s)} className="inline-flex items-center justify-center text-blue-600 hover:text-blue-800 mr-2" title="Editar"><Pencil size={18} /></button>
+                        <button onClick={() => handleDelete(s.id)} className="inline-flex items-center justify-center text-red-600 hover:text-red-800" disabled={deleteId === s.id} title="Excluir"><Trash2 size={18} />{deleteId === s.id && <span className="ml-1 text-xs">...</span>}</button>
                       </>
                     )}
                   </td>
