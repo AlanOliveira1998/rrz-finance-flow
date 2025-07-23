@@ -806,6 +806,22 @@ export const Dashboard = () => {
     );
   }
 
+  // Adicionar lógica para exibir área em branco na aba Rotinas
+  if (location.search.includes('tab=rotinas')) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            {/* Área reservada para o futuro kanban de atividades */}
+            <div className="h-full w-full bg-white rounded-lg shadow min-h-[60vh]"></div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeTab={path} onTabChange={handleTabChange} />
