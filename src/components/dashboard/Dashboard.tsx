@@ -587,6 +587,36 @@ export const Dashboard = () => {
     );
   };
 
+  // Renderizar SupplierForm na aba de cadastro de fornecedores
+  if (location.search.includes('tab=pagar') && sub === 'fornecedor-cadastro') {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            <SupplierForm onSuccess={() => { navigate('/dashboard?tab=pagar&sub=fornecedor-lista'); }} />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Renderizar SupplierList na aba de lista de fornecedores
+  if (location.search.includes('tab=pagar') && sub === 'fornecedor-lista') {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            <SupplierList />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   // Adicionar lógica para exibir DashboardOverview na aba Contas a Receber
   if (location.search.includes('tab=receber')) {
     return (
@@ -606,7 +636,7 @@ export const Dashboard = () => {
   if (location.search.includes('tab=pagar')) {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar activeTab={path} onTabChange={handleTabChange} />
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex flex-col overflow-hidden ml-64">
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
@@ -642,36 +672,6 @@ export const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  // Renderizar SupplierForm na aba de cadastro de fornecedores
-  if (location.search.includes('tab=pagar') && sub === 'fornecedor-cadastro') {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        <div className="flex-1 flex flex-col overflow-hidden ml-64">
-          <Header />
-          <main className="flex-1 overflow-y-auto p-6">
-            <SupplierForm onSuccess={() => { navigate('/dashboard?tab=pagar&sub=fornecedor-lista'); }} />
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  // Renderizar SupplierList na aba de lista de fornecedores
-  if (location.search.includes('tab=pagar') && sub === 'fornecedor-lista') {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        <div className="flex-1 flex flex-col overflow-hidden ml-64">
-          <Header />
-          <main className="flex-1 overflow-y-auto p-6">
-            <SupplierList />
           </main>
         </div>
       </div>
