@@ -285,7 +285,6 @@ const SupplierList = () => {
   const [editFields, setEditFields] = useState<any>({});
   const [editLoading, setEditLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
   useEffect(() => {
     fetchSuppliers();
@@ -359,27 +358,10 @@ const SupplierList = () => {
   };
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
-          <p className="text-gray-600">Lista de fornecedores cadastrados</p>
-        </div>
-        <button onClick={() => setShowModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">Novo Fornecedor</button>
+      <div>
+        <h2 className="text-3xl font-bold text-gray-900">Fornecedores RRZ</h2>
+        <p className="text-gray-600">Lista de fornecedores cadastrados</p>
       </div>
-      {/* Modal de cadastro de fornecedor */}
-      {showModal && (
-        <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Novo Fornecedor</DialogTitle>
-            </DialogHeader>
-            <SupplierForm onSuccess={() => { setShowModal(false); fetchSuppliers(); }} />
-            <DialogFooter>
-              <button onClick={() => setShowModal(false)} className="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded">Fechar</button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
         <input
           type="text"
