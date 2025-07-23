@@ -479,6 +479,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     data_pagamento: '',
     categoria: '',
     valor: '',
+    status: 'pendente',
   });
   const { toast } = useToast();
   useEffect(() => {
@@ -507,6 +508,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         data_pagamento: fields.data_pagamento || null,
         categoria: fields.categoria,
         valor: fields.valor,
+        status: fields.status,
       };
       const { error: supaError } = await supabase.from('pay_bills').insert([payload]);
       if (supaError) {
@@ -514,7 +516,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         toast({ title: 'Erro ao cadastrar boleto', description: supaError.message, variant: 'destructive' });
       } else {
         toast({ title: 'Boleto cadastrado!', description: 'O boleto foi cadastrado com sucesso.' });
-        setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '', valor: '' });
+        setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '', valor: '', status: 'pendente' });
         if (onSuccess) onSuccess();
       }
     } catch (err: any) {
@@ -554,6 +556,14 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700">Valor *</label>
               <input name="valor" type="number" min="0" step="0.01" value={fields.valor} onChange={handleChange} required className="border rounded px-2 py-1 w-full" placeholder="R$" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Status *</label>
+              <select name="status" value={fields.status} onChange={handleChange} required className="border rounded px-2 py-1 w-full">
+                <option value="pendente">Pendente</option>
+                <option value="pago">Pago</option>
+                <option value="atrasado">Atrasado</option>
+              </select>
             </div>
           </div>
           <div className="bg-white rounded shadow p-6 space-y-4">
