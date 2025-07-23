@@ -41,6 +41,28 @@ CREATE TABLE IF NOT EXISTS clients (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 2.1. TABELA DE FORNECEDORES (nova)
+-- Verificar se a tabela suppliers existe
+SELECT EXISTS (
+   SELECT FROM information_schema.tables 
+   WHERE table_schema = 'public'
+   AND table_name = 'suppliers'
+);
+
+-- Criar a tabela suppliers se ela não existir
+CREATE TABLE IF NOT EXISTS suppliers (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    cnpj VARCHAR(18) NOT NULL,
+    razao_social VARCHAR(255) NOT NULL,
+    nome_fantasia VARCHAR(255),
+    email VARCHAR(255),
+    telefone VARCHAR(20),
+    endereco JSONB,
+    ativo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 3. TABELA DE PROJETOS (já existe)
 -- Verificar se a tabela projects existe
 SELECT EXISTS (
@@ -179,6 +201,11 @@ CREATE INDEX IF NOT EXISTS idx_emitted_installments_status ON emitted_installmen
 CREATE INDEX IF NOT EXISTS idx_emitted_installments_data_vencimento ON emitted_installments(data_vencimento);
 CREATE INDEX IF NOT EXISTS idx_emitted_installments_cliente_id ON emitted_installments(cliente_id);
 
+-- Índices para suppliers
+CREATE INDEX IF NOT EXISTS idx_suppliers_cnpj ON suppliers(cnpj);
+CREATE INDEX IF NOT EXISTS idx_suppliers_razao_social ON suppliers(razao_social);
+CREATE INDEX IF NOT EXISTS idx_suppliers_ativo ON suppliers(ativo);
+
 -- =====================================================
 -- ROW LEVEL SECURITY (RLS)
 -- =====================================================
@@ -190,6 +217,7 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emitted_installments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para profiles
 CREATE POLICY "Users can view their own profile" ON profiles
@@ -219,6 +247,10 @@ CREATE POLICY "System can insert activity logs" ON activity_logs
 
 -- Políticas para emitted_installments
 CREATE POLICY "Authenticated users can manage installments" ON emitted_installments
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Políticas para suppliers
+CREATE POLICY "Authenticated users can manage suppliers" ON suppliers
     FOR ALL USING (auth.uid() IS NOT NULL);
 
 -- =====================================================
@@ -260,7 +292,7 @@ SELECT
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as columns_count
 FROM information_schema.tables t
 WHERE table_schema = 'public' 
-AND table_name IN ('profiles', 'clients', 'projects', 'invoices', 'activity_logs', 'emitted_installments')
+AND table_name IN ('profiles', 'clients', 'projects', 'invoices', 'activity_logs', 'emitted_installments', 'suppliers')
 ORDER BY table_name;
 
 -- Verificar contagem de registros em cada tabela
@@ -274,4 +306,6 @@ SELECT 'invoices' as table_name, COUNT(*) as total_records FROM invoices
 UNION ALL
 SELECT 'activity_logs' as table_name, COUNT(*) as total_records FROM activity_logs
 UNION ALL
-SELECT 'emitted_installments' as table_name, COUNT(*) as total_records FROM emitted_installments; 
+SELECT 'emitted_installments' as table_name, COUNT(*) as total_records FROM emitted_installments
+UNION ALL
+SELECT 'suppliers' as table_name, COUNT(*) as total_records FROM suppliers; 
