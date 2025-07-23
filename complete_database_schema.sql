@@ -94,7 +94,6 @@ CREATE TABLE IF NOT EXISTS invoices (
     projeto_id UUID REFERENCES projects(id),
     projeto VARCHAR(255),
     tipo_projeto VARCHAR(100),
-    proposal_url TEXT, -- URL do arquivo PDF da proposta
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
