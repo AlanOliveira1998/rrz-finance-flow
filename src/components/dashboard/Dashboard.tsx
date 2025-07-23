@@ -849,7 +849,9 @@ export const Dashboard = () => {
               {['todo', 'doing', 'done'].map((col, i) => (
                 <div
                   key={col}
-                  className="flex-1 bg-white rounded-lg shadow p-4 flex flex-col"
+                  className={`flex-1 rounded-lg shadow p-4 flex flex-col ${
+                    col === 'todo' ? 'bg-red-50' : col === 'doing' ? 'bg-yellow-50' : 'bg-green-50'
+                  }`}
                   onDrop={handleDrop(col)}
                   onDragOver={handleDragOver}
                 >
