@@ -25,7 +25,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         { id: 'new-invoice', label: 'Nova Nota', icon: '➕' },
         { id: 'taxes', label: 'Impostos', icon: '💸' },
         { id: 'reports', label: 'Relatórios', icon: '📈' },
-        { id: 'proposals', label: 'Propostas', icon: '📄' },
       ],
     },
     {
