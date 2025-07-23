@@ -42,27 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <span className="mr-3">🏠</span>
                 Página Inicial
               </Button>
-              <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 mt-4 pl-2">Financeiro</div>
-              <Button
-                key="pagar-lista"
-                variant={activeTab === 'pagar-lista' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${activeTab === 'pagar-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
-                onClick={() => onTabChange('pagar-lista')}
-                aria-label="Contas a Pagar"
-              >
-                <span className="mr-3">💸</span>
-                Lista de Contas a Pagar
-              </Button>
-              <Button
-                key="pagar-nova"
-                variant={activeTab === 'pagar-nova' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${activeTab === 'pagar-nova' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
-                onClick={() => onTabChange('pagar-nova')}
-                aria-label="Nova Conta a Pagar"
-              >
-                <span className="mr-3">➕</span>
-                Nova Conta a Pagar
-              </Button>
+              {/* Removido: Lista de Contas a Pagar e Nova Conta a Pagar */}
               <Button
                 key="fornecedor-cadastro"
                 variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
