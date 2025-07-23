@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         variant={activeTab === 'dashboard' ? "secondary" : "ghost"}
         className={`w-full justify-start text-left mt-4 mb-2 ${
           activeTab === 'dashboard' 
-            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            ? 'bg-gray-800 text-white hover:bg-gray-900' 
             : 'text-gray-300 hover:text-white hover:bg-gray-800'
         }`}
         onClick={() => onTabChange('dashboard')}
