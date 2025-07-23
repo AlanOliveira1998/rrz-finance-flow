@@ -477,6 +477,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     data_vencimento: '',
     data_pagamento: '',
     categoria: '',
+    valor: '',
   });
   const { toast } = useToast();
   useEffect(() => {
@@ -504,6 +505,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         data_vencimento: fields.data_vencimento,
         data_pagamento: fields.data_pagamento,
         categoria: fields.categoria,
+        valor: fields.valor,
       };
       const { error: supaError } = await supabase.from('pay_bills').insert([payload]);
       if (supaError) {
@@ -511,7 +513,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         toast({ title: 'Erro ao cadastrar boleto', description: supaError.message, variant: 'destructive' });
       } else {
         toast({ title: 'Boleto cadastrado!', description: 'O boleto foi cadastrado com sucesso.' });
-        setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '' });
+        setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '', valor: '' });
         if (onSuccess) onSuccess();
       }
     } catch (err: any) {
@@ -521,36 +523,51 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     setLoading(false);
   };
   return (
-    <div className="space-y-6 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900">Cadastro de Boleto</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Fornecedor *</label>
-          <select name="fornecedor_id" value={fields.fornecedor_id} onChange={handleChange} required className="border rounded px-2 py-1 w-full">
-            <option value="">Selecione o fornecedor</option>
-            {fornecedores.map(f => (
-              <option key={f.id} value={f.id}>{f.razao_social}</option>
-            ))}
-          </select>
+          <h2 className="text-3xl font-bold text-gray-900">Cadastro de Boleto</h2>
+          <p className="text-gray-600">Preencha os dados do boleto a pagar</p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mês de Referência *</label>
-          <input name="mes_referencia" type="month" value={fields.mes_referencia} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Data de Vencimento *</label>
-          <input name="data_vencimento" type="date" value={fields.data_vencimento} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Data de Pagamento</label>
-          <input name="data_pagamento" type="date" value={fields.data_pagamento} onChange={handleChange} className="border rounded px-2 py-1 w-full" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Categoria *</label>
-          <input name="categoria" type="text" value={fields.categoria} onChange={handleChange} required className="border rounded px-2 py-1 w-full" placeholder="Ex: Energia, Internet, Aluguel..." />
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded shadow p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Fornecedor *</label>
+              <select name="fornecedor_id" value={fields.fornecedor_id} onChange={handleChange} required className="border rounded px-2 py-1 w-full">
+                <option value="">Selecione o fornecedor</option>
+                {fornecedores.map(f => (
+                  <option key={f.id} value={f.id}>{f.razao_social}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Categoria *</label>
+              <input name="categoria" type="text" value={fields.categoria} onChange={handleChange} required className="border rounded px-2 py-1 w-full" placeholder="Ex: Energia, Internet, Aluguel..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Mês de Referência *</label>
+              <input name="mes_referencia" type="month" value={fields.mes_referencia} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Valor *</label>
+              <input name="valor" type="number" min="0" step="0.01" value={fields.valor} onChange={handleChange} required className="border rounded px-2 py-1 w-full" placeholder="R$" />
+            </div>
+          </div>
+          <div className="bg-white rounded shadow p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Data de Vencimento *</label>
+              <input name="data_vencimento" type="date" value={fields.data_vencimento} onChange={handleChange} required className="border rounded px-2 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Data de Pagamento</label>
+              <input name="data_pagamento" type="date" value={fields.data_pagamento} onChange={handleChange} className="border rounded px-2 py-1 w-full" />
+            </div>
+          </div>
         </div>
         {error && <div className="text-red-600 text-sm font-semibold text-center border border-red-200 bg-red-50 rounded-md py-2">{error}</div>}
-        <div className="flex justify-end">
+        <div className="flex justify-end space-x-4">
           <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded" disabled={loading}>{loading ? 'Salvando...' : 'Cadastrar Boleto'}</button>
         </div>
       </form>
