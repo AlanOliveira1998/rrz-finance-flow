@@ -12,6 +12,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
   const location = window.location;
 
+  // Sidebar vazio para Rotinas
+  if (location.search.includes('tab=rotinas')) {
+    return (
+      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
+        {/* Sidebar vazio para a aba Rotinas */}
+      </aside>
+    );
+  }
+
   // Novo menu para Contas a Pagar
   if (location.search.includes('tab=pagar')) {
     return (
@@ -77,14 +86,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             </div>
           </nav>
         </div>
-      </aside>
-    );
-  }
-
-  if (activeTab === 'rotinas') {
-    return (
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
-        {/* Sidebar vazio para a aba Rotinas */}
       </aside>
     );
   }
