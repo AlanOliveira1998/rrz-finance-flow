@@ -77,7 +77,8 @@ export const Header = () => {
               <button
                 className={`px-3 py-1 rounded font-medium transition-colors ${
                   (location.search.includes(item.path.split('=')[1]) || (item.path === '/dashboard' && location.pathname === '/dashboard'))
-                    ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-100'
+                    ? (item.label === 'Dashboard' ? 'bg-gray-800 text-white' : 'bg-blue-600 text-white')
+                    : 'text-gray-700 hover:bg-blue-100'
                 }`}
                 onClick={() => navigate(item.path)}
               >
