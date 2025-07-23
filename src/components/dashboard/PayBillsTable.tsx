@@ -44,9 +44,10 @@ export const PayBillsTable: React.FC = () => {
   const getFornecedorNome = (id: string) => fornecedores.find(f => f.id === id)?.razao_social || '-';
 
   // Resumo dos valores
+  const today = new Date().toISOString().slice(0, 10);
   const totalPago = bills.filter(b => b.status === 'pago').reduce((sum, b) => sum + Number(b.valor || 0), 0);
-  const totalPendente = bills.filter(b => b.status === 'pendente' || !b.status).reduce((sum, b) => sum + Number(b.valor || 0), 0);
-  const totalAtrasado = bills.filter(b => b.status === 'atrasado').reduce((sum, b) => sum + Number(b.valor || 0), 0);
+  const totalVencido = bills.filter(b => (b.status === 'atrasado') || (b.status === 'pendente' && b.data_vencimento && b.data_vencimento < today)).reduce((sum, b) => sum + Number(b.valor || 0), 0);
+  const totalPendente = bills.filter(b => b.status === 'pendente' && b.data_vencimento && b.data_vencimento >= today).reduce((sum, b) => sum + Number(b.valor || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -74,7 +75,7 @@ export const PayBillsTable: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Vencido</p>
-              <p className="text-2xl font-bold text-red-600">{totalAtrasado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+              <p className="text-2xl font-bold text-red-600">{totalVencido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
             </div>
             <div className="text-2xl">⚠️</div>
           </div>
