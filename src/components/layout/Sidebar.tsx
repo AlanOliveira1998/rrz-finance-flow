@@ -10,6 +10,53 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
+  const location = window.location;
+
+  // Novo menu para Contas a Pagar
+  if (location.search.includes('tab=pagar')) {
+    return (
+      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
+        <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg">Contas a Pagar</h2>
+              <p className="text-sm text-gray-400">RRZ Consultoria</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
+          <nav>
+            <div className="mb-2">
+              <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 mt-4 pl-2">Financeiro</div>
+              <Button
+                key="pagar-lista"
+                variant={activeTab === 'pagar-lista' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left ${activeTab === 'pagar-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('pagar-lista')}
+                aria-label="Contas a Pagar"
+              >
+                <span className="mr-3">💸</span>
+                Lista de Contas a Pagar
+              </Button>
+              <Button
+                key="pagar-nova"
+                variant={activeTab === 'pagar-nova' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left ${activeTab === 'pagar-nova' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('pagar-nova')}
+                aria-label="Nova Conta a Pagar"
+              >
+                <span className="mr-3">➕</span>
+                Nova Conta a Pagar
+              </Button>
+            </div>
+          </nav>
+        </div>
+      </aside>
+    );
+  }
 
   const menuSections = [
     {
