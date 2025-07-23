@@ -57,11 +57,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               <Button
                 key="fornecedor-lista"
                 variant={activeTab === 'fornecedor-lista' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
+                className={`w-full justify-start text-left mb-2 transition-all duration-200 font-semibold tracking-wide rounded-lg ${
+                  activeTab === 'fornecedor-lista'
+                    ? 'bg-gradient-to-r from-cyan-700 to-blue-800 text-white shadow-md border-l-4 border-cyan-300'
+                    : 'text-gray-200 hover:text-white hover:bg-cyan-900 hover:shadow-lg hover:border-l-4 hover:border-cyan-400'
+                }`}
                 onClick={() => onTabChange('fornecedor-lista')}
                 aria-label="Fornecedores RRZ"
               >
-                <span className="mr-3">📋</span>
+                <span className="mr-3 flex items-center justify-center w-6 h-6 rounded bg-cyan-400/20 text-cyan-300">
+                  {/* Modern icon: group/list */}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m0-4a4 4 0 100-8 4 4 0 000 8zm8 0a4 4 0 100-8 4 4 0 000 8z" />
+                  </svg>
+                </span>
                 Fornecedores RRZ
               </Button>
               <Button
