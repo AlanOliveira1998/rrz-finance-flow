@@ -22,7 +22,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">Contas a Pagar</h2>
+              <h2 className="font-bold text-lg leading-tight">
+                Sistema<br />Financeiro
+              </h2>
               <p className="text-sm text-gray-400">RRZ Consultoria</p>
             </div>
           </div>
@@ -30,6 +32,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
           <nav>
             <div className="mb-2">
+              <Button
+                key="pagar-home"
+                variant={activeTab === 'pagar-home' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left mb-2 ${activeTab === 'pagar-home' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('pagar-home')}
+                aria-label="Página Inicial"
+              >
+                <span className="mr-3">🏠</span>
+                Página Inicial
+              </Button>
               <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 mt-4 pl-2">Financeiro</div>
               <Button
                 key="pagar-lista"
