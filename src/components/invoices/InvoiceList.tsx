@@ -328,12 +328,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                           </div>
                           <div>
                             <span className="text-gray-500">Recebimento:</span>
-                            <input
-                              type="date"
-                              value={notaExtras[invoice.id]?.dataRecebimento || invoice.dataRecebimento || ''}
-                              onChange={e => handleDataRecebimentoChange(invoice.id, e.target.value)}
-                              className="border rounded px-2 py-1 w-full"
-                            />
+                            <p className="font-medium">{invoice.dataRecebimento ? formatDate(invoice.dataRecebimento) : '-'}</p>
                           </div>
                         </div>
                       </div>
