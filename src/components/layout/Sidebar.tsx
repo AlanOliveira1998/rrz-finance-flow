@@ -31,7 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
           <nav>
-            <div className="mb-2">
+            <div className="mb-4">
+              <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 pl-2">Contas a Pagar</div>
               <Button
                 key="pagar-home"
                 variant={activeTab === 'pagar-home' ? "secondary" : "ghost"}
@@ -42,21 +43,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <span className="mr-3">🏠</span>
                 Página Inicial
               </Button>
-              {/* Removido: Lista de Contas a Pagar e Nova Conta a Pagar */}
               <Button
-                key="fornecedor-cadastro"
-                variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mt-4 ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
-                onClick={() => onTabChange('fornecedor-cadastro')}
-                aria-label="Cadastro de Fornecedores"
+                key="boletos-cadastro"
+                variant={activeTab === 'boletos-cadastro' ? "secondary" : "outline"}
+                className={`w-full justify-start text-left mb-2 border-blue-500 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-blue-400 border hover:text-white hover:bg-blue-800'}`}
+                onClick={() => onTabChange('boletos-cadastro')}
+                aria-label="Cadastrar Boleto"
               >
-                <span className="mr-3">🏢</span>
-                Cadastro de Fornecedores
+                <span className="mr-3">💳</span>
+                Cadastrar Boleto
               </Button>
+              <hr className="my-3 border-gray-700" />
               <Button
                 key="fornecedor-lista"
                 variant={activeTab === 'fornecedor-lista' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                className={`w-full justify-start text-left mb-2 ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
                 onClick={() => onTabChange('fornecedor-lista')}
                 aria-label="Fornecedores RRZ"
               >
@@ -64,14 +65,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 Fornecedores RRZ
               </Button>
               <Button
-                key="boletos-cadastro"
-                variant={activeTab === 'boletos-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mt-4 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
-                onClick={() => onTabChange('boletos-cadastro')}
-                aria-label="Boletos"
+                key="fornecedor-cadastro"
+                variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
+                className={`w-full justify-start text-left ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
+                onClick={() => onTabChange('fornecedor-cadastro')}
+                aria-label="Cadastro de Fornecedores"
               >
-                <span className="mr-3">💳</span>
-                Boletos
+                <span className="mr-3">🏢</span>
+                Cadastro de Fornecedores
               </Button>
             </div>
           </nav>
