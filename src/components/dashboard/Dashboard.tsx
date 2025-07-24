@@ -629,6 +629,14 @@ export const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Kanban hooks SEMPRE no topo
+  const [kanban, setKanban] = React.useState({
+    todo: [],
+    doing: [],
+    done: [],
+  });
+  const [newTask, setNewTask] = React.useState('');
+
   // Map URL path to tab
   const path = location.pathname.replace(/^\/dashboard\/?/, '') || 'dashboard';
 
@@ -809,12 +817,6 @@ export const Dashboard = () => {
   // Adicionar lógica para exibir área em branco na aba Rotinas
   if (location.search.includes('tab=rotinas')) {
     // Kanban simples
-    const [kanban, setKanban] = React.useState({
-      todo: [],
-      doing: [],
-      done: [],
-    });
-    const [newTask, setNewTask] = React.useState('');
     const handleAddTask = () => {
       if (newTask.trim()) {
         setKanban(prev => ({ ...prev, todo: [...prev.todo, { id: Date.now(), text: newTask }] }));
