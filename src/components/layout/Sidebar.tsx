@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   activeTab: string;
@@ -11,6 +12,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
   const location = window.location;
+  const navigate = useNavigate();
 
   // Sidebar vazio para Rotinas, mas mantendo o logo
   if (location.search.includes('tab=rotinas')) {
@@ -29,13 +31,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             </div>
           </div>
         </div>
-        {/* Menu Rotinas */}
         <nav className="flex-1 p-4 space-y-2">
           <button
-            className={`w-full text-left px-4 py-2 rounded hover:bg-blue-800 transition ${location.pathname.includes('/dashboard/kanban') ? 'bg-blue-800' : ''}`}
-            onClick={() => window.location.href = '/dashboard/kanban'}
+            className="w-full text-left px-4 py-2 rounded hover:bg-gray-800 transition"
+            onClick={() => navigate('/dashboard/kanban?tab=rotinas')}
           >
-            🗂️ Kanban de Atividades
+            Kanban de Atividades
+          </button>
+          <button
+            className="w-full text-left px-4 py-2 rounded hover:bg-gray-800 transition"
+            onClick={() => navigate('/dashboard/checklist?tab=rotinas')}
+          >
+            Checklist de Rotinas
           </button>
         </nav>
       </aside>
