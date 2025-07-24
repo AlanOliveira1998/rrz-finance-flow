@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInvoices } from '@/hooks/useInvoices';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const DashboardOverview = () => {
   const { invoices, updateInvoice } = useInvoices();
