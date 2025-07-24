@@ -98,6 +98,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               </Button>
             </div>
           </nav>
+          <button
+            className={`w-full text-left px-4 py-2 rounded hover:bg-cyan-800 transition ${location.pathname.includes('/dashboard/kanban') ? 'bg-cyan-800' : ''}`}
+            onClick={() => window.location.href = '/dashboard/kanban'}
+          >
+            🗂️ Kanban de Atividades
+          </button>
         </div>
       </aside>
     );
@@ -189,6 +195,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             </div>
           ))}
         </nav>
+        <button
+          className={`w-full text-left px-4 py-2 rounded hover:bg-blue-800 transition ${location.pathname.includes('/dashboard/kanban') ? 'bg-blue-800' : ''}`}
+          onClick={() => window.location.href = '/dashboard/kanban'}
+        >
+          🗂️ Kanban de Atividades
+        </button>
       </div>
     </aside>
   );
