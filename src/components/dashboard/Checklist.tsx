@@ -43,55 +43,64 @@ const Checklist: React.FC = () => {
   const filtered = (t: 'Diário' | 'Semanal' | 'Mensal') => items.filter(item => item.type === t);
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Checklist de Rotinas</h2>
-      <div className="flex gap-2 mb-4">
-        <input
-          className="border rounded px-2 py-1 flex-1"
-          placeholder="Nova rotina..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addItem()}
-        />
-        <select
-          className="border rounded px-2 py-1"
-          value={type}
-          onChange={e => setType(e.target.value as any)}
-        >
-          <option value="Diário">Diário</option>
-          <option value="Semanal">Semanal</option>
-          <option value="Mensal">Mensal</option>
-        </select>
+    <div className="flex flex-col h-full min-h-[70vh] w-full max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-0 md:p-8">
+      <div className="sticky top-0 z-10 bg-white rounded-t-lg border-b px-4 py-4 md:px-0 md:py-6 flex flex-col md:flex-row md:items-end gap-2 md:gap-4">
+        <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4">
+          <input
+            className="border rounded px-3 py-2 flex-1 text-base focus:ring-2 focus:ring-blue-200"
+            placeholder="Nova rotina..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addItem()}
+          />
+          <select
+            className="border rounded px-3 py-2 text-base"
+            value={type}
+            onChange={e => setType(e.target.value as any)}
+          >
+            <option value="Diário">Diário</option>
+            <option value="Semanal">Semanal</option>
+            <option value="Mensal">Mensal</option>
+          </select>
+        </div>
         <button
-          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition"
           onClick={addItem}
         >Adicionar</button>
       </div>
-      {(['Diário', 'Semanal', 'Mensal'] as const).map(t => (
-        <div key={t} className="mb-6">
-          <h3 className="font-semibold text-lg mb-2">{t}</h3>
-          {filtered(t).length === 0 ? (
-            <p className="text-gray-400 text-sm">Nenhuma rotina {t.toLowerCase()} cadastrada.</p>
-          ) : (
-            <ul className="space-y-2">
-              {filtered(t).map(item => (
-                <li key={item.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={item.done}
-                    onChange={() => toggleItem(item.id)}
-                  />
-                  <span className={item.done ? 'line-through text-gray-400' : ''}>{item.text}</span>
-                  <button
-                    className="ml-auto text-xs text-red-500 hover:underline"
-                    onClick={() => removeItem(item.id)}
-                  >Remover</button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 md:p-0 mt-4">
+        {(['Diário', 'Semanal', 'Mensal'] as const).map(t => (
+          <div key={t} className="bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col min-h-[250px]">
+            <h3 className="font-semibold text-lg mb-3 text-blue-700 border-b pb-2 flex items-center gap-2">
+              {t === 'Diário' && <span className="text-blue-400">📅</span>}
+              {t === 'Semanal' && <span className="text-green-400">🗓️</span>}
+              {t === 'Mensal' && <span className="text-purple-400">📆</span>}
+              {t}
+            </h3>
+            {filtered(t).length === 0 ? (
+              <p className="text-gray-400 text-sm flex-1 flex items-center justify-center">Nenhuma rotina {t.toLowerCase()} cadastrada.</p>
+            ) : (
+              <ul className="space-y-2 flex-1">
+                {filtered(t).map(item => (
+                  <li key={item.id} className="flex items-center gap-2 group">
+                    <input
+                      type="checkbox"
+                      checked={item.done}
+                      onChange={() => toggleItem(item.id)}
+                      className="accent-blue-600 w-5 h-5"
+                    />
+                    <span className={item.done ? 'line-through text-gray-400 flex-1' : 'flex-1'}>{item.text}</span>
+                    <button
+                      className="ml-auto text-xs text-red-500 hover:underline opacity-0 group-hover:opacity-100 transition"
+                      onClick={() => removeItem(item.id)}
+                    >Remover</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
