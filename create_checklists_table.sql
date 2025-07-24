@@ -5,6 +5,9 @@ create table if not exists checklists (
   text text not null,
   done boolean not null default false,
   type text not null check (type in ('Diário', 'Semanal', 'Mensal')),
+  due_date date,
+  priority int default 0,
+  tags text[] default array[]::text[],
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
