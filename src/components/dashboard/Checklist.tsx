@@ -43,7 +43,7 @@ const Checklist: React.FC = () => {
   const filtered = (t: 'Diário' | 'Semanal' | 'Mensal') => items.filter(item => item.type === t);
 
   return (
-    <div className="flex flex-col h-full min-h-[70vh] w-full max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-0 md:p-8">
+    <div className="flex flex-col h-full min-h-[calc(100vh-120px)] w-full max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-0 md:p-8">
       <div className="sticky top-0 z-10 bg-white rounded-t-lg border-b px-4 py-4 md:px-0 md:py-6 flex flex-col md:flex-row md:items-end gap-2 md:gap-4">
         <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4">
           <input
@@ -68,9 +68,9 @@ const Checklist: React.FC = () => {
           onClick={addItem}
         >Adicionar</button>
       </div>
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 md:p-0 mt-4">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-2 md:p-4 mt-2 md:mt-4 min-h-[400px]">
         {(['Diário', 'Semanal', 'Mensal'] as const).map(t => (
-          <div key={t} className="bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col min-h-[250px]">
+          <div key={t} className="bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col min-h-[350px] h-full">
             <h3 className="font-semibold text-lg mb-3 text-blue-700 border-b pb-2 flex items-center gap-2">
               {t === 'Diário' && <span className="text-blue-400">📅</span>}
               {t === 'Semanal' && <span className="text-green-400">🗓️</span>}
@@ -78,7 +78,9 @@ const Checklist: React.FC = () => {
               {t}
             </h3>
             {filtered(t).length === 0 ? (
-              <p className="text-gray-400 text-sm flex-1 flex items-center justify-center">Nenhuma rotina {t.toLowerCase()} cadastrada.</p>
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-gray-400 text-sm">Nenhuma rotina {t.toLowerCase()} cadastrada.</p>
+              </div>
             ) : (
               <ul className="space-y-2 flex-1">
                 {filtered(t).map(item => (
