@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Pencil, Trash2 } from 'lucide-react';
 import { PayBillsTable } from './PayBillsTable';
+import Checklist from './Checklist'; // importar o novo componente
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -736,6 +737,7 @@ export const Dashboard = () => {
         <Route path="taxes" element={<TaxesList />} />
         <Route path="logs" element={<LogsPanel />} />
         <Route path="kanban" element={<KanbanAtividades kanban={kanban} setKanban={setKanban} newTask={newTask} setNewTask={setNewTask} />} />
+        <Route path="checklist" element={<Checklist />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     );
