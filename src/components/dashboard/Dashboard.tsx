@@ -672,6 +672,8 @@ export const Dashboard = () => {
         navigate('/dashboard/taxes'); break;
       case 'logs':
         navigate('/dashboard/logs'); break;
+      case 'kanban':
+        navigate('/dashboard/kanban'); break;
       // Corrigir navegação para abas de contas a pagar e fornecedores
       case 'pagar-home':
         navigate('/dashboard?tab=pagar'); break;
@@ -720,7 +722,6 @@ export const Dashboard = () => {
   };
 
   const renderContent = () => {
-    // Removed switch statement based on activeTab
     return (
       <Routes>
         <Route path="" element={<DashboardOverview />} />
@@ -734,8 +735,89 @@ export const Dashboard = () => {
         <Route path="users" element={<UserManagement />} />
         <Route path="taxes" element={<TaxesList />} />
         <Route path="logs" element={<LogsPanel />} />
+        <Route path="kanban" element={<KanbanAtividades kanban={kanban} setKanban={setKanban} newTask={newTask} setNewTask={setNewTask} />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+    );
+  };
+
+  // Kanban de Atividades como componente separado
+  const KanbanAtividades = ({ kanban, setKanban, newTask, setNewTask }) => {
+    const handleAddTask = () => {
+      if (newTask.trim()) {
+        setKanban(prev => ({ ...prev, todo: [...prev.todo, { id: Date.now(), text: newTask }] }));
+        setNewTask('');
+      }
+    };
+    const handleDragStart = (col, idx) => (e) => {
+      e.dataTransfer.setData('col', col);
+      e.dataTransfer.setData('idx', idx);
+    };
+    const handleDrop = (targetCol) => (e) => {
+      const fromCol = e.dataTransfer.getData('col');
+      const fromIdx = parseInt(e.dataTransfer.getData('idx'), 10);
+      if (fromCol && fromCol !== targetCol) {
+        const item = kanban[fromCol][fromIdx];
+        setKanban(prev => {
+          const newFrom = [...prev[fromCol]];
+          newFrom.splice(fromIdx, 1);
+          const newTo = [...prev[targetCol], item];
+          return { ...prev, [fromCol]: newFrom, [targetCol]: newTo };
+        });
+      }
+    };
+    const handleDragOver = (e) => e.preventDefault();
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={"kanban"} onTabChange={handleTabChange} />
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="flex gap-6 h-[70vh]">
+              {['todo', 'doing', 'done'].map((col, i) => (
+                <div
+                  key={col}
+                  className={`flex-1 rounded-lg shadow p-4 flex flex-col ${
+                    col === 'todo' ? 'bg-red-50' : col === 'doing' ? 'bg-yellow-50' : 'bg-green-50'
+                  }`}
+                  onDrop={handleDrop(col)}
+                  onDragOver={handleDragOver}
+                >
+                  <h3 className="font-bold text-lg mb-4 text-gray-700">
+                    {col === 'todo' && 'A Fazer'}
+                    {col === 'doing' && 'Em Andamento'}
+                    {col === 'done' && 'Realizado'}
+                  </h3>
+                  {col === 'todo' && (
+                    <div className="mb-4 flex gap-2">
+                      <input
+                        className="flex-1 border rounded px-2 py-1"
+                        placeholder="Adicionar atividade..."
+                        value={newTask}
+                        onChange={e => setNewTask(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleAddTask()}
+                      />
+                      <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={handleAddTask}>Adicionar</button>
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2 min-h-[40px]">
+                    {kanban[col].map((card, idx) => (
+                      <div
+                        key={card.id}
+                        className="bg-gray-100 rounded p-3 shadow cursor-move"
+                        draggable
+                        onDragStart={handleDragStart(col, idx)}
+                      >
+                        {card.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
+      </div>
     );
   };
 
