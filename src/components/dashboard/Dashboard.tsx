@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Pencil, Trash2 } from 'lucide-react';
 import { PayBillsTable } from './PayBillsTable';
 import Checklist from './Checklist'; // importar o novo componente
+import { useAuth } from '@/hooks/useAuth';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -629,6 +630,7 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 export const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Kanban hooks SEMPRE no topo
   const [kanban, setKanban] = React.useState({
@@ -637,6 +639,30 @@ export const Dashboard = () => {
     done: [],
   });
   const [newTask, setNewTask] = React.useState('');
+  const [kanbanLoading, setKanbanLoading] = useState(false);
+
+  // Buscar tarefas do Kanban do Supabase ao carregar
+  useEffect(() => {
+    if (!user?.id) return;
+    setKanbanLoading(true);
+    supabase
+      .from('kanban_tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setKanban({
+            todo: data.filter(t => t.status === 'todo'),
+            doing: data.filter(t => t.status === 'doing'),
+            done: data.filter(t => t.status === 'done'),
+            lembretes: data.filter(t => t.status === 'lembretes'),
+            reunioes: data.filter(t => t.status === 'reunioes'),
+          });
+        }
+        setKanbanLoading(false);
+      });
+  }, [user?.id]);
 
   // Map URL path to tab
   const path = location.pathname.replace(/^\/dashboard\/?/, '') || 'dashboard';
@@ -745,11 +771,56 @@ export const Dashboard = () => {
 
   // Kanban de Atividades como componente separado
   const KanbanAtividades = ({ kanban, setKanban, newTask, setNewTask }) => {
-    const handleAddTask = () => {
-      if (newTask.trim()) {
-        setKanban(prev => ({ ...prev, todo: [...prev.todo, { id: Date.now(), text: newTask }] }));
+    // Adicionar tarefa (por padrão em 'todo')
+    const handleAddTask = async () => {
+      if (!newTask.trim() || !user?.id) return;
+      setKanbanLoading(true);
+      const { data, error } = await supabase
+        .from('kanban_tasks')
+        .insert([{ user_id: user.id, text: newTask.trim(), status: 'todo' }])
+        .select();
+      if (!error && data && data[0]) {
+        setKanban(prev => ({ ...prev, todo: [...prev.todo, data[0]] }));
         setNewTask('');
       }
+      setKanbanLoading(false);
+    };
+    // Mover tarefa entre colunas
+    const moveTask = async (fromCol, fromIdx, toCol) => {
+      const item = kanban[fromCol][fromIdx];
+      if (!item) return;
+      setKanbanLoading(true);
+      const { error } = await supabase
+        .from('kanban_tasks')
+        .update({ status: toCol })
+        .eq('id', item.id);
+      if (!error) {
+        setKanban(prev => {
+          const newFrom = [...prev[fromCol]];
+          newFrom.splice(fromIdx, 1);
+          const newTo = [...prev[toCol], { ...item, status: toCol }];
+          return { ...prev, [fromCol]: newFrom, [toCol]: newTo };
+        });
+      }
+      setKanbanLoading(false);
+    };
+    // Remover tarefa
+    const removeTask = async (col, idx) => {
+      const item = kanban[col][idx];
+      if (!item) return;
+      setKanbanLoading(true);
+      const { error } = await supabase
+        .from('kanban_tasks')
+        .delete()
+        .eq('id', item.id);
+      if (!error) {
+        setKanban(prev => {
+          const newCol = [...prev[col]];
+          newCol.splice(idx, 1);
+          return { ...prev, [col]: newCol };
+        });
+      }
+      setKanbanLoading(false);
     };
     const handleDragStart = (col, idx) => (e) => {
       e.dataTransfer.setData('col', col);
@@ -759,16 +830,18 @@ export const Dashboard = () => {
       const fromCol = e.dataTransfer.getData('col');
       const fromIdx = parseInt(e.dataTransfer.getData('idx'), 10);
       if (fromCol && fromCol !== targetCol) {
-        const item = kanban[fromCol][fromIdx];
-        setKanban(prev => {
-          const newFrom = [...prev[fromCol]];
-          newFrom.splice(fromIdx, 1);
-          const newTo = [...prev[targetCol], item];
-          return { ...prev, [fromCol]: newFrom, [targetCol]: newTo };
-        });
+        moveTask(fromCol, fromIdx, targetCol);
       }
     };
     const handleDragOver = (e) => e.preventDefault();
+    // Colunas do Kanban
+    const columns = [
+      { key: 'todo', label: 'A Fazer', color: 'bg-red-50' },
+      { key: 'doing', label: 'Em Andamento', color: 'bg-yellow-50' },
+      { key: 'done', label: 'Realizado', color: 'bg-green-50' },
+      { key: 'lembretes', label: 'Lembretes', color: 'bg-blue-50' },
+      { key: 'reunioes', label: 'Reuniões', color: 'bg-purple-50' },
+    ];
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={"kanban"} onTabChange={handleTabChange} />
@@ -776,21 +849,15 @@ export const Dashboard = () => {
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
             <div className="flex gap-6 h-[70vh]">
-              {['todo', 'doing', 'done'].map((col, i) => (
+              {columns.map((col) => (
                 <div
-                  key={col}
-                  className={`flex-1 rounded-lg shadow p-4 flex flex-col ${
-                    col === 'todo' ? 'bg-red-50' : col === 'doing' ? 'bg-yellow-50' : 'bg-green-50'
-                  }`}
-                  onDrop={handleDrop(col)}
+                  key={col.key}
+                  className={`flex-1 rounded-lg shadow p-4 flex flex-col ${col.color}`}
+                  onDrop={handleDrop(col.key)}
                   onDragOver={handleDragOver}
                 >
-                  <h3 className="font-bold text-lg mb-4 text-gray-700">
-                    {col === 'todo' && 'A Fazer'}
-                    {col === 'doing' && 'Em Andamento'}
-                    {col === 'done' && 'Realizado'}
-                  </h3>
-                  {col === 'todo' && (
+                  <h3 className="font-bold text-lg mb-4 text-gray-700">{col.label}</h3>
+                  {col.key === 'todo' && (
                     <div className="mb-4 flex gap-2">
                       <input
                         className="flex-1 border rounded px-2 py-1"
@@ -798,22 +865,29 @@ export const Dashboard = () => {
                         value={newTask}
                         onChange={e => setNewTask(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleAddTask()}
+                        disabled={kanbanLoading}
                       />
-                      <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={handleAddTask}>Adicionar</button>
+                      <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={handleAddTask} disabled={kanbanLoading}>Adicionar</button>
                     </div>
                   )}
                   <div className="flex-1 space-y-2 min-h-[40px]">
-                    {kanban[col].map((card, idx) => (
+                    {kanban[col.key]?.map((card, idx) => (
                       <div
                         key={card.id}
-                        className="bg-gray-100 rounded p-3 shadow cursor-move"
+                        className="bg-gray-100 rounded p-3 shadow cursor-move group flex items-center"
                         draggable
-                        onDragStart={handleDragStart(col, idx)}
+                        onDragStart={handleDragStart(col.key, idx)}
                       >
-                        {card.text}
+                        <span className="flex-1">{card.text}</span>
+                        <button
+                          className="ml-2 text-xs text-red-500 hover:underline opacity-0 group-hover:opacity-100 transition"
+                          onClick={() => removeTask(col.key, idx)}
+                          disabled={kanbanLoading}
+                        >Remover</button>
                       </div>
                     ))}
                   </div>
+                  {kanbanLoading && <div className="text-center text-blue-400 mt-2 animate-pulse">Sincronizando...</div>}
                 </div>
               ))}
             </div>
