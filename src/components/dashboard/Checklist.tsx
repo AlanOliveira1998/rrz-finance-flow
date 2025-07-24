@@ -160,8 +160,9 @@ const Checklist: React.FC = () => {
     }
   };
 
+  // Função de filtro: sempre mostra todos se showCompleted[t] for true, senão só pendentes
   const filtered = (t: 'Diário' | 'Semanal' | 'Mensal') =>
-    items.filter(item => item.type === t && (showCompleted[t] || !item.done));
+    showCompleted[t] ? items.filter(item => item.type === t) : items.filter(item => item.type === t && !item.done);
 
   return (
     <div className="flex flex-col h-full min-h-[calc(100vh-120px)] w-full max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-0 md:p-8">
@@ -261,7 +262,7 @@ const Checklist: React.FC = () => {
                       />
                     ) : (
                       <span
-                        className={item.done ? 'line-through text-gray-400 flex-1 cursor-pointer' : 'flex-1 cursor-pointer'}
+                        className={item.done ? 'line-through text-gray-400 flex-1 cursor-pointer opacity-60' : 'flex-1 cursor-pointer'}
                         onClick={e => { e.stopPropagation(); setEditingId(item.id); setEditingText(item.text); }}
                       >{item.text}</span>
                     )}
