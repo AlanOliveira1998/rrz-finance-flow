@@ -8,6 +8,9 @@ interface ChecklistItem {
   text: string;
   done: boolean;
   type: 'Diário' | 'Semanal' | 'Mensal';
+  due_date?: string | null;
+  priority?: number;
+  tags?: string[];
 }
 
 const Checklist: React.FC = () => {
@@ -28,6 +31,14 @@ const Checklist: React.FC = () => {
   });
   // Novo: estado para drag and drop
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  // Adicionar estados para due_date, priority e tags
+  const [dueDate, setDueDate] = useState<string>('');
+  const [priority, setPriority] = useState<number>(0);
+  const [tags, setTags] = useState<string>(''); // tags separadas por vírgula
+  // Adicionar estados para edição inline dos novos campos
+  const [editingDueDate, setEditingDueDate] = useState('');
+  const [editingPriority, setEditingPriority] = useState(0);
+  const [editingTags, setEditingTags] = useState('');
 
   // Buscar rotinas do Supabase ao carregar
   useEffect(() => {
@@ -45,6 +56,9 @@ const Checklist: React.FC = () => {
             text: item.text,
             done: item.done,
             type: item.type,
+            due_date: item.due_date,
+            priority: item.priority,
+            tags: item.tags,
           })));
         }
         setLoading(false);
@@ -55,9 +69,10 @@ const Checklist: React.FC = () => {
   const addItem = async () => {
     if (!input.trim() || !user?.id) return;
     setLoading(true);
+    const tagArr = tags.split(',').map(t => t.trim()).filter(Boolean);
     const { data, error } = await supabase
       .from('checklists')
-      .insert([{ user_id: user.id, text: input.trim(), done: false, type }])
+      .insert([{ user_id: user.id, text: input.trim(), done: false, type, due_date: dueDate || null, priority, tags: tagArr.length ? tagArr : null }])
       .select();
     if (!error && data && data[0]) {
       setItems(prev => [...prev, {
@@ -65,13 +80,29 @@ const Checklist: React.FC = () => {
         text: data[0].text,
         done: data[0].done,
         type: data[0].type,
+        due_date: data[0].due_date,
+        priority: data[0].priority,
+        tags: data[0].tags,
       }]);
       setInput('');
+      setDueDate('');
+      setPriority(0);
+      setTags('');
     }
     setLoading(false);
   };
 
-  // Marcar como feito/não feito
+  // Função utilitária para calcular próxima data de recorrência
+  function getNextDueDate(current: string | null, type: 'Diário' | 'Semanal' | 'Mensal'): string | null {
+    if (!current) return null;
+    const date = new Date(current);
+    if (type === 'Diário') date.setDate(date.getDate() + 1);
+    if (type === 'Semanal') date.setDate(date.getDate() + 7);
+    if (type === 'Mensal') date.setMonth(date.getMonth() + 1);
+    return date.toISOString().split('T')[0];
+  }
+
+  // Marcar como feito/não feito + recorrência automática
   const toggleItem = async (id: string) => {
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -82,6 +113,36 @@ const Checklist: React.FC = () => {
       .eq('id', id);
     if (!error) {
       setItems(items.map(i => i.id === id ? { ...i, done: !i.done } : i));
+      // Recorrência automática: se marcou como feito, cria nova tarefa para o próximo ciclo
+      if (!item.done && (item.type === 'Diário' || item.type === 'Semanal' || item.type === 'Mensal')) {
+        const nextDue = getNextDueDate(item.due_date || null, item.type);
+        if (nextDue) {
+          const { data: recData, error: recError } = await supabase
+            .from('checklists')
+            .insert([{
+              user_id: user.id,
+              text: item.text,
+              done: false,
+              type: item.type,
+              due_date: nextDue,
+              priority: item.priority || 0,
+              tags: item.tags || [],
+            }])
+            .select();
+          if (!recError && recData && recData[0]) {
+            setItems(prev => [...prev, {
+              id: recData[0].id,
+              text: recData[0].text,
+              done: recData[0].done,
+              type: recData[0].type,
+              due_date: recData[0].due_date,
+              priority: recData[0].priority,
+              tags: recData[0].tags,
+            }]);
+            toast({ title: 'Rotina recorrente criada', description: `Nova rotina para ${item.type.toLowerCase()} em ${new Date(nextDue).toLocaleDateString()}` });
+          }
+        }
+      }
     }
     setLoading(false);
   };
@@ -127,18 +188,36 @@ const Checklist: React.FC = () => {
     if (!item || !editingText.trim()) {
       setEditingId(null);
       setEditingText('');
+      setEditingDueDate('');
+      setEditingPriority(0);
+      setEditingTags('');
       return;
     }
     setLoading(true);
+    const tagArr = editingTags.split(',').map(t => t.trim()).filter(Boolean);
     const { error } = await supabase
       .from('checklists')
-      .update({ text: editingText.trim() })
+      .update({
+        text: editingText.trim(),
+        due_date: editingDueDate || null,
+        priority: editingPriority,
+        tags: tagArr.length ? tagArr : null,
+      })
       .eq('id', id);
     if (!error) {
-      setItems(items.map(i => i.id === id ? { ...i, text: editingText.trim() } : i));
+      setItems(items.map(i => i.id === id ? {
+        ...i,
+        text: editingText.trim(),
+        due_date: editingDueDate || null,
+        priority: editingPriority,
+        tags: tagArr.length ? tagArr : [],
+      } : i));
     }
     setEditingId(null);
     setEditingText('');
+    setEditingDueDate('');
+    setEditingPriority(0);
+    setEditingTags('');
     setLoading(false);
   };
 
@@ -175,6 +254,32 @@ const Checklist: React.FC = () => {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addItem()}
             disabled={loading}
+          />
+          <input
+            type="date"
+            className="border rounded px-3 py-2 text-base"
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+            disabled={loading}
+            style={{ minWidth: 140 }}
+          />
+          <button
+            type="button"
+            className={`border rounded px-3 py-2 text-base flex items-center gap-1 ${priority ? 'bg-yellow-100 text-yellow-700' : ''}`}
+            onClick={() => setPriority(p => p ? 0 : 1)}
+            disabled={loading}
+            title={priority ? 'Desmarcar prioridade' : 'Marcar como prioritário'}
+            style={{ minWidth: 44 }}
+          >
+            <span style={{ fontSize: 18 }}>{priority ? '★' : '☆'}</span>
+          </button>
+          <input
+            className="border rounded px-3 py-2 text-base"
+            placeholder="Tags (separadas por vírgula)"
+            value={tags}
+            onChange={e => setTags(e.target.value)}
+            disabled={loading}
+            style={{ minWidth: 120 }}
           />
           <select
             className="border rounded px-3 py-2 text-base"
@@ -247,24 +352,67 @@ const Checklist: React.FC = () => {
                       style={{ minWidth: 24, minHeight: 24 }}
                     />
                     {editingId === item.id ? (
-                      <input
-                        className="flex-1 border rounded px-2 py-1"
-                        value={editingText}
-                        autoFocus
-                        onChange={e => setEditingText(e.target.value)}
-                        onBlur={() => saveEdit(item.id)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') saveEdit(item.id);
-                          if (e.key === 'Escape') { setEditingId(null); setEditingText(''); }
-                        }}
-                        disabled={loading}
-                        onClick={e => e.stopPropagation()}
-                      />
+                      <div className="flex flex-1 gap-2 items-center">
+                        <input
+                          className="flex-1 border rounded px-2 py-1"
+                          value={editingText}
+                          autoFocus
+                          onChange={e => setEditingText(e.target.value)}
+                          onBlur={() => saveEdit(item.id)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') saveEdit(item.id);
+                            if (e.key === 'Escape') {
+                              setEditingId(null); setEditingText(''); setEditingDueDate(''); setEditingPriority(0); setEditingTags('');
+                            }
+                          }}
+                          disabled={loading}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <input
+                          type="date"
+                          className="border rounded px-2 py-1"
+                          value={editingDueDate}
+                          onChange={e => setEditingDueDate(e.target.value)}
+                          onBlur={() => saveEdit(item.id)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveEdit(item.id); }}
+                          disabled={loading}
+                          style={{ minWidth: 110 }}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <button
+                          type="button"
+                          className={`border rounded px-2 py-1 flex items-center gap-1 ${editingPriority ? 'bg-yellow-100 text-yellow-700' : ''}`}
+                          onClick={e => { e.stopPropagation(); setEditingPriority(p => p ? 0 : 1); }}
+                          disabled={loading}
+                          title={editingPriority ? 'Desmarcar prioridade' : 'Marcar como prioritário'}
+                          style={{ minWidth: 32 }}
+                        >
+                          <span style={{ fontSize: 18 }}>{editingPriority ? '★' : '☆'}</span>
+                        </button>
+                        <input
+                          className="border rounded px-2 py-1"
+                          placeholder="Tags"
+                          value={editingTags}
+                          onChange={e => setEditingTags(e.target.value)}
+                          onBlur={() => saveEdit(item.id)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveEdit(item.id); }}
+                          disabled={loading}
+                          style={{ minWidth: 80 }}
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </div>
                     ) : (
                       <span
                         className={item.done ? 'line-through text-gray-400 flex-1 cursor-pointer opacity-60' : 'flex-1 cursor-pointer'}
-                        onClick={e => { e.stopPropagation(); setEditingId(item.id); setEditingText(item.text); }}
-                      >{item.text}</span>
+                        onClick={e => { e.stopPropagation(); setEditingId(item.id); setEditingText(item.text); setEditingDueDate(item.due_date || ''); setEditingPriority(item.priority || 0); setEditingTags(item.tags ? item.tags.join(', ') : ''); }}
+                      >
+                        {item.text}
+                        {item.priority ? <span className="ml-2 text-yellow-500" title="Prioritário">★</span> : null}
+                        {item.due_date ? <span className="ml-2 text-xs text-blue-600" title="Vencimento">{new Date(item.due_date).toLocaleDateString()}</span> : null}
+                        {item.tags && item.tags.length > 0 ? (
+                          <span className="ml-2 text-xs text-gray-500">{item.tags.map(tag => `#${tag}`).join(' ')}</span>
+                        ) : null}
+                      </span>
                     )}
                     <button
                       className="ml-auto text-xs text-red-500 hover:underline opacity-0 group-hover:opacity-100 transition"
