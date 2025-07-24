@@ -1064,7 +1064,11 @@ export const Dashboard = () => {
 
   // Adicionar lógica para exibir área em branco na aba Rotinas
   if (location.search.includes('tab=rotinas')) {
-    // Verifica a rota para decidir o que renderizar
+    // Se não estiver em /kanban ou /checklist, redireciona para o Kanban
+    if (!location.pathname.endsWith('/kanban') && !location.pathname.endsWith('/checklist')) {
+      navigate('/dashboard/kanban?tab=rotinas', { replace: true });
+      return null;
+    }
     if (location.pathname.endsWith('/kanban')) {
       // Kanban de Atividades
       return <KanbanAtividades kanban={kanban} setKanban={setKanban} />;
