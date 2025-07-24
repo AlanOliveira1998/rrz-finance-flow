@@ -23,6 +23,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { PayBillsTable } from './PayBillsTable';
 import Checklist from './Checklist'; // importar o novo componente
 import { useAuth } from '@/hooks/useAuth';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 const LogsPanel = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
@@ -764,7 +765,7 @@ export const Dashboard = () => {
         <Route path="users" element={<UserManagement />} />
         <Route path="taxes" element={<TaxesList />} />
         <Route path="logs" element={<LogsPanel />} />
-        <Route path="kanban" element={<KanbanAtividades kanban={kanban} setKanban={setKanban} newTask={newTask} setNewTask={setNewTask} />} />
+        <Route path="kanban" element={<KanbanAtividades kanban={kanban} setKanban={setKanban} />} />
         <Route path="checklist" element={<Checklist />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
@@ -772,18 +773,29 @@ export const Dashboard = () => {
   };
 
   // Kanban de Atividades como componente separado
-  const KanbanAtividades = ({ kanban, setKanban, newTask, setNewTask }) => {
-    // Adicionar tarefa (por padrão em 'todo')
-    const handleAddTask = async () => {
-      if (!newTask.trim() || !user?.id) return;
+  const KanbanAtividades = ({ kanban, setKanban }) => {
+    const { toast } = useToast();
+    // Novo: um estado para cada input de nova tarefa por coluna
+    const [newTasks, setNewTasks] = React.useState({
+      todo: '',
+      doing: '',
+      done: '',
+      lembretes: '',
+      reunioes: '',
+    });
+    // Adicionar tarefa em qualquer coluna
+    const handleAddTask = async (colKey) => {
+      const text = newTasks[colKey]?.trim();
+      if (!text || !user?.id) return;
       setKanbanLoading(true);
       const { data, error } = await supabase
         .from('kanban_tasks')
-        .insert([{ user_id: user.id, text: newTask.trim(), status: 'todo' }])
+        .insert([{ user_id: user.id, text, status: colKey }])
         .select();
       if (!error && data && data[0]) {
-        setKanban(prev => ({ ...prev, todo: [...prev.todo, data[0]] }));
-        setNewTask('');
+        setKanban(prev => ({ ...prev, [colKey]: [...prev[colKey], data[0]] }));
+        setNewTasks(prev => ({ ...prev, [colKey]: '' }));
+        toast({ title: 'Tarefa criada', description: `Tarefa adicionada em "${columns.find(c => c.key === colKey)?.label}".` });
       }
       setKanbanLoading(false);
     };
@@ -803,6 +815,7 @@ export const Dashboard = () => {
           const newTo = [...prev[toCol], { ...item, status: toCol }];
           return { ...prev, [fromCol]: newFrom, [toCol]: newTo };
         });
+        toast({ title: 'Tarefa movida', description: `Tarefa movida para "${columns.find(c => c.key === toCol)?.label}".` });
       }
       setKanbanLoading(false);
     };
@@ -821,6 +834,7 @@ export const Dashboard = () => {
           newCol.splice(idx, 1);
           return { ...prev, [col]: newCol };
         });
+        toast({ title: 'Tarefa removida', description: 'A tarefa foi removida com sucesso.' });
       }
       setKanbanLoading(false);
     };
@@ -844,6 +858,53 @@ export const Dashboard = () => {
       { key: 'lembretes', label: 'Lembretes', color: 'bg-blue-50' },
       { key: 'reunioes', label: 'Reuniões', color: 'bg-purple-50' },
     ];
+    // Estado para edição inline
+    const [editingTask, setEditingTask] = React.useState({ col: null, idx: null });
+    const [editingText, setEditingText] = React.useState('');
+
+    // Salvar edição
+    const handleEditSave = async (col, idx) => {
+      const item = kanban[col][idx];
+      if (!item || !editingText.trim()) {
+        setEditingTask({ col: null, idx: null });
+        setEditingText('');
+        return;
+      }
+      setKanbanLoading(true);
+      const { error } = await supabase
+        .from('kanban_tasks')
+        .update({ text: editingText.trim() })
+        .eq('id', item.id);
+      if (!error) {
+        setKanban(prev => {
+          const newCol = [...prev[col]];
+          newCol[idx] = { ...newCol[idx], text: editingText.trim() };
+          return { ...prev, [col]: newCol };
+        });
+        toast({ title: 'Tarefa editada', description: 'O texto da tarefa foi atualizado.' });
+      }
+      setEditingTask({ col: null, idx: null });
+      setEditingText('');
+      setKanbanLoading(false);
+    };
+    // Estado para controle do modal de remoção
+    const [removeDialog, setRemoveDialog] = React.useState({ open: false, col: null, idx: null });
+
+    // Função para abrir o modal
+    const handleRemoveClick = (col, idx) => {
+      setRemoveDialog({ open: true, col, idx });
+    };
+    // Função para confirmar remoção
+    const handleRemoveConfirm = async () => {
+      if (removeDialog.col !== null && removeDialog.idx !== null) {
+        await removeTask(removeDialog.col, removeDialog.idx);
+      }
+      setRemoveDialog({ open: false, col: null, idx: null });
+    };
+    // Função para cancelar
+    const handleRemoveCancel = () => {
+      setRemoveDialog({ open: false, col: null, idx: null });
+    };
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar activeTab={"kanban"} onTabChange={handleTabChange} />
@@ -859,19 +920,18 @@ export const Dashboard = () => {
                   onDragOver={handleDragOver}
                 >
                   <h3 className="font-bold text-lg mb-4 text-gray-700">{col.label}</h3>
-                  {col.key === 'todo' && (
-                    <div className="mb-4 flex gap-2">
-                      <input
-                        className="flex-1 border rounded px-2 py-1"
-                        placeholder="Adicionar atividade..."
-                        value={newTask}
-                        onChange={e => setNewTask(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-                        disabled={kanbanLoading}
-                      />
-                      <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={handleAddTask} disabled={kanbanLoading}>Adicionar</button>
-                    </div>
-                  )}
+                  {/* Input de nova tarefa em todas as colunas */}
+                  <div className="mb-4 flex gap-2">
+                    <input
+                      className="flex-1 border rounded px-2 py-1"
+                      placeholder={`Adicionar em ${col.label}...`}
+                      value={newTasks[col.key] || ''}
+                      onChange={e => setNewTasks(prev => ({ ...prev, [col.key]: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && handleAddTask(col.key)}
+                      disabled={kanbanLoading}
+                    />
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={() => handleAddTask(col.key)} disabled={kanbanLoading}>Adicionar</button>
+                  </div>
                   <div className="flex-1 space-y-2 min-h-[40px]">
                     {kanban[col.key]?.map((card, idx) => (
                       <div
@@ -880,10 +940,25 @@ export const Dashboard = () => {
                         draggable
                         onDragStart={handleDragStart(col.key, idx)}
                       >
-                        <span className="flex-1">{card.text}</span>
+                        {editingTask.col === col.key && editingTask.idx === idx ? (
+                          <input
+                            className="flex-1 border rounded px-2 py-1 mr-2"
+                            value={editingText}
+                            autoFocus
+                            onChange={e => setEditingText(e.target.value)}
+                            onBlur={() => handleEditSave(col.key, idx)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleEditSave(col.key, idx);
+                              if (e.key === 'Escape') { setEditingTask({ col: null, idx: null }); setEditingText(''); }
+                            }}
+                            disabled={kanbanLoading}
+                          />
+                        ) : (
+                          <span className="flex-1 cursor-pointer" onClick={() => { setEditingTask({ col: col.key, idx }); setEditingText(card.text); }}>{card.text}</span>
+                        )}
                         <button
                           className="ml-2 text-xs text-red-500 hover:underline opacity-0 group-hover:opacity-100 transition"
-                          onClick={() => removeTask(col.key, idx)}
+                          onClick={() => handleRemoveClick(col.key, idx)}
                           disabled={kanbanLoading}
                         >Remover</button>
                       </div>
@@ -896,6 +971,19 @@ export const Dashboard = () => {
           </main>
         </div>
       </div>
+      {/* Modal de confirmação de remoção */}
+      <AlertDialog open={removeDialog.open} onOpenChange={open => !open && handleRemoveCancel()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover tarefa</AlertDialogTitle>
+            <AlertDialogDescription>Tem certeza que deseja remover esta tarefa? Esta ação não pode ser desfeita.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleRemoveCancel}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveConfirm}>Remover</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   };
 
