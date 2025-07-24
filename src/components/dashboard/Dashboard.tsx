@@ -970,20 +970,20 @@ export const Dashboard = () => {
             </div>
           </main>
         </div>
+        {/* Modal de confirmação de remoção */}
+        <AlertDialog open={removeDialog.open} onOpenChange={open => !open && handleRemoveCancel()}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover tarefa</AlertDialogTitle>
+              <AlertDialogDescription>Tem certeza que deseja remover esta tarefa? Esta ação não pode ser desfeita.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleRemoveCancel}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRemoveConfirm}>Remover</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-      {/* Modal de confirmação de remoção */}
-      <AlertDialog open={removeDialog.open} onOpenChange={open => !open && handleRemoveCancel()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover tarefa</AlertDialogTitle>
-            <AlertDialogDescription>Tem certeza que deseja remover esta tarefa? Esta ação não pode ser desfeita.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleRemoveCancel}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveConfirm}>Remover</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     );
   };
 
@@ -1067,112 +1067,9 @@ export const Dashboard = () => {
     // Verifica a rota para decidir o que renderizar
     if (location.pathname.endsWith('/kanban')) {
       // Kanban de Atividades
-      const handleAddTask = () => {
-        if (newTask.trim()) {
-          setKanban(prev => ({ ...prev, todo: [...prev.todo, { id: Date.now(), text: newTask }] }));
-          setNewTask('');
-        }
-      };
-      const handleDragStart = (col, idx) => (e) => {
-        e.dataTransfer.setData('col', col);
-        e.dataTransfer.setData('idx', idx);
-      };
-      const handleDrop = (targetCol) => (e) => {
-        const fromCol = e.dataTransfer.getData('col');
-        const fromIdx = parseInt(e.dataTransfer.getData('idx'), 10);
-        if (fromCol && fromCol !== targetCol) {
-          const item = kanban[fromCol][fromIdx];
-          setKanban(prev => {
-            const newFrom = [...prev[fromCol]];
-            newFrom.splice(fromIdx, 1);
-            const newTo = [...prev[targetCol], item];
-            return { ...prev, [fromCol]: newFrom, [targetCol]: newTo };
-          });
-        }
-      };
-      const handleDragOver = (e) => e.preventDefault();
-      return (
-        <div className="flex h-screen bg-gray-50">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-          <div className="flex-1 flex flex-col overflow-hidden ml-64">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-6">
-              <div className="flex gap-6 h-[70vh]">
-                {['todo', 'doing', 'done'].map((col, i) => (
-                  <div
-                    key={col}
-                    className={`flex-1 rounded-lg shadow p-4 flex flex-col ${
-                      col === 'todo' ? 'bg-red-50' : col === 'doing' ? 'bg-yellow-50' : 'bg-green-50'
-                    }`}
-                    onDrop={handleDrop(col)}
-                    onDragOver={handleDragOver}
-                  >
-                    <h3 className="font-bold text-lg mb-4 text-gray-700">
-                      {col === 'todo' && 'A Fazer'}
-                      {col === 'doing' && 'Em Andamento'}
-                      {col === 'done' && 'Realizado'}
-                    </h3>
-                    {col === 'todo' && (
-                      <div className="mb-4 flex gap-2">
-                        <input
-                          className="flex-1 border rounded px-2 py-1"
-                          placeholder="Adicionar atividade..."
-                          value={newTask}
-                          onChange={e => setNewTask(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-                        />
-                        <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={handleAddTask}>Adicionar</button>
-                      </div>
-                    )}
-                    <div className="flex-1 space-y-2 min-h-[40px]">
-                      {kanban[col].map((card, idx) => (
-                        <div
-                          key={card.id}
-                          className="bg-gray-100 rounded p-3 shadow cursor-move"
-                          draggable
-                          onDragStart={handleDragStart(col, idx)}
-                        >
-                          {card.text}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </main>
-          </div>
-        </div>
-      );
-    } else if (location.pathname.endsWith('/checklist')) {
-      // Checklist de Rotinas
-      return (
-        <div className="flex h-screen bg-gray-50">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-          <div className="flex-1 flex flex-col overflow-hidden ml-64">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-6">
-              <Checklist />
-            </main>
-          </div>
-        </div>
-      );
-    } else {
-      // Página inicial da aba Rotinas (pode ser em branco ou mostrar instruções)
-      return (
-        <div className="flex h-screen bg-gray-50">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-          <div className="flex-1 flex flex-col overflow-hidden ml-64">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <h2 className="text-2xl font-bold mb-2">Bem-vindo à área de Rotinas</h2>
-                <p>Selecione uma opção no menu lateral para começar.</p>
-              </div>
-            </main>
-          </div>
-        </div>
-      );
+      return <KanbanAtividades kanban={kanban} setKanban={setKanban} />;
     }
+    // ... (demais lógicas para rotinas, se houver)
   }
 
   return (
