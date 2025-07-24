@@ -637,6 +637,8 @@ export const Dashboard = () => {
     todo: [],
     doing: [],
     done: [],
+    lembretes: [],
+    reunioes: [],
   });
   const [newTask, setNewTask] = React.useState('');
   const [kanbanLoading, setKanbanLoading] = useState(false);
