@@ -66,6 +66,7 @@ export const DashboardOverview = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     // Notificações automáticas para notas a vencer em até 3 dias
     const hoje = new Date();
     invoices.forEach((invoice) => {
@@ -73,19 +74,26 @@ export const DashboardOverview = () => {
         const vencimento = new Date(invoice.dataVencimento);
         const diff = (vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
         if (diff >= 0 && diff <= 3) {
-          updateInvoice && updateInvoice(invoice.id, {}); // força re-render para evitar toast duplicado
-          toast({
-            title: 'Nota a vencer',
-            description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,
-            variant: 'default',
-          });
+          if (isMounted) {
+            updateInvoice && updateInvoice(invoice.id, {}); // força re-render para evitar toast duplicado
+            toast({
+              title: 'Nota a vencer',
+              description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,
+              variant: 'default',
+            });
+          }
         }
       }
     });
+    return () => { isMounted = false; };
   }, [invoices, toast, updateInvoice]);
 
   React.useEffect(() => {
-    setLogs(JSON.parse(localStorage.getItem('rrz_logs') || '[]').reverse());
+    let isMounted = true;
+    if (isMounted) {
+      setLogs(JSON.parse(localStorage.getItem('rrz_logs') || '[]').reverse());
+    }
+    return () => { isMounted = false; };
   }, [invoices]);
 
   return (
