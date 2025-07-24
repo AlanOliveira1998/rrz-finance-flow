@@ -40,6 +40,7 @@ interface InvoicesContextType {
 const InvoicesContext = createContext<InvoicesContextType | undefined>(undefined);
 
 export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('[InvoicesProvider] Montando provider');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -243,6 +244,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useInvoices = () => {
   const context = useContext(InvoicesContext);
+  console.log('[useInvoices] Chamado, contexto:', context);
   if (context === undefined) {
     throw new Error('useInvoices must be used within an InvoicesProvider');
   }
