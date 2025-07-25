@@ -142,8 +142,25 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
           title: "Nota fiscal criada",
           description: "A nota fiscal foi criada com sucesso.",
         });
+        // Limpar formulário após cadastrar nova nota
+        setFormData({
+          numero: '',
+          descricao: '',
+          tipo: 'entrada',
+          status: 'pendente',
+          dataEmissao: '',
+          dataVencimento: '',
+          dataRecebimento: '',
+          valorBruto: 0,
+          clienteId: '',
+          numeroParcela: 1,
+          totalParcelas: 1,
+          projetoId: '',
+          tipoProjeto: '',
+        });
+        setDeduzirPisCofins(true);
+        // Não chama onBack, permanece na tela
       }
-      onBack();
     } catch (e) {
       toast({
         title: "Erro ao salvar",
