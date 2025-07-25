@@ -25,7 +25,7 @@ interface ClientFormProps {
 }
 
 export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
-  const { addClient, updateClient } = useClients();
+  const { addClient, updateClient, clients } = useClients();
   const { toast } = useToast();
   const [doc, setDoc] = useState(client?.cnpj || '');
   const [loading, setLoading] = useState(false);
@@ -47,6 +47,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
     cep: client?.endereco?.cep || '',
     ativo: client?.ativo ?? true,
   });
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDoc(e.target.value);
@@ -84,7 +85,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
           cidade: data.municipio || '',
           uf: data.uf || '',
           cep: data.cep || '',
-          ativo: data.situacao_cadastral === 'ATIVA',
+          ativo: true, // Sempre ativo ao cadastrar novo cliente
         });
       } catch (err) {
         setError('Erro ao buscar dados do CNPJ. Preencha manualmente.');
@@ -99,6 +100,18 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    // Verificação de duplicidade
+    const cnpjLimpo = (fields.cnpj || doc).replace(/\D/g, '');
+    const razaoSocialTrim = fields.razao_social.trim().toLowerCase();
+    const existeDuplicado = clients.some(c =>
+      (!client || c.id !== client.id) &&
+      (c.cnpj.replace(/\D/g, '') === cnpjLimpo || c.razaoSocial.trim().toLowerCase() === razaoSocialTrim)
+    );
+    if (existeDuplicado) {
+      setShowDuplicateModal(true);
+      setLoading(false); // Reset loading state
+      return;
+    }
     try {
       const isCnpjDoc = isCNPJ(doc);
       const payload = {
@@ -141,6 +154,23 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
 
   return (
     <div className="space-y-6">
+      {/* Modal de cliente duplicado */}
+      <Dialog open={showDuplicateModal} onOpenChange={setShowDuplicateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cliente já existente</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Já existe um cliente cadastrado com o mesmo CNPJ ou razão social.<br />
+            Verifique os dados antes de tentar novamente.
+          </DialogDescription>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button onClick={() => setShowDuplicateModal(false)} autoFocus>OK</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">{client ? 'Editar Cliente' : 'Novo Cliente'}</h2>
