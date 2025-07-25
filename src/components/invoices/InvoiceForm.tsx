@@ -129,6 +129,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         cliente: selectedClient?.razaoSocial || '',
         projeto: selectedProject?.nome || '',
         tipoProjeto: formData.tipoProjeto,
+        // Corrigir campos de data para null se vazio
+        dataEmissao: formData.dataEmissao || null,
+        dataVencimento: formData.dataVencimento || null,
+        dataRecebimento: formData.dataRecebimento || null,
       };
       if (invoice) {
         await updateInvoice(invoice.id, invoiceData);
