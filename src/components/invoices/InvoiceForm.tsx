@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useInvoices, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
@@ -57,6 +58,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
   // Estados para os checkboxes
   const [deduzirPisCofins, setDeduzirPisCofins] = useState(true);
   const [aplicarTodosImpostos, setAplicarTodosImpostos] = useState(true);
+  
+  // Estado para o modal de duplicação
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   useEffect(() => {
     if (invoice) {
@@ -114,8 +118,39 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     });
   };
 
+  // Função para verificar se a nota já existe
+  const checkInvoiceExists = async (numero: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('id, numero')
+        .eq('numero', numero)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Erro ao verificar nota:', error);
+        return false;
+      }
+      
+      return !!data; // Retorna true se a nota existe
+    } catch (error) {
+      console.error('Erro ao verificar nota:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Se não for edição (nova nota), verificar se já existe
+    if (!invoice) {
+      const invoiceExists = await checkInvoiceExists(formData.numero);
+      if (invoiceExists) {
+        setShowDuplicateModal(true);
+        return;
+      }
+    }
+    
     try {
       // Remover lógica de upload de proposta do handleSubmit
       const selectedClient = clients.find(c => c.id === formData.clienteId);
@@ -465,6 +500,25 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
           </Button>
         </div>
       </form>
+
+      {/* Modal de Nota Duplicada */}
+      <AlertDialog open={showDuplicateModal} onOpenChange={setShowDuplicateModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nota Fiscal Já Existe</AlertDialogTitle>
+            <AlertDialogDescription>
+              A nota fiscal <strong>{formData.numero}</strong> já está cadastrada no sistema.
+              <br /><br />
+              Não é possível cadastrar duas notas com o mesmo número.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDuplicateModal(false)}>
+              OK
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
