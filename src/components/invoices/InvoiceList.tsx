@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, 
 import { useToast } from '@/hooks/use-toast';
 import { useProjects } from '@/hooks/useProjects';
 import { useClients } from '@/hooks/useClients';
+import { Download } from 'lucide-react';
 
 interface InvoiceListProps {
   onEdit: (invoice: Invoice) => void;
@@ -163,6 +164,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
             emitida,
             totalParcelas,
             invoiceId: invoice.id,
+            tipoProjeto: invoice.tipoProjeto || '',
           });
         }
         
@@ -173,6 +175,51 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     
     // Ordenar por data de vencimento
     return allInstallments.sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime());
+  };
+
+  // Função para exportar para Excel
+  const exportToExcel = (installments: any[], monthFilter: string) => {
+    // Criar o conteúdo CSV
+    const headers = [
+      'Mês',
+      'Cliente',
+      'Valor da Parcela',
+      'Data de Emissão',
+      'Parcela',
+      'Número da Nota',
+      'Tipo de Projeto'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...installments.map(installment => [
+        installment.mes,
+        `"${installment.cliente}"`, // Aspas para evitar problemas com vírgulas no nome
+        installment.valor.toFixed(2).replace('.', ','),
+        installment.dataEmissao,
+        `${installment.numero}/${installment.totalParcelas}`,
+        installment.numeroNota,
+        installment.tipoProjeto || ''
+      ].join(','))
+    ].join('\n');
+
+    // Criar o blob e fazer download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Nome do arquivo com mês atual
+    const currentDate = new Date();
+    const monthName = monthFilter === 'all' 
+      ? 'Todas_Parcelas' 
+      : new Date(currentDate.getFullYear(), parseInt(monthFilter) - 1).toLocaleDateString('pt-BR', { month: 'long' });
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Parcelas_${monthName}_${currentDate.getFullYear()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleEdit = (invoice: Invoice) => {
@@ -465,35 +512,47 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     <CardTitle>Filtros</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <label htmlFor="month-filter" className="text-sm font-medium">
-                          Filtrar por mês:
-                        </label>
-                        <Select value={monthFilter} onValueChange={setMonthFilter}>
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Selecione o mês" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos os meses</SelectItem>
-                            <SelectItem value="1">Janeiro</SelectItem>
-                            <SelectItem value="2">Fevereiro</SelectItem>
-                            <SelectItem value="3">Março</SelectItem>
-                            <SelectItem value="4">Abril</SelectItem>
-                            <SelectItem value="5">Maio</SelectItem>
-                            <SelectItem value="6">Junho</SelectItem>
-                            <SelectItem value="7">Julho</SelectItem>
-                            <SelectItem value="8">Agosto</SelectItem>
-                            <SelectItem value="9">Setembro</SelectItem>
-                            <SelectItem value="10">Outubro</SelectItem>
-                            <SelectItem value="11">Novembro</SelectItem>
-                            <SelectItem value="12">Dezembro</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <label htmlFor="month-filter" className="text-sm font-medium">
+                            Filtrar por mês:
+                          </label>
+                          <Select value={monthFilter} onValueChange={setMonthFilter}>
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Selecione o mês" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos os meses</SelectItem>
+                              <SelectItem value="1">Janeiro</SelectItem>
+                              <SelectItem value="2">Fevereiro</SelectItem>
+                              <SelectItem value="3">Março</SelectItem>
+                              <SelectItem value="4">Abril</SelectItem>
+                              <SelectItem value="5">Maio</SelectItem>
+                              <SelectItem value="6">Junho</SelectItem>
+                              <SelectItem value="7">Julho</SelectItem>
+                              <SelectItem value="8">Agosto</SelectItem>
+                              <SelectItem value="9">Setembro</SelectItem>
+                              <SelectItem value="10">Outubro</SelectItem>
+                              <SelectItem value="11">Novembro</SelectItem>
+                              <SelectItem value="12">Dezembro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Badge variant="outline" className="text-sm">
+                          {filteredInstallments.length} de {allInstallments.length} parcelas
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-sm">
-                        {filteredInstallments.length} de {allInstallments.length} parcelas
-                      </Badge>
+                      <Button
+                        onClick={() => exportToExcel(filteredInstallments, monthFilter)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        disabled={filteredInstallments.length === 0}
+                      >
+                        <Download className="w-4 h-4" />
+                        Exportar Excel
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
