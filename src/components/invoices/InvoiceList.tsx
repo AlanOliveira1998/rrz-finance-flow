@@ -447,14 +447,63 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
         <TabsContent value="parcelas" className="space-y-6">
           {(() => {
             const allInstallments = generateAllUpcomingInstallments(false);
+            const [monthFilter, setMonthFilter] = useState('all');
+            
+            // Filtrar por mês se necessário
+            const filteredInstallments = monthFilter === 'all' 
+              ? allInstallments 
+              : allInstallments.filter(installment => {
+                  const installmentDate = new Date(installment.dataVencimento);
+                  return (installmentDate.getMonth() + 1).toString() === monthFilter;
+                });
+            
             return allInstallments.length > 0 ? (
               <>
+                {/* Filtro por mês */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Filtros</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <label htmlFor="month-filter" className="text-sm font-medium">
+                          Filtrar por mês:
+                        </label>
+                        <Select value={monthFilter} onValueChange={setMonthFilter}>
+                          <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Selecione o mês" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos os meses</SelectItem>
+                            <SelectItem value="1">Janeiro</SelectItem>
+                            <SelectItem value="2">Fevereiro</SelectItem>
+                            <SelectItem value="3">Março</SelectItem>
+                            <SelectItem value="4">Abril</SelectItem>
+                            <SelectItem value="5">Maio</SelectItem>
+                            <SelectItem value="6">Junho</SelectItem>
+                            <SelectItem value="7">Julho</SelectItem>
+                            <SelectItem value="8">Agosto</SelectItem>
+                            <SelectItem value="9">Setembro</SelectItem>
+                            <SelectItem value="10">Outubro</SelectItem>
+                            <SelectItem value="11">Novembro</SelectItem>
+                            <SelectItem value="12">Dezembro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Badge variant="outline" className="text-sm">
+                        {filteredInstallments.length} de {allInstallments.length} parcelas
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle>Próximas Parcelas a Emitir</CardTitle>
                       <Badge variant="outline" className="text-sm">
-                        {allInstallments.length} parcela{allInstallments.length !== 1 ? 's' : ''}
+                        {filteredInstallments.length} parcela{filteredInstallments.length !== 1 ? 's' : ''}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -472,7 +521,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {allInstallments.map((installment) => (
+                        {filteredInstallments.map((installment) => (
                           <TableRow key={installment.key}>
                             <TableCell>{installment.mes}</TableCell>
                             <TableCell>{installment.cliente}</TableCell>
@@ -523,13 +572,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                       <div>
                         <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
                         <p className="text-sm text-blue-700">
-                          {allInstallments.length} parcelas a emitir
+                          {filteredInstallments.length} de {allInstallments.length} parcelas a emitir
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-blue-700">Valor total das parcelas</p>
+                        <p className="text-sm text-blue-700">Valor total das parcelas filtradas</p>
                         <p className="text-lg font-bold text-blue-900">
-                          {formatCurrency(allInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                          {formatCurrency(filteredInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
                         </p>
                       </div>
                     </div>
