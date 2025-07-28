@@ -10,6 +10,7 @@ export const DashboardOverview = () => {
   const { toast } = useToast();
   const [logs, setLogs] = React.useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('pendentes');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
@@ -67,6 +68,17 @@ export const DashboardOverview = () => {
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Função para verificar se uma nota está vencida
+  const isInvoiceOverdue = (dataVencimento: string) => {
+    if (!dataVencimento) return false;
+    const vencimento = new Date(dataVencimento);
+    const hoje = new Date();
+    // Resetar as horas para comparar apenas as datas
+    hoje.setHours(0, 0, 0, 0);
+    vencimento.setHours(0, 0, 0, 0);
+    return vencimento < hoje;
+  };
+
   // Filtrar notas por status
   const notasPendentes = invoices.filter(invoice => invoice.status !== 'pago');
   const notasPagas = invoices.filter(invoice => invoice.status === 'pago');
@@ -100,6 +112,11 @@ export const DashboardOverview = () => {
       setLogs(JSON.parse(localStorage.getItem('rrz_logs') || '[]').reverse());
     }
     return () => { isMounted = false; };
+  }, [invoices]);
+
+  // Forçar re-renderização quando os invoices mudarem
+  useEffect(() => {
+    setRefreshKey(prev => prev + 1);
   }, [invoices]);
 
   return (
@@ -147,7 +164,7 @@ export const DashboardOverview = () => {
             </TabsList>
             
             <TabsContent value="pendentes" className="mt-4">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" key={refreshKey}>
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
@@ -188,7 +205,7 @@ export const DashboardOverview = () => {
                             <option value="pago">Pago</option>
                             <option value="atrasado">Atrasado</option>
                           </select>
-                          {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
+                          {invoice.status === 'pendente' && isInvoiceOverdue(invoice.dataVencimento) && (
                             <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
                               Vencida
                             </span>
