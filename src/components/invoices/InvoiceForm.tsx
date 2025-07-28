@@ -54,8 +54,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
   // Remover os estados relacionados a proposta
   // const [proposalFile, setProposalFile] = useState<File | null>(null);
   // const [proposalUrl, setProposalUrl] = useState<string | null>(invoice?.proposalUrl || null);
-  // Adicionar estado para o checkbox
+  // Estados para os checkboxes
   const [deduzirPisCofins, setDeduzirPisCofins] = useState(true);
+  const [aplicarTodosImpostos, setAplicarTodosImpostos] = useState(true);
 
   useEffect(() => {
     if (invoice) {
@@ -79,15 +80,19 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
 
   useEffect(() => {
     calculateTaxes();
-  }, [formData.valorBruto, formData.totalParcelas]);
+  }, [formData.valorBruto, formData.totalParcelas, deduzirPisCofins, aplicarTodosImpostos]);
 
   const calculateTaxes = () => {
     const valorBruto = formData.valorBruto;
-    const irrf = valorBruto * 0.015; // 1,5%
-    const csll = valorBruto * 0.01; // 1%
-    // No cálculo dos impostos, use o estado do checkbox:
-    const pis = deduzirPisCofins ? formData.valorBruto * 0.0065 : 0;
-    const cofins = deduzirPisCofins ? formData.valorBruto * 0.03 : 0;
+    
+    // Se o checkbox "aplicarTodosImpostos" estiver marcado, aplica IRRF e CSLL
+    // Se não estiver marcado, não aplica IRRF e CSLL
+    const irrf = aplicarTodosImpostos ? valorBruto * 0.015 : 0; // 1,5%
+    const csll = aplicarTodosImpostos ? valorBruto * 0.01 : 0; // 1%
+    
+    // PIS e COFINS são controlados pelo checkbox original
+    const pis = deduzirPisCofins ? valorBruto * 0.0065 : 0; // 0,65%
+    const cofins = deduzirPisCofins ? valorBruto * 0.03 : 0; // 3%
     
     const totalImpostos = irrf + csll + pis + cofins;
     const valorEmitido = valorBruto - totalImpostos;
@@ -115,13 +120,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       // Remover lógica de upload de proposta do handleSubmit
       const selectedClient = clients.find(c => c.id === formData.clienteId);
       const selectedProject = projects.find(p => p.id === formData.projetoId);
-      // No envio dos dados (handleSubmit), envie os valores de pis e cofins conforme o checkbox e os demais campos de impostos de calculatedValues:
       const invoiceData = {
         ...formData,
         irrf: calculatedValues.irrf,
         csll: calculatedValues.csll,
-        pis: visualPis,
-        cofins: visualCofins,
+        pis: calculatedValues.pis,
+        cofins: calculatedValues.cofins,
         valorEmitido: calculatedValues.valorEmitido,
         valorRecebido: calculatedValues.valorRecebido,
         valorLivreImpostos: calculatedValues.valorLivreImpostos,
@@ -163,6 +167,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
           tipoProjeto: '',
         });
         setDeduzirPisCofins(true);
+        setAplicarTodosImpostos(true);
         // Não chama onBack, permanece na tela
       }
     } catch (e) {
@@ -190,10 +195,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     }).format(value);
   };
 
-  // No cálculo automático, use o valor do checkbox para exibir PIS e COFINS como zero se desmarcado
-  const visualPis = deduzirPisCofins ? calculatedValues.pis : 0;
-  const visualCofins = deduzirPisCofins ? calculatedValues.cofins : 0;
-  const visualTotalImpostos = calculatedValues.irrf + calculatedValues.csll + visualPis + visualCofins;
+  // Total de impostos calculado automaticamente baseado no checkbox
+  const totalImpostos = calculatedValues.totalImpostos;
 
   return (
     <div className="space-y-6">
@@ -404,31 +407,42 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
                 <div>
                   <Label>PIS (0,65%)</Label>
                   <div className="p-2 bg-gray-50 rounded">
-                    {formatCurrency(visualPis)}
+                    {formatCurrency(calculatedValues.pis)}
                   </div>
                 </div>
                 <div>
                   <Label>COFINS (3%)</Label>
                   <div className="p-2 bg-gray-50 rounded">
-                    {formatCurrency(visualCofins)}
+                    {formatCurrency(calculatedValues.cofins)}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 pt-4 border-t">
-                <div className="flex items-center gap-2 mb-2">
-                  <input
-                    type="checkbox"
-                    checked={deduzirPisCofins}
-                    onChange={e => setDeduzirPisCofins(e.target.checked)}
-                    id="deduzir-pis-cofins"
-                  />
-                  <label htmlFor="deduzir-pis-cofins" className="text-sm">Deduzir PIS e COFINS</label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={aplicarTodosImpostos}
+                      onChange={e => setAplicarTodosImpostos(e.target.checked)}
+                      id="aplicar-todos-impostos"
+                    />
+                    <label htmlFor="aplicar-todos-impostos" className="text-sm">Aplicar IRRF e CSLL</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={deduzirPisCofins}
+                      onChange={e => setDeduzirPisCofins(e.target.checked)}
+                      id="deduzir-pis-cofins"
+                    />
+                    <label htmlFor="deduzir-pis-cofins" className="text-sm">Aplicar PIS e COFINS</label>
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium text-lg">Total de Impostos:</span>
                   <span className="font-bold text-red-600 text-lg">
-                    {formatCurrency(visualTotalImpostos)}
+                    {formatCurrency(totalImpostos)}
                   </span>
                 </div>
                 <div className="flex justify-between">
