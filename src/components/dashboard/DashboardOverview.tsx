@@ -1,6 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,6 +9,7 @@ export const DashboardOverview = () => {
   const { invoices, updateInvoice } = useInvoices();
   const { toast } = useToast();
   const [logs, setLogs] = React.useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('pendentes');
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
@@ -64,6 +66,10 @@ export const DashboardOverview = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
   };
+
+  // Filtrar notas por status
+  const notasPendentes = invoices.filter(invoice => invoice.status !== 'pago');
+  const notasPagas = invoices.filter(invoice => invoice.status === 'pago');
 
   useEffect(() => {
     let isMounted = true;
@@ -130,66 +136,137 @@ export const DashboardOverview = () => {
           <CardTitle>Controle de Recebimento das Notas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead>
-                <tr>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
-                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {invoices.map((invoice) => (
-                  <tr key={invoice.id}>
-                    <td className="px-2 py-1 whitespace-nowrap">{invoice.numero}</td>
-                    <td className="px-2 py-1 whitespace-nowrap truncate max-w-[120px]">{invoice.cliente}</td>
-                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatCurrency(invoice.valorLivreImpostos)}</td>
-                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataEmissao)}</td>
-                    <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataVencimento)}</td>
-                    <td className="px-2 py-1 whitespace-nowrap">
-                      <input
-                        type="date"
-                        value={invoice.dataRecebimento || ''}
-                        onChange={e => updateInvoice(invoice.id, { dataRecebimento: e.target.value })}
-                        className="border rounded px-1 py-0.5 w-28 text-xs"
-                        style={{ minWidth: 0 }}
-                      />
-                    </td>
-                    <td className="px-2 py-1 whitespace-nowrap">
-                      <select
-                        value={invoice.status}
-                        onChange={e => updateInvoice(invoice.id, { status: e.target.value as 'pendente' | 'pago' | 'atrasado' })}
-                        className="border rounded px-1 py-0.5 w-24 text-xs"
-                        style={{ minWidth: 0 }}
-                      >
-                        <option value="pendente">Pendente</option>
-                        <option value="pago">Pago</option>
-                        <option value="atrasado">Atrasado</option>
-                      </select>
-                      {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
-                        <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
-                          Vencida
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {invoices.length === 0 && (
-              <div className="text-center py-8">
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma nota fiscal encontrada</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Cadastre uma nota fiscal para começar o controle de recebimento.
-                </p>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="pendentes">
+                Pendentes ({notasPendentes.length})
+              </TabsTrigger>
+              <TabsTrigger value="pagas">
+                Pagas ({notasPagas.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="pendentes" className="mt-4">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {notasPendentes.map((invoice) => (
+                      <tr key={invoice.id}>
+                        <td className="px-2 py-1 whitespace-nowrap">{invoice.numero}</td>
+                        <td className="px-2 py-1 whitespace-nowrap truncate max-w-[120px]">{invoice.cliente}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatCurrency(invoice.valorLivreImpostos)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataEmissao)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataVencimento)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap">
+                          <input
+                            type="date"
+                            value={invoice.dataRecebimento || ''}
+                            onChange={e => updateInvoice(invoice.id, { dataRecebimento: e.target.value })}
+                            className="border rounded px-1 py-0.5 w-28 text-xs"
+                            style={{ minWidth: 0 }}
+                          />
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap">
+                          <select
+                            value={invoice.status}
+                            onChange={e => updateInvoice(invoice.id, { status: e.target.value as 'pendente' | 'pago' | 'atrasado' })}
+                            className="border rounded px-1 py-0.5 w-24 text-xs"
+                            style={{ minWidth: 0 }}
+                          >
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="atrasado">Atrasado</option>
+                          </select>
+                          {invoice.status === 'pendente' && new Date(invoice.dataVencimento) < new Date() && (
+                            <span className="ml-2 inline-block px-2 py-1 rounded text-xs font-bold bg-red-600 text-white animate-pulse" title="Nota vencida">
+                              Vencida
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {notasPendentes.length === 0 && (
+                  <div className="text-center py-8">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma nota pendente</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Todas as notas foram pagas ou não há notas cadastradas.
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+            
+            <TabsContent value="pagas" className="mt-4">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {notasPagas.map((invoice) => (
+                      <tr key={invoice.id} className="bg-green-50">
+                        <td className="px-2 py-1 whitespace-nowrap">{invoice.numero}</td>
+                        <td className="px-2 py-1 whitespace-nowrap truncate max-w-[120px]">{invoice.cliente}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatCurrency(invoice.valorLivreImpostos)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataEmissao)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap hidden md:table-cell">{formatDate(invoice.dataVencimento)}</td>
+                        <td className="px-2 py-1 whitespace-nowrap">
+                          <input
+                            type="date"
+                            value={invoice.dataRecebimento || ''}
+                            onChange={e => updateInvoice(invoice.id, { dataRecebimento: e.target.value })}
+                            className="border rounded px-1 py-0.5 w-28 text-xs"
+                            style={{ minWidth: 0 }}
+                          />
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap">
+                          <select
+                            value={invoice.status}
+                            onChange={e => updateInvoice(invoice.id, { status: e.target.value as 'pendente' | 'pago' | 'atrasado' })}
+                            className="border rounded px-1 py-0.5 w-24 text-xs"
+                            style={{ minWidth: 0 }}
+                          >
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="atrasado">Atrasado</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {notasPagas.length === 0 && (
+                  <div className="text-center py-8">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma nota paga</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Não há notas pagas para exibir.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
