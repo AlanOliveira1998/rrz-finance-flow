@@ -212,6 +212,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
       return date.toLocaleDateString('pt-BR');
     };
 
+    // Função para formatar parcela como texto (evitar que Excel interprete como data)
+    const formatParcela = (numero: number, totalParcelas: number) => {
+      return `Parcela ${numero}/${totalParcelas}`;
+    };
+
     const csvContent = [
       headers.join(';'), // Usar ponto e vírgula como separador (padrão brasileiro)
       ...installments.map(installment => [
@@ -219,7 +224,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
         escapeField(installment.cliente),
         formatCurrency(installment.valor),
         formatDate(installment.dataEmissao),
-        escapeField(`${installment.numero}/${installment.totalParcelas}`),
+        escapeField(formatParcela(installment.numero, installment.totalParcelas)),
         escapeField(installment.numeroNota),
         escapeField(installment.tipoProjeto || '')
       ].join(';'))
