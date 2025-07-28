@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClients } from '@/hooks/useClients';
 import { FileText } from 'lucide-react';
@@ -17,8 +15,8 @@ interface UpcomingInstallmentsProps {
   clienteId: string;
   numeroNota: string;
   dataEmissao: string;
-  valorLivreImpostos: number; // Adicionar prop para valor líquido
-  onlyEmitted?: boolean; // nova prop
+  valorLivreImpostos: number;
+  onlyEmitted?: boolean;
   onEditNota?: () => void;
 }
 
@@ -68,8 +66,6 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
 }) => {
   const { clients } = useClients();
   const { invoices } = useInvoices();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [monthFilter, setMonthFilter] = useState('all');
   const cliente = clients.find(c => c.id === clienteId);
 
   // Estado de parcelas emitidas e extras
@@ -90,19 +86,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
     setExtras(prev => ({ ...prev, [key]: { ...prev[key], emitida: !prev[key]?.emitida } }));
   };
 
-  const handleDateChange = (key: string, value: string) => {
-    setExtras(prev => ({ ...prev, [key]: { ...prev[key], dataPagamento: value } }));
-  };
-
-  const handleStatusChange = (key: string, value: 'pendente' | 'pago' | 'atrasado') => {
-    setExtras(prev => ({ ...prev, [key]: { ...prev[key], status: value } }));
-  };
-
-  const handleValueChange = (key: string, value: number) => {
-    setExtras(prev => ({ ...prev, [key]: { ...prev[key], valorEditado: value } }));
-  };
-
-  // Valor líquido por parcela (agora: repetir o valor líquido total em cada parcela)
+  // Valor líquido por parcela
   const valorLiquidoPorParcela = valorLivreImpostos || valorTotal;
 
   const generateUpcomingInstallments = () => {
@@ -136,14 +120,11 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
         dataVencimento: dueDate.toISOString().split('T')[0],
         valor: extras[key]?.valorEditado ?? valorLiquidoPorParcela,
         mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        mesNumerico: dueDate.getMonth() + 1,
         cliente: cliente?.razaoSocial || 'Cliente não encontrado',
         numeroNota,
         dataEmissao: dataEmissaoParcela.toISOString().split('T')[0],
         key,
         emitida: !!extras[key]?.emitida,
-        dataPagamento: extras[key]?.dataPagamento || '',
-        status: extras[key]?.status || 'pendente',
       });
       // Atualizar dataEmissaoAnterior para a próxima parcela
       dataEmissaoAnterior = new Date(dataEmissaoParcela);
@@ -153,13 +134,9 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
 
   const upcomingInstallments = generateUpcomingInstallments();
 
-  // Filtrar parcelas
+  // Filtrar apenas por status de emissão
   const filteredInstallments = upcomingInstallments.filter(installment => {
-    const matchesSearch = (installment.cliente?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (installment.numeroNota?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesMonth = monthFilter === 'all' || installment.mesNumerico.toString() === monthFilter;
-    const matchesEmit = onlyEmitted ? installment.emitida : !installment.emitida;
-    return matchesSearch && matchesMonth && matchesEmit;
+    return onlyEmitted ? installment.emitida : !installment.emitida;
   });
 
   const formatCurrency = (value: number) => {
@@ -182,42 +159,6 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="Buscar por cliente ou número da nota..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Select value={monthFilter} onValueChange={setMonthFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por mês" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os meses</SelectItem>
-                <SelectItem value="1">Janeiro</SelectItem>
-                <SelectItem value="2">Fevereiro</SelectItem>
-                <SelectItem value="3">Março</SelectItem>
-                <SelectItem value="4">Abril</SelectItem>
-                <SelectItem value="5">Maio</SelectItem>
-                <SelectItem value="6">Junho</SelectItem>
-                <SelectItem value="7">Julho</SelectItem>
-                <SelectItem value="8">Agosto</SelectItem>
-                <SelectItem value="9">Setembro</SelectItem>
-                <SelectItem value="10">Outubro</SelectItem>
-                <SelectItem value="11">Novembro</SelectItem>
-                <SelectItem value="12">Dezembro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Tabela */}
       <Card>
         <CardHeader>
@@ -261,7 +202,6 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
                         onChange={() => handleToggleEmit(installment.key)}
                       />
                     </TableCell>
-                    {/* Remover Data Pagamento e Status da aba de emitidas */}
                     <TableCell>
                       {onEditNota && (
                         <Button
@@ -282,7 +222,7 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela encontrada</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Tente ajustar os filtros para ver mais resultados.
+                Não há parcelas para exibir.
               </p>
             </div>
           )}
@@ -295,13 +235,13 @@ export const UpcomingInstallments: React.FC<UpcomingInstallmentsProps> = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-blue-900">Resumo das Parcelas Filtradas</h4>
+                <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
                 <p className="text-sm text-blue-700">
                   {filteredInstallments.length} de {upcomingInstallments.length} parcelas
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-blue-700">Valor total das parcelas filtradas</p>
+                <p className="text-sm text-blue-700">Valor total das parcelas</p>
                 <p className="text-lg font-bold text-blue-900">
                   {formatCurrency(totalFilteredValue)}
                 </p>
