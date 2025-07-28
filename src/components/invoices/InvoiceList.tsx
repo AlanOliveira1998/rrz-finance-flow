@@ -179,32 +179,58 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
 
   // Função para exportar para Excel
   const exportToExcel = (installments: any[], monthFilter: string) => {
-    // Criar o conteúdo CSV
+    // Criar o conteúdo CSV com formatação melhorada
     const headers = [
       'Mês',
       'Cliente',
-      'Valor da Parcela',
+      'Valor da Parcela (R$)',
       'Data de Emissão',
       'Parcela',
       'Número da Nota',
       'Tipo de Projeto'
     ];
 
+    // Função para escapar campos que contêm vírgulas ou quebras de linha
+    const escapeField = (field: string) => {
+      if (!field) return '';
+      // Se o campo contém vírgula, quebra de linha ou aspas, envolver em aspas
+      if (field.includes(',') || field.includes('\n') || field.includes('"')) {
+        return `"${field.replace(/"/g, '""')}"`;
+      }
+      return field;
+    };
+
+    // Função para formatar valor monetário
+    const formatCurrency = (value: number) => {
+      return value.toFixed(2).replace('.', ',');
+    };
+
+    // Função para formatar data
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    };
+
     const csvContent = [
-      headers.join(','),
+      headers.join(';'), // Usar ponto e vírgula como separador (padrão brasileiro)
       ...installments.map(installment => [
-        installment.mes,
-        `"${installment.cliente}"`, // Aspas para evitar problemas com vírgulas no nome
-        installment.valor.toFixed(2).replace('.', ','),
-        installment.dataEmissao,
-        `${installment.numero}/${installment.totalParcelas}`,
-        installment.numeroNota,
-        installment.tipoProjeto || ''
-      ].join(','))
-    ].join('\n');
+        escapeField(installment.mes),
+        escapeField(installment.cliente),
+        formatCurrency(installment.valor),
+        formatDate(installment.dataEmissao),
+        escapeField(`${installment.numero}/${installment.totalParcelas}`),
+        escapeField(installment.numeroNota),
+        escapeField(installment.tipoProjeto || '')
+      ].join(';'))
+    ].join('\r\n'); // Usar \r\n para compatibilidade com Excel no Windows
+
+    // Adicionar BOM para UTF-8 (importante para caracteres especiais)
+    const BOM = '\uFEFF';
+    const csvContentWithBOM = BOM + csvContent;
 
     // Criar o blob e fazer download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContentWithBOM], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
