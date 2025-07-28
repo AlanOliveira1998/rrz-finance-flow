@@ -448,92 +448,94 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
           {(() => {
             const allInstallments = generateAllUpcomingInstallments(false);
             return allInstallments.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Próximas Parcelas a Emitir</CardTitle>
-                    <Badge variant="outline" className="text-sm">
-                      {allInstallments.length} parcela{allInstallments.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mês</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Valor da Parcela</TableHead>
-                        <TableHead>Data de Emissão</TableHead>
-                        <TableHead>Parcela</TableHead>
-                        <TableHead>Emitida?</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allInstallments.map((installment) => (
-                        <TableRow key={installment.key}>
-                          <TableCell>{installment.mes}</TableCell>
-                          <TableCell>{installment.cliente}</TableCell>
-                          <TableCell className="font-medium">
-                            {formatCurrency(installment.valor)}
-                          </TableCell>
-                          <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
-                          <TableCell>
-                            {installment.numero}/{installment.totalParcelas}
-                          </TableCell>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              checked={installment.emitida}
-                              onChange={() => {
-                                const saved = localStorage.getItem('rrz_emitted_installments');
-                                const extras = saved ? JSON.parse(saved) : {};
-                                extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
-                                localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
-                                // Forçar re-render
-                                window.location.reload();
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const invoice = invoices.find(inv => inv.id === installment.invoiceId);
-                                if (invoice) handleEdit(invoice);
-                              }}
-                            >
-                              Editar
-                            </Button>
-                          </TableCell>
+              <>
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Próximas Parcelas a Emitir</CardTitle>
+                      <Badge variant="outline" className="text-sm">
+                        {allInstallments.length} parcela{allInstallments.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mês</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Valor da Parcela</TableHead>
+                          <TableHead>Data de Emissão</TableHead>
+                          <TableHead>Parcela</TableHead>
+                          <TableHead>Emitida?</TableHead>
+                          <TableHead>Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              
-              {/* Resumo */}
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
-                      <p className="text-sm text-blue-700">
-                        {allInstallments.length} parcelas a emitir
-                      </p>
+                      </TableHeader>
+                      <TableBody>
+                        {allInstallments.map((installment) => (
+                          <TableRow key={installment.key}>
+                            <TableCell>{installment.mes}</TableCell>
+                            <TableCell>{installment.cliente}</TableCell>
+                            <TableCell className="font-medium">
+                              {formatCurrency(installment.valor)}
+                            </TableCell>
+                            <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
+                            <TableCell>
+                              {installment.numero}/{installment.totalParcelas}
+                            </TableCell>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={installment.emitida}
+                                onChange={() => {
+                                  const saved = localStorage.getItem('rrz_emitted_installments');
+                                  const extras = saved ? JSON.parse(saved) : {};
+                                  extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
+                                  localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
+                                  // Forçar re-render
+                                  window.location.reload();
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const invoice = invoices.find(inv => inv.id === installment.invoiceId);
+                                  if (invoice) handleEdit(invoice);
+                                }}
+                              >
+                                Editar
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                
+                {/* Resumo */}
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
+                        <p className="text-sm text-blue-700">
+                          {allInstallments.length} parcelas a emitir
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-blue-700">Valor total das parcelas</p>
+                        <p className="text-lg font-bold text-blue-900">
+                          {formatCurrency(allInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-blue-700">Valor total das parcelas</p>
-                      <p className="text-lg font-bold text-blue-900">
-                        {formatCurrency(allInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </>
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
@@ -552,92 +554,94 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
           {(() => {
             const allEmittedInstallments = generateAllUpcomingInstallments(true);
             return allEmittedInstallments.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Parcelas Emitidas</CardTitle>
-                    <Badge variant="outline" className="text-sm">
-                      {allEmittedInstallments.length} parcela{allEmittedInstallments.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mês</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Valor da Parcela</TableHead>
-                        <TableHead>Data de Emissão</TableHead>
-                        <TableHead>Parcela</TableHead>
-                        <TableHead>Emitida?</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allEmittedInstallments.map((installment) => (
-                        <TableRow key={installment.key}>
-                          <TableCell>{installment.mes}</TableCell>
-                          <TableCell>{installment.cliente}</TableCell>
-                          <TableCell className="font-medium">
-                            {formatCurrency(installment.valor)}
-                          </TableCell>
-                          <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
-                          <TableCell>
-                            {installment.numero}/{installment.totalParcelas}
-                          </TableCell>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              checked={installment.emitida}
-                              onChange={() => {
-                                const saved = localStorage.getItem('rrz_emitted_installments');
-                                const extras = saved ? JSON.parse(saved) : {};
-                                extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
-                                localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
-                                // Forçar re-render
-                                window.location.reload();
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const invoice = invoices.find(inv => inv.id === installment.invoiceId);
-                                if (invoice) handleEdit(invoice);
-                              }}
-                            >
-                              Editar
-                            </Button>
-                          </TableCell>
+              <>
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Parcelas Emitidas</CardTitle>
+                      <Badge variant="outline" className="text-sm">
+                        {allEmittedInstallments.length} parcela{allEmittedInstallments.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mês</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Valor da Parcela</TableHead>
+                          <TableHead>Data de Emissão</TableHead>
+                          <TableHead>Parcela</TableHead>
+                          <TableHead>Emitida?</TableHead>
+                          <TableHead>Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              
-              {/* Resumo */}
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-green-900">Resumo das Parcelas Emitidas</h4>
-                      <p className="text-sm text-green-700">
-                        {allEmittedInstallments.length} parcelas emitidas
-                      </p>
+                      </TableHeader>
+                      <TableBody>
+                        {allEmittedInstallments.map((installment) => (
+                          <TableRow key={installment.key}>
+                            <TableCell>{installment.mes}</TableCell>
+                            <TableCell>{installment.cliente}</TableCell>
+                            <TableCell className="font-medium">
+                              {formatCurrency(installment.valor)}
+                            </TableCell>
+                            <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
+                            <TableCell>
+                              {installment.numero}/{installment.totalParcelas}
+                            </TableCell>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={installment.emitida}
+                                onChange={() => {
+                                  const saved = localStorage.getItem('rrz_emitted_installments');
+                                  const extras = saved ? JSON.parse(saved) : {};
+                                  extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
+                                  localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
+                                  // Forçar re-render
+                                  window.location.reload();
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const invoice = invoices.find(inv => inv.id === installment.invoiceId);
+                                  if (invoice) handleEdit(invoice);
+                                }}
+                              >
+                                Editar
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                
+                {/* Resumo */}
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-green-900">Resumo das Parcelas Emitidas</h4>
+                        <p className="text-sm text-green-700">
+                          {allEmittedInstallments.length} parcelas emitidas
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-green-700">Valor total das parcelas</p>
+                        <p className="text-lg font-bold text-green-900">
+                          {formatCurrency(allEmittedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-green-700">Valor total das parcelas</p>
-                      <p className="text-lg font-bold text-green-900">
-                        {formatCurrency(allEmittedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </>
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
