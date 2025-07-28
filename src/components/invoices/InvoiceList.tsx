@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { useInvoices } from '@/hooks/useInvoices';
 import { Invoice } from '@/hooks/useInvoices';
-import { UpcomingInstallments } from './UpcomingInstallments';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useProjects } from '@/hooks/useProjects';
@@ -106,6 +107,72 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  // Função para gerar todas as próximas parcelas de todas as notas
+  const generateAllUpcomingInstallments = (onlyEmitted: boolean = false) => {
+    const allInstallments: any[] = [];
+    
+    invoicesWithFutureInstallments.forEach((invoice) => {
+      const cliente = clients.find(c => c.id === invoice.clienteId);
+      const valorLiquidoPorParcela = invoice.valorLivreImpostos || invoice.valorBruto;
+      const numeroParcela = invoice.numeroParcela || 1;
+      const totalParcelas = invoice.totalParcelas || 1;
+      
+      // Carregar extras do localStorage
+      const saved = localStorage.getItem('rrz_emitted_installments');
+      const extras = saved ? JSON.parse(saved) : {};
+      
+      // Gerar parcelas futuras para esta nota
+      let dataEmissaoBase = invoice.dataEmissao;
+      let dataEmissaoAnterior = new Date(dataEmissaoBase);
+      
+      for (let i = numeroParcela + 1; i <= totalParcelas; i++) {
+        // Data de emissão da próxima parcela = data de emissão anterior + 1 mês
+        let dataEmissaoParcela = new Date(dataEmissaoAnterior);
+        dataEmissaoParcela.setMonth(dataEmissaoParcela.getMonth() + 1);
+        
+        // Função para avançar para o próximo dia útil
+        const getNextBusinessDay = (date: Date) => {
+          const d = new Date(date);
+          while (d.getDay() === 0 || d.getDay() === 6) {
+            d.setDate(d.getDate() + 1);
+          }
+          return d;
+        };
+        
+        dataEmissaoParcela = getNextBusinessDay(dataEmissaoParcela);
+        
+        const dueDate = new Date(invoice.dataVencimento);
+        dueDate.setMonth(dueDate.getMonth() + (i - numeroParcela));
+        
+        const key = `${invoice.numero}-${i}`;
+        const emitida = !!extras[key]?.emitida;
+        
+        // Filtrar por status de emissão
+        if (onlyEmitted === emitida) {
+          allInstallments.push({
+            numero: i,
+            dataVencimento: dueDate.toISOString().split('T')[0],
+            valor: extras[key]?.valorEditado ?? valorLiquidoPorParcela,
+            mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+            cliente: cliente?.razaoSocial || 'Cliente não encontrado',
+            numeroNota: invoice.numero,
+            dataEmissao: dataEmissaoParcela.toISOString().split('T')[0],
+            key,
+            emitida,
+            totalParcelas,
+            invoiceId: invoice.id,
+          });
+        }
+        
+        // Atualizar dataEmissaoAnterior para a próxima parcela
+        dataEmissaoAnterior = new Date(dataEmissaoParcela);
+      }
+    });
+    
+    // Ordenar por data de vencimento
+    return allInstallments.sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime());
   };
 
   const handleEdit = (invoice: Invoice) => {
@@ -378,68 +445,212 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
         </TabsContent>
 
         <TabsContent value="parcelas" className="space-y-6">
-          {invoicesWithFutureInstallments.length > 0 ? (
-            <div className="space-y-6">
-              {invoicesWithFutureInstallments.map((invoice) => (
-                <div key={invoice.id}>
-                  <UpcomingInstallments 
-                    valorTotal={invoice.valorBruto}
-                    valorLivreImpostos={invoice.valorLivreImpostos}
-                    numeroParcela={invoice.numeroParcela || 1}
-                    totalParcelas={invoice.totalParcelas || 1}
-                    dataVencimento={invoice.dataVencimento}
-                    clienteId={invoice.clienteId || ''}
-                    numeroNota={invoice.numero}
-                    dataEmissao={invoice.dataEmissao}
-                    onEditNota={() => handleEdit(invoice)}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="text-center">
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela futura</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Não há notas fiscais com parcelas futuras para exibir.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const allInstallments = generateAllUpcomingInstallments(false);
+            return allInstallments.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Próximas Parcelas a Emitir</CardTitle>
+                    <Badge variant="outline" className="text-sm">
+                      {allInstallments.length} parcela{allInstallments.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mês</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Valor da Parcela</TableHead>
+                        <TableHead>Data de Emissão</TableHead>
+                        <TableHead>Parcela</TableHead>
+                        <TableHead>Emitida?</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allInstallments.map((installment) => (
+                        <TableRow key={installment.key}>
+                          <TableCell>{installment.mes}</TableCell>
+                          <TableCell>{installment.cliente}</TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(installment.valor)}
+                          </TableCell>
+                          <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
+                          <TableCell>
+                            {installment.numero}/{installment.totalParcelas}
+                          </TableCell>
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={installment.emitida}
+                              onChange={() => {
+                                const saved = localStorage.getItem('rrz_emitted_installments');
+                                const extras = saved ? JSON.parse(saved) : {};
+                                extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
+                                localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
+                                // Forçar re-render
+                                window.location.reload();
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const invoice = invoices.find(inv => inv.id === installment.invoiceId);
+                                if (invoice) handleEdit(invoice);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+              
+              {/* Resumo */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
+                      <p className="text-sm text-blue-700">
+                        {allInstallments.length} parcelas a emitir
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-blue-700">Valor total das parcelas</p>
+                      <p className="text-lg font-bold text-blue-900">
+                        {formatCurrency(allInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <div className="text-center">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela futura</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Não há notas fiscais com parcelas futuras para exibir.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
         <TabsContent value="parcelas-emitidas" className="space-y-6">
-          {invoicesWithFutureInstallments.length > 0 ? (
-            <div className="space-y-6">
-              {invoicesWithFutureInstallments.map((invoice) => (
-                <div key={invoice.id}>
-                  <UpcomingInstallments 
-                    valorTotal={invoice.valorBruto}
-                    valorLivreImpostos={invoice.valorLivreImpostos}
-                    numeroParcela={invoice.numeroParcela || 1}
-                    totalParcelas={invoice.totalParcelas || 1}
-                    dataVencimento={invoice.dataVencimento}
-                    clienteId={invoice.clienteId || ''}
-                    numeroNota={invoice.numero}
-                    dataEmissao={invoice.dataEmissao}
-                    onlyEmitted={true}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="text-center">
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela emitida</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Não há parcelas emitidas para exibir.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const allEmittedInstallments = generateAllUpcomingInstallments(true);
+            return allEmittedInstallments.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Parcelas Emitidas</CardTitle>
+                    <Badge variant="outline" className="text-sm">
+                      {allEmittedInstallments.length} parcela{allEmittedInstallments.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mês</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Valor da Parcela</TableHead>
+                        <TableHead>Data de Emissão</TableHead>
+                        <TableHead>Parcela</TableHead>
+                        <TableHead>Emitida?</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allEmittedInstallments.map((installment) => (
+                        <TableRow key={installment.key}>
+                          <TableCell>{installment.mes}</TableCell>
+                          <TableCell>{installment.cliente}</TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(installment.valor)}
+                          </TableCell>
+                          <TableCell>{formatDate(installment.dataEmissao)}</TableCell>
+                          <TableCell>
+                            {installment.numero}/{installment.totalParcelas}
+                          </TableCell>
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={installment.emitida}
+                              onChange={() => {
+                                const saved = localStorage.getItem('rrz_emitted_installments');
+                                const extras = saved ? JSON.parse(saved) : {};
+                                extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
+                                localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
+                                // Forçar re-render
+                                window.location.reload();
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const invoice = invoices.find(inv => inv.id === installment.invoiceId);
+                                if (invoice) handleEdit(invoice);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+              
+              {/* Resumo */}
+              <Card className="bg-green-50 border-green-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-green-900">Resumo das Parcelas Emitidas</h4>
+                      <p className="text-sm text-green-700">
+                        {allEmittedInstallments.length} parcelas emitidas
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-green-700">Valor total das parcelas</p>
+                      <p className="text-lg font-bold text-green-900">
+                        {formatCurrency(allEmittedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <div className="text-center">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma parcela emitida</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Não há parcelas emitidas para exibir.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </div>
