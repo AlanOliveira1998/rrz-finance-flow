@@ -179,6 +179,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
           title: "Nota fiscal atualizada",
           description: "A nota fiscal foi atualizada com sucesso.",
         });
+        // Voltar para a tela de notas fiscais após atualizar
+        onBack();
       } else {
         await addInvoice(invoiceData);
         toast({
