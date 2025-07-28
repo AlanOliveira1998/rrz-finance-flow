@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronUp, ChevronDown } from 'lucide-react';
 
 export const DashboardOverview = () => {
   const { invoices, updateInvoice } = useInvoices();
@@ -12,10 +11,6 @@ export const DashboardOverview = () => {
   const [logs, setLogs] = React.useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('pendentes');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: 'asc' | 'desc';
-  } | null>(null);
 
   const totalReceived = invoices
     .filter(inv => inv.status === 'pago')
@@ -84,59 +79,9 @@ export const DashboardOverview = () => {
     return vencimento < hoje;
   };
 
-  // Função para ordenar dados
-  const sortData = (data: any[], key: string, direction: 'asc' | 'desc') => {
-    return [...data].sort((a, b) => {
-      let aValue = a[key];
-      let bValue = b[key];
-
-      // Tratamento especial para diferentes tipos de dados
-      if (key === 'valorLivreImpostos') {
-        aValue = aValue || 0;
-        bValue = bValue || 0;
-      } else if (key === 'dataEmissao' || key === 'dataVencimento') {
-        aValue = aValue ? new Date(aValue).getTime() : 0;
-        bValue = bValue ? new Date(bValue).getTime() : 0;
-      } else if (key === 'numero') {
-        aValue = parseInt(aValue) || 0;
-        bValue = parseInt(bValue) || 0;
-      } else {
-        aValue = (aValue || '').toString().toLowerCase();
-        bValue = (bValue || '').toString().toLowerCase();
-      }
-
-      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-
-  // Função para lidar com clique no cabeçalho
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Função para obter ícone de ordenação
-  const getSortIcon = (key: string) => {
-    if (sortConfig?.key !== key) {
-      return <ChevronUp className="w-4 h-4 text-gray-400" />;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="w-4 h-4 text-blue-600" />
-      : <ChevronDown className="w-4 h-4 text-blue-600" />;
-  };
-
-  // Filtrar e ordenar notas por status
-  const notasPendentes = sortConfig 
-    ? sortData(invoices.filter(invoice => invoice.status !== 'pago'), sortConfig.key, sortConfig.direction)
-    : invoices.filter(invoice => invoice.status !== 'pago');
-  const notasPagas = sortConfig 
-    ? sortData(invoices.filter(invoice => invoice.status === 'pago'), sortConfig.key, sortConfig.direction)
-    : invoices.filter(invoice => invoice.status === 'pago');
+  // Filtrar notas por status
+  const notasPendentes = invoices.filter(invoice => invoice.status !== 'pago');
+  const notasPagas = invoices.filter(invoice => invoice.status === 'pago');
 
   useEffect(() => {
     let isMounted = true;
@@ -223,36 +168,11 @@ export const DashboardOverview = () => {
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('numero')}
-                      >
-                        Nº {getSortIcon('numero')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('cliente')}
-                      >
-                        Cliente {getSortIcon('cliente')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('valorLivreImpostos')}
-                      >
-                        Valor Líquido {getSortIcon('valorLivreImpostos')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('dataEmissao')}
-                      >
-                        Emissão {getSortIcon('dataEmissao')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('dataVencimento')}
-                      >
-                        Vencimento {getSortIcon('dataVencimento')}
-                      </th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
                       <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
                       <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
                     </tr>
@@ -311,36 +231,11 @@ export const DashboardOverview = () => {
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('numero')}
-                      >
-                        Nº {getSortIcon('numero')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('cliente')}
-                      >
-                        Cliente {getSortIcon('cliente')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('valorLivreImpostos')}
-                      >
-                        Valor Líquido {getSortIcon('valorLivreImpostos')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('dataEmissao')}
-                      >
-                        Emissão {getSortIcon('dataEmissao')}
-                      </th>
-                      <th 
-                        className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                        onClick={() => handleSort('dataVencimento')}
-                      >
-                        Vencimento {getSortIcon('dataVencimento')}
-                      </th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Nº</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Cliente</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Valor Líquido</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Emissão</th>
+                      <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">Vencimento</th>
                       <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Recebimento</th>
                       <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
                     </tr>
