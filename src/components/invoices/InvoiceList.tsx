@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, 
 import { useToast } from '@/hooks/use-toast';
 import { useProjects } from '@/hooks/useProjects';
 import { useClients } from '@/hooks/useClients';
-import { Download, ChevronUp, ChevronDown } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 interface InvoiceListProps {
   onEdit: (invoice: Invoice) => void;
@@ -42,10 +42,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const [dataEmissaoFim, setDataEmissaoFim] = useState('');
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState('');
   const [dataVencimentoFim, setDataVencimentoFim] = useState('');
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: 'asc' | 'desc';
-  } | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('rrz_nota_extras');
@@ -102,11 +98,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     const matchesDataVencimentoFim = !dataVencimentoFim || new Date(invoice.dataVencimento) <= new Date(dataVencimentoFim);
     return matchesSearch && matchesStatus && matchesType && matchesProject && matchesTipoProjeto && matchesCliente && matchesValorMin && matchesValorMax && matchesDataEmissaoInicio && matchesDataEmissaoFim && matchesDataVencimentoInicio && matchesDataVencimentoFim;
   });
-
-  // Aplicar ordenação aos dados filtrados
-  const sortedInvoices = sortConfig 
-    ? sortData(filteredInvoices, sortConfig.key, sortConfig.direction)
-    : filteredInvoices;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -215,57 +206,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     };
 
     // Função para formatar data
-      const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-  };
-
-  // Função para ordenar dados
-  const sortData = (data: any[], key: string, direction: 'asc' | 'desc') => {
-    return [...data].sort((a, b) => {
-      let aValue = a[key];
-      let bValue = b[key];
-
-      // Tratamento especial para diferentes tipos de dados
-      if (key === 'valor' || key === 'valorBruto' || key === 'valorLivreImpostos') {
-        aValue = aValue || 0;
-        bValue = bValue || 0;
-      } else if (key === 'dataEmissao' || key === 'dataVencimento' || key === 'dataVencimento') {
-        aValue = aValue ? new Date(aValue).getTime() : 0;
-        bValue = bValue ? new Date(bValue).getTime() : 0;
-      } else if (key === 'numero' || key === 'numeroNota') {
-        aValue = parseInt(aValue) || 0;
-        bValue = parseInt(bValue) || 0;
-      } else {
-        aValue = (aValue || '').toString().toLowerCase();
-        bValue = (bValue || '').toString().toLowerCase();
-      }
-
-      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-
-  // Função para lidar com clique no cabeçalho
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Função para obter ícone de ordenação
-  const getSortIcon = (key: string) => {
-    if (sortConfig?.key !== key) {
-      return <ChevronUp className="w-4 h-4 text-gray-400" />;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="w-4 h-4 text-blue-600" />
-      : <ChevronDown className="w-4 h-4 text-blue-600" />;
-  };
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    };
 
     // Função para formatar parcela como texto (evitar que Excel interprete como data)
     const formatParcela = (numero: number, totalParcelas: number) => {
@@ -590,11 +535,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                   return (installmentDate.getMonth() + 1).toString() === monthFilter;
                 });
             
-            // Aplicar ordenação aos dados filtrados
-            const sortedInstallments = sortConfig 
-              ? sortData(filteredInstallments, sortConfig.key, sortConfig.direction)
-              : filteredInstallments;
-            
             return allInstallments.length > 0 ? (
               <>
                 {/* Filtro por mês */}
@@ -631,15 +571,15 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                           </Select>
                         </div>
                         <Badge variant="outline" className="text-sm">
-                          {sortedInstallments.length} de {allInstallments.length} parcelas
+                          {filteredInstallments.length} de {allInstallments.length} parcelas
                         </Badge>
                       </div>
                       <Button
-                        onClick={() => exportToExcel(sortedInstallments, monthFilter)}
+                        onClick={() => exportToExcel(filteredInstallments, monthFilter)}
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
-                        disabled={sortedInstallments.length === 0}
+                        disabled={filteredInstallments.length === 0}
                       >
                         <Download className="w-4 h-4" />
                         Exportar Excel
@@ -653,7 +593,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     <div className="flex items-center justify-between">
                       <CardTitle>Próximas Parcelas a Emitir</CardTitle>
                       <Badge variant="outline" className="text-sm">
-                        {sortedInstallments.length} parcela{sortedInstallments.length !== 1 ? 's' : ''}
+                        {filteredInstallments.length} parcela{filteredInstallments.length !== 1 ? 's' : ''}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -661,42 +601,17 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('mes')}
-                          >
-                            Mês {getSortIcon('mes')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('cliente')}
-                          >
-                            Cliente {getSortIcon('cliente')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('valor')}
-                          >
-                            Valor da Parcela {getSortIcon('valor')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('dataEmissao')}
-                          >
-                            Data de Emissão {getSortIcon('dataEmissao')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('numero')}
-                          >
-                            Parcela {getSortIcon('numero')}
-                          </TableHead>
+                          <TableHead>Mês</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Valor da Parcela</TableHead>
+                          <TableHead>Data de Emissão</TableHead>
+                          <TableHead>Parcela</TableHead>
                           <TableHead>Emitida?</TableHead>
                           <TableHead>Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sortedInstallments.map((installment) => (
+                        {filteredInstallments.map((installment) => (
                           <TableRow key={installment.key}>
                             <TableCell>{installment.mes}</TableCell>
                             <TableCell>{installment.cliente}</TableCell>
@@ -747,13 +662,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                       <div>
                         <h4 className="font-medium text-blue-900">Resumo das Parcelas</h4>
                         <p className="text-sm text-blue-700">
-                          {sortedInstallments.length} de {allInstallments.length} parcelas a emitir
+                          {filteredInstallments.length} de {allInstallments.length} parcelas a emitir
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-blue-700">Valor total das parcelas filtradas</p>
                         <p className="text-lg font-bold text-blue-900">
-                          {formatCurrency(sortedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                          {formatCurrency(filteredInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
                         </p>
                       </div>
                     </div>
@@ -777,12 +692,6 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
         <TabsContent value="parcelas-emitidas" className="space-y-6">
           {(() => {
             const allEmittedInstallments = generateAllUpcomingInstallments(true);
-            
-            // Aplicar ordenação aos dados emitidos
-            const sortedEmittedInstallments = sortConfig 
-              ? sortData(allEmittedInstallments, sortConfig.key, sortConfig.direction)
-              : allEmittedInstallments;
-            
             return allEmittedInstallments.length > 0 ? (
               <>
                 <Card>
@@ -790,7 +699,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     <div className="flex items-center justify-between">
                       <CardTitle>Parcelas Emitidas</CardTitle>
                       <Badge variant="outline" className="text-sm">
-                        {sortedEmittedInstallments.length} parcela{sortedEmittedInstallments.length !== 1 ? 's' : ''}
+                        {allEmittedInstallments.length} parcela{allEmittedInstallments.length !== 1 ? 's' : ''}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -798,42 +707,17 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('mes')}
-                          >
-                            Mês {getSortIcon('mes')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('cliente')}
-                          >
-                            Cliente {getSortIcon('cliente')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('valor')}
-                          >
-                            Valor da Parcela {getSortIcon('valor')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('dataEmissao')}
-                          >
-                            Data de Emissão {getSortIcon('dataEmissao')}
-                          </TableHead>
-                          <TableHead 
-                            className="cursor-pointer hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleSort('numero')}
-                          >
-                            Parcela {getSortIcon('numero')}
-                          </TableHead>
+                          <TableHead>Mês</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Valor da Parcela</TableHead>
+                          <TableHead>Data de Emissão</TableHead>
+                          <TableHead>Parcela</TableHead>
                           <TableHead>Emitida?</TableHead>
                           <TableHead>Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sortedEmittedInstallments.map((installment) => (
+                        {allEmittedInstallments.map((installment) => (
                           <TableRow key={installment.key}>
                             <TableCell>{installment.mes}</TableCell>
                             <TableCell>{installment.cliente}</TableCell>
@@ -884,13 +768,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                       <div>
                         <h4 className="font-medium text-green-900">Resumo das Parcelas Emitidas</h4>
                         <p className="text-sm text-green-700">
-                          {sortedEmittedInstallments.length} parcelas emitidas
+                          {allEmittedInstallments.length} parcelas emitidas
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-green-700">Valor total das parcelas</p>
                         <p className="text-lg font-bold text-green-900">
-                          {formatCurrency(sortedEmittedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
+                          {formatCurrency(allEmittedInstallments.reduce((sum, installment) => sum + installment.valor, 0))}
                         </p>
                       </div>
                     </div>
