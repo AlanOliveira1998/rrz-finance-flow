@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState(() => localStorage.getItem('remembered_email') || '');
@@ -36,12 +37,24 @@ export const LoginForm = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro interno do servidor",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      // Detect network / connection errors and show a helpful message
+      const msg = (error as Error)?.message ?? String(error);
+      // Log error to centralized logger for debugging
+      logger.error('Login error:', error);
+      if (/fetch|network|connect|ECONNREFUSED|Failed to fetch/i.test(msg)) {
+        toast({
+          title: "Erro de conexão",
+          description: "Não foi possível conectar ao servidor de autenticação. Verifique as variáveis de ambiente (VITE_SUPABASE_URL) e se o Supabase está rodando.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Erro interno do servidor",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
