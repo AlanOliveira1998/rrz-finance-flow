@@ -9,15 +9,23 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabaseClient';
 
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'financeiro' | 'leitura' | string;
+  ativo?: boolean;
+}
+
 export const UserManagement = () => {
-  const { user } = useAuth();
+  const { user, register } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'leitura' });
   const [formLoading, setFormLoading] = useState(false);
-  const [editUser, setEditUser] = useState<any | null>(null);
+  const [editUser, setEditUser] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', role: 'leitura', password: '' });
   const [editLoading, setEditLoading] = useState(false);
 
@@ -36,7 +44,7 @@ export const UserManagement = () => {
       }
     };
     fetchUsers();
-  }, [showModal]);
+  }, [showModal, toast]);
 
   if (user?.role !== 'admin') {
     return (
@@ -59,7 +67,6 @@ export const UserManagement = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const { register } = useAuth();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
@@ -68,16 +75,17 @@ export const UserManagement = () => {
       if (!success) throw new Error(error || 'Erro ao cadastrar usuário');
       toast({ title: 'Usuário cadastrado', description: 'Usuário cadastrado com sucesso!' });
       setShowModal(false);
-    } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Erro', description: _errMsg, variant: 'destructive' });
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleOpenEditModal = (user: any) => {
-    setEditUser(user);
-    setEditForm({ name: user.name, email: user.email, role: user.role, password: '' });
+  const handleOpenEditModal = (profile: Profile) => {
+    setEditUser(profile);
+    setEditForm({ name: profile.name, email: profile.email, role: profile.role, password: '' });
   };
   const handleCloseEditModal = () => {
     setEditUser(null);
@@ -106,8 +114,9 @@ export const UserManagement = () => {
       const { data, error: fetchError } = await supabase.from('profiles').select('*');
       if (!fetchError) setUsers(data || []);
       setLoading(false);
-    } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Erro', description: _errMsg, variant: 'destructive' });
     } finally {
       setEditLoading(false);
     }
@@ -120,8 +129,9 @@ export const UserManagement = () => {
       const { error } = await supabase.auth.resetPasswordForEmail(editForm.email);
       if (error) throw new Error(error.message);
       toast({ title: 'E-mail enviado', description: 'E-mail de redefinição de senha enviado com sucesso!' });
-    } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Erro', description: _errMsg, variant: 'destructive' });
     } finally {
       setEditLoading(false);
     }
@@ -146,8 +156,9 @@ export const UserManagement = () => {
       // Atualiza lista
       const { data: usersData, error: fetchError } = await supabase.from('profiles').select('*');
       if (!fetchError) setUsers(usersData || []);
-    } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Erro', description: _errMsg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -187,7 +198,7 @@ export const UserManagement = () => {
                 ) : users.length === 0 ? (
                   <tr><td colSpan={5} className="p-4 text-center">Nenhum usuário cadastrado.</td></tr>
                 ) : (
-                  users.map((user: any) => (
+                  users.map((user: Profile) => (
                     <tr key={user.id} className="border-b">
                       <td className="p-4 font-medium">{user.name}</td>
                       <td className="p-4">{user.email}</td>

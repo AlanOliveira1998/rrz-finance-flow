@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export const ClientFormMinimal = () => {
   const [loading, setLoading] = useState(false);
@@ -11,13 +12,13 @@ export const ClientFormMinimal = () => {
     setLoading(true);
     
     try {
-      console.log('Tentando cadastrar cliente mínimo...');
+      logger.debug('Tentando cadastrar cliente mínimo...');
       
       // Verificar autenticação
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Sessão:', session);
-      console.log('Usuário ID:', session?.user?.id);
-      console.log('Usuário Email:', session?.user?.email);
+      logger.debug('Sessão:', session);
+      logger.debug('Usuário ID:', session?.user?.id);
+      logger.debug('Usuário Email:', session?.user?.email);
       
       if (!session) {
         alert('Usuário não está autenticado');
@@ -31,9 +32,9 @@ export const ClientFormMinimal = () => {
         ativo: true
       };
       
-      console.log('Dados sendo enviados:', clientData);
-      console.log('Tipo dos dados:', typeof clientData);
-      console.log('JSON dos dados:', JSON.stringify(clientData, null, 2));
+      logger.debug('Dados sendo enviados:', clientData);
+      logger.debug('Tipo dos dados:', typeof clientData);
+      logger.debug('JSON dos dados:', JSON.stringify(clientData, null, 2));
       
       const { data, error } = await supabase
         .from('clients')
@@ -41,17 +42,17 @@ export const ClientFormMinimal = () => {
         .select();
       
       if (error) {
-        console.error('Erro:', error);
+        logger.error('Erro:', error);
         alert(`Erro: ${error.message}`);
       } else {
-        console.log('Sucesso:', data);
+        logger.debug('Sucesso:', data);
         alert('Cliente cadastrado com sucesso!');
         setCnpj('');
         setRazaoSocial('');
       }
       
     } catch (error) {
-      console.error('Exceção:', error);
+      logger.error('Exceção:', error);
       alert(`Exceção: ${error}`);
     } finally {
       setLoading(false);

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 interface InvoiceFormProps {
   invoice?: Invoice | null;
@@ -82,11 +83,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     }
   }, [invoice]);
 
-  useEffect(() => {
-    calculateTaxes();
-  }, [formData.valorBruto, formData.totalParcelas, deduzirPisCofins, aplicarTodosImpostos]);
-
-  const calculateTaxes = () => {
+  const calculateTaxes = useCallback(() => {
     const valorBruto = formData.valorBruto;
     
     // Se o checkbox "aplicarTodosImpostos" estiver marcado, aplica IRRF e CSLL
@@ -116,7 +113,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
       valorLivre,
       valorParcela
     });
-  };
+  }, [formData.valorBruto, formData.totalParcelas, deduzirPisCofins, aplicarTodosImpostos, formData.status]);
+
+  useEffect(() => {
+    calculateTaxes();
+  }, [calculateTaxes]);
 
   // Função para verificar se a nota já existe
   const checkInvoiceExists = async (numero: string): Promise<boolean> => {
@@ -128,13 +129,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
         .single();
       
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Erro ao verificar nota:', error);
+        logger.error('Erro ao verificar nota:', error);
         return false;
       }
       
       return !!data; // Retorna true se a nota existe
     } catch (error) {
-      console.error('Erro ao verificar nota:', error);
+      logger.error('Erro ao verificar nota:', error);
       return false;
     }
   };
@@ -218,7 +219,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onBack }) => 
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = <K extends keyof typeof formData>(field: K, value: typeof formData[K]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

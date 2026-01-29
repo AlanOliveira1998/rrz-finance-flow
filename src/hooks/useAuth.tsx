@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -25,11 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const fetchProfileAndSetUser = async (userObj: any) => {
-      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', userObj.id).single();
+    const fetchProfileAndSetUser = async (userObj: unknown) => {
+      const u = userObj as any;
+      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', u.id).single();
       setUser({
-        id: userObj.id,
-        email: userObj.email ?? '',
+        id: u.id,
+        email: u.email ?? '',
         name: profile?.name,
         role: profile?.role,
       });
@@ -102,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
-        console.error('Erro ao recarregar sessão:', error);
+        logger.error('Erro ao recarregar sessão:', error);
         return false;
       }
       if (data.session) {
@@ -118,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return false;
     } catch (error) {
-      console.error('Erro ao recarregar sessão:', error);
+      logger.error('Erro ao recarregar sessão:', error);
       return false;
     }
   };

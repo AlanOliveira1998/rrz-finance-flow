@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export interface Client {
   id: string;
@@ -26,15 +27,15 @@ export const useClientsSimple = () => {
 
   const addClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
     setLoading(true);
-    console.log('Tentando adicionar cliente (versão simples):', clientData);
+    logger.debug('Tentando adicionar cliente (versão simples):', clientData);
     
     try {
       // Verificar autenticação
       const { data: { session }, error: authError } = await supabase.auth.getSession();
-      console.log('Status de autenticação:', { session: !!session, authError });
+      logger.debug('Status de autenticação:', { session: !!session, authError });
       
       if (!session) {
-        console.error('Usuário não está autenticado');
+        logger.error('Usuário não está autenticado');
         throw new Error('Usuário não está autenticado. Faça login novamente.');
       }
 
@@ -68,28 +69,28 @@ export const useClientsSimple = () => {
         ativo: cleanClientData.ativo
       };
       
-      console.log('Dados para Supabase:', supabaseData);
-      console.log('Usuário autenticado:', session.user.id);
+      logger.debug('Dados para Supabase:', supabaseData);
+      logger.debug('Usuário autenticado:', session.user.id);
       
       const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
       
-      console.log('Resposta do Supabase:', { data, error });
+      logger.debug('Resposta do Supabase:', { data, error });
       
       if (error) {
-        console.error('Erro ao adicionar cliente:', error);
+        logger.error('Erro ao adicionar cliente:', error);
         throw error;
       }
       
       if (data && data.length > 0) {
-        console.log('Cliente adicionado com sucesso:', data[0]);
+        logger.debug('Cliente adicionado com sucesso:', data[0]);
         return data[0];
       } else {
-        console.error('Nenhum dado retornado após inserção');
+        logger.error('Nenhum dado retornado após inserção');
         throw new Error('Nenhum dado retornado após inserção');
       }
       
     } catch (error) {
-      console.error('Erro na função addClient:', error);
+      logger.error('Erro na função addClient:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -173,7 +174,7 @@ export const useClientsSimple = () => {
         }
       };
     } catch (error) {
-      console.error('Erro na consulta do CNPJ:', error);
+      logger.error('Erro na consulta do CNPJ:', error);
       
       const cleanCnpj = cnpj.replace(/\D/g, '');
       return {

@@ -74,25 +74,41 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Basic sanitizers for color values: allow hex (#RGB, #RRGGBB, #RRGGBBAA) and rgb/rgba()
+  const isHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+  const isRgb = /^rgba?\(\s*(?:\d{1,3}%?\s*,\s*){2}\d{1,3}%?(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/
+
+  const sanitizeColor = (v: unknown): string | null => {
+    if (typeof v !== 'string') return null
+    const s = v.trim()
+    if (isHex.test(s) || isRgb.test(s)) return s
+    return null
+  }
+
+  const css = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const lines = colorConfig
+        .map(([key, itemConfig]) => {
+          const raw = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color
+          const safe = sanitizeColor(raw)
+          return safe ? `  --color-${key}: ${safe};` : null
+        })
+        .filter(Boolean)
+        .join('\n')
+
+      if (!lines) return null
+
+      return `${prefix} [data-chart=${id}] {\n${lines}\n}`
+    })
+    .filter(Boolean)
+    .join('\n')
+
+  if (!css) return null
+
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
+        __html: css,
       }}
     />
   )

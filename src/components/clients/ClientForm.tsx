@@ -146,8 +146,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
         });
         setDoc('');
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar cliente.');
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      setError(_errMsg || 'Erro ao salvar cliente.');
     }
     setLoading(false);
   };

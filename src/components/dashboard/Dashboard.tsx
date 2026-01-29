@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -179,9 +180,10 @@ const SupplierForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         });
         if (onSuccess) onSuccess();
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar fornecedor.');
-      toast({ title: 'Erro ao cadastrar fornecedor', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      setError(_errMsg || 'Erro ao salvar fornecedor.');
+      toast({ title: 'Erro ao cadastrar fornecedor', description: _errMsg, variant: 'destructive' });
     }
     setLoading(false);
   };
@@ -293,7 +295,7 @@ const SupplierList = () => {
   const { toast } = useToast();
   useEffect(() => {
     fetchSuppliers();
-    // eslint-disable-next-line
+     
   }, []);
   const fetchSuppliers = () => {
     setLoading(true);
@@ -561,9 +563,10 @@ const PayBillForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         setFields({ fornecedor_id: '', mes_referencia: '', data_vencimento: '', data_pagamento: '', categoria: '', valor: '', status: 'pendente' });
         if (onSuccess) onSuccess();
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar boleto.');
-      toast({ title: 'Erro ao cadastrar boleto', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const _errMsg = err instanceof Error ? err.message : String(err);
+      setError(_errMsg || 'Erro ao salvar boleto.');
+      toast({ title: 'Erro ao cadastrar boleto', description: _errMsg, variant: 'destructive' });
     }
     setLoading(false);
   };

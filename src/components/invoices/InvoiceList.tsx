@@ -19,6 +19,21 @@ interface InvoiceListProps {
   onEdit: (invoice: Invoice) => void;
 }
 
+interface Installment {
+  numero: number;
+  dataVencimento: string;
+  valor: number;
+  mes: string;
+  cliente: string;
+  numeroNota: string;
+  dataEmissao: string;
+  key: string;
+  emitida: boolean;
+  totalParcelas: number;
+  invoiceId: string;
+  tipoProjeto?: string;
+}
+
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const { invoices, deleteInvoice, updateInvoice, loading } = useInvoices();
   const { toast } = useToast();
@@ -42,6 +57,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const [dataEmissaoFim, setDataEmissaoFim] = useState('');
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState('');
   const [dataVencimentoFim, setDataVencimentoFim] = useState('');
+  const [monthFilter, setMonthFilter] = useState('all');
 
   useEffect(() => {
     const saved = localStorage.getItem('rrz_nota_extras');
@@ -112,7 +128,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
 
   // Função para gerar todas as próximas parcelas de todas as notas
   const generateAllUpcomingInstallments = (onlyEmitted: boolean = false) => {
-    const allInstallments: any[] = [];
+    const allInstallments: Installment[] = []; 
     
     invoicesWithFutureInstallments.forEach((invoice) => {
       const cliente = clients.find(c => c.id === invoice.clienteId);
@@ -125,7 +141,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
       const extras = saved ? JSON.parse(saved) : {};
       
       // Gerar parcelas futuras para esta nota
-      let dataEmissaoBase = invoice.dataEmissao;
+      const dataEmissaoBase = invoice.dataEmissao;
       let dataEmissaoAnterior = new Date(dataEmissaoBase);
       
       for (let i = numeroParcela + 1; i <= totalParcelas; i++) {
@@ -178,7 +194,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   };
 
   // Função para exportar para Excel
-  const exportToExcel = (installments: any[], monthFilter: string) => {
+  const exportToExcel = (installments: Installment[], monthFilter: string) => {
     // Criar o conteúdo CSV com formatação melhorada
     const headers = [
       'Mês',
@@ -525,8 +541,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
         <TabsContent value="parcelas" className="space-y-6">
           {(() => {
             const allInstallments = generateAllUpcomingInstallments(false);
-            const [monthFilter, setMonthFilter] = useState('all');
-            
+
             // Filtrar por mês se necessário
             const filteredInstallments = monthFilter === 'all' 
               ? allInstallments 

@@ -62,7 +62,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
               className="pl-10 w-80"
             />
           </div>
-          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
+          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as 'all' | 'active' | 'inactive')}>
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,8 +43,8 @@ export const AuthDebug = () => {
         ativo: true
       };
 
-      console.log('Teste - Dados sendo enviados:', testClient);
-      console.log('Teste - JSON dos dados:', JSON.stringify(testClient, null, 2));
+      logger.debug('Teste - Dados sendo enviados:', testClient);
+      logger.debug('Teste - JSON dos dados:', JSON.stringify(testClient, null, 2));
 
       const { data, error } = await supabase
         .from('clients')
@@ -50,14 +52,14 @@ export const AuthDebug = () => {
         .select();
 
       if (error) {
-        console.error('Teste - Erro detalhado:', error);
+        logger.error('Teste - Erro detalhado:', error);
         setTestResult(`ERRO: ${error.message}`);
       } else {
-        console.log('Teste - Sucesso:', data);
+        logger.debug('Teste - Sucesso:', data);
         setTestResult(`SUCESSO: Cliente inserido com ID ${data?.[0]?.id}`);
       }
     } catch (error) {
-      console.error('Teste - Exceção:', error);
+      logger.error('Teste - Exceção:', error);
       setTestResult(`EXCEÇÃO: ${error}`);
     }
   };

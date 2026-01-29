@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from './useAuth';
+import { logger } from '@/lib/logger';
 
 export interface Client {
   id: string;
@@ -56,17 +57,17 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     setLoading(true);
-    console.log('Carregando clientes...');
+    logger.debug('Carregando clientes...');
     
     supabase.from('clients').select('*').then(({ data, error }) => {
-      console.log('Resposta do carregamento de clientes:', { data, error });
+      logger.debug('Resposta do carregamento de clientes:', { data, error });
       
       if (error) {
-        console.error('Erro ao carregar clientes:', error);
+        logger.error('Erro ao carregar clientes:', error);
       }
       
       if (data) {
-        console.log('Clientes carregados:', data);
+        logger.debug('Clientes carregados:', data);
         // Converter snake_case para camelCase
         const convertedClients = data.map(client => ({
           id: client.id,
@@ -171,7 +172,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       };
     } catch (error) {
-      console.error('Erro na consulta do CNPJ:', error);
+      logger.error('Erro na consulta do CNPJ:', error);
       
       // Em caso de erro, retornar objeto vazio para permitir preenchimento manual
       const cleanCnpj = cnpj.replace(/\D/g, '');
@@ -196,14 +197,14 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
     setLoading(true);
-    console.log('Tentando adicionar cliente:', clientData);
+    logger.debug('Tentando adicionar cliente:', clientData);
     
     // Verificar autenticação primeiro
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    console.log('Status de autenticação:', { session: !!session, authError });
+    logger.debug('Status de autenticação:', { session: !!session, authError });
     
     if (!session) {
-      console.error('Usuário não está autenticado');
+      logger.error('Usuário não está autenticado');
       throw new Error('Usuário não está autenticado. Faça login novamente.');
     }
     
@@ -237,33 +238,33 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ativo: cleanClientData.ativo
     };
     
-    console.log('Dados originais:', clientData);
-    console.log('Dados limpos:', cleanClientData);
-    console.log('Dados convertidos para Supabase:', supabaseData);
-    console.log('Tipo dos dados:', typeof supabaseData);
-    console.log('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
-    console.log('Usuário autenticado:', session.user.id);
+    logger.debug('Dados originais:', clientData);
+    logger.debug('Dados limpos:', cleanClientData);
+    logger.debug('Dados convertidos para Supabase:', supabaseData);
+    logger.debug('Tipo dos dados:', typeof supabaseData);
+    logger.debug('JSON dos dados:', JSON.stringify(supabaseData, null, 2));
+    logger.debug('Usuário autenticado:', session.user.id);
     
     const { data, error } = await supabase.from('clients').insert([supabaseData]).select();
     
-    console.log('Resposta do Supabase:', { data, error });
+    logger.debug('Resposta do Supabase:', { data, error });
     
     if (error) {
-      console.error('Erro ao adicionar cliente:', error);
+      logger.error('Erro ao adicionar cliente:', error);
       
       // Se for erro de RLS, tentar recarregar a sessão
       if (error.message.includes('new row violates row-level security policy')) {
-        console.log('Erro de RLS detectado, tentando recarregar sessão...');
+        logger.debug('Erro de RLS detectado, tentando recarregar sessão...');
         const sessionRefreshed = await refreshSession();
         if (sessionRefreshed) {
-          console.log('Sessão recarregada, tentando inserção novamente...');
+          logger.debug('Sessão recarregada, tentando inserção novamente...');
           const { data: retryData, error: retryError } = await supabase.from('clients').insert([supabaseData]).select();
           if (retryError) {
-            console.error('Erro persistente após recarregar sessão:', retryError);
+            logger.error('Erro persistente após recarregar sessão:', retryError);
             throw retryError;
           }
           if (retryData && retryData.length > 0) {
-            console.log('Cliente adicionado com sucesso na segunda tentativa:', retryData[0]);
+            logger.debug('Cliente adicionado com sucesso na segunda tentativa:', retryData[0]);
             const client = {
               id: retryData[0].id,
               cnpj: retryData[0].cnpj,
@@ -286,7 +287,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     if (data && data.length > 0) {
-      console.log('Cliente adicionado com sucesso:', data[0]);
+      logger.debug('Cliente adicionado com sucesso:', data[0]);
       // Converter de volta para camelCase
       const client = {
         id: data[0].id,
@@ -301,7 +302,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       setClients((prev) => [...prev, client as Client]);
     } else {
-      console.error('Nenhum dado retornado após inserção');
+      logger.error('Nenhum dado retornado após inserção');
     }
     
     setLoading(false);

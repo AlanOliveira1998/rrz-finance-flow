@@ -51,15 +51,18 @@ const Checklist: React.FC = () => {
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
         if (!error && data) {
-          setItems(data.map((item: any) => ({
-            id: item.id,
-            text: item.text,
-            done: item.done,
-            type: item.type,
-            due_date: item.due_date,
-            priority: item.priority,
-            tags: item.tags,
-          })));
+          setItems((data || []).map((item: unknown) => {
+            const it = item as ChecklistItem;
+            return {
+              id: it.id,
+              text: it.text,
+              done: it.done,
+              type: it.type,
+              due_date: it.due_date,
+              priority: it.priority,
+              tags: it.tags,
+            };
+          }));
         }
         setLoading(false);
       });
@@ -284,7 +287,7 @@ const Checklist: React.FC = () => {
           <select
             className="border rounded px-3 py-2 text-base"
             value={type}
-            onChange={e => setType(e.target.value as any)}
+            onChange={e => setType(e.target.value as 'Diário' | 'Semanal' | 'Mensal')}
             disabled={loading}
           >
             <option value="Diário">Diário</option>

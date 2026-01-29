@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -12,7 +13,7 @@ export const SimpleTest = () => {
     try {
       // Teste 1: Verificar autenticação
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Sessão:', session);
+      logger.debug('Sessão:', session);
       
       if (!session) {
         setResult('ERRO: Não há sessão ativa');
@@ -26,7 +27,7 @@ export const SimpleTest = () => {
         ativo: true
       };
       
-      console.log('Enviando dados:', testData);
+      logger.debug('Enviando dados:', testData);
       
       const { data, error } = await supabase
         .from('clients')
@@ -34,15 +35,15 @@ export const SimpleTest = () => {
         .select();
       
       if (error) {
-        console.error('Erro:', error);
+        logger.error('Erro:', error);
         setResult(`ERRO: ${error.message}`);
       } else {
-        console.log('Sucesso:', data);
+        logger.debug('Sucesso:', data);
         setResult(`SUCESSO: ID ${data?.[0]?.id}`);
       }
       
     } catch (error) {
-      console.error('Exceção:', error);
+      logger.error('Exceção:', error);
       setResult(`EXCEÇÃO: ${error}`);
     }
   };

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 export const DashboardOverview = () => {
   const { invoices, updateInvoice } = useInvoices();
   const { toast } = useToast();
-  const [logs, setLogs] = React.useState<any[]>([]);
+  const [logs, setLogs] = React.useState<unknown[]>([]);
   const [activeTab, setActiveTab] = useState('pendentes');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -93,7 +93,9 @@ export const DashboardOverview = () => {
         const diff = (vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
         if (diff >= 0 && diff <= 3) {
           if (isMounted) {
-            updateInvoice && updateInvoice(invoice.id, {}); // força re-render para evitar toast duplicado
+            if (updateInvoice) {
+              updateInvoice(invoice.id, {}); // força re-render para evitar toast duplicado
+            }
             toast({
               title: 'Nota a vencer',
               description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,

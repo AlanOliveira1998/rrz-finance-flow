@@ -1,20 +1,19 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { logger } from '@/lib/logger';
 import React from 'react';
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: any) {
+class ErrorBoundary extends React.Component<object, { hasError: boolean; error: unknown | null }> {
+  state: { hasError: boolean; error: unknown | null } = { hasError: false, error: null };
+  static getDerivedStateFromError(error: unknown) {
     return { hasError: true, error };
   }
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo | null) {
     // Você pode logar o erro aqui
-    console.error('ErrorBoundary:', error, errorInfo);
+    logger.error('ErrorBoundary:', error, errorInfo);
   }
+  
   render() {
     if (this.state.hasError) {
       return <div style={{ color: 'red', padding: 32 }}><h1>Erro na aplicação</h1><pre>{String(this.state.error)}</pre></div>;

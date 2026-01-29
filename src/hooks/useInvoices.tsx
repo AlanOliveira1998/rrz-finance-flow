@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export interface Invoice {
   id: string;
@@ -40,7 +41,7 @@ interface InvoicesContextType {
 const InvoicesContext = createContext<InvoicesContextType | undefined>(undefined);
 
 export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('[InvoicesProvider] Montando provider');
+  logger.debug('[InvoicesProvider] Montando provider');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +49,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLoading(true);
     supabase.from('invoices').select('*').then(({ data, error }) => {
       if (error) {
-        console.error('Erro ao carregar invoices:', error);
+        logger.error('Erro ao carregar invoices:', error);
       }
       if (data) {
         // Converter snake_case para camelCase
@@ -118,7 +119,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     const { data, error } = await supabase.from('invoices').insert(supabaseData).select();
     if (error) {
-      console.error('Erro ao adicionar invoice:', error);
+      logger.error('Erro ao adicionar invoice:', error);
       throw error;
     }
     if (data && data.length > 0) {
@@ -187,7 +188,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     const { data, error } = await supabase.from('invoices').update(supabaseData).eq('id', id).select();
     if (error) {
-      console.error('Erro ao atualizar invoice:', error);
+      logger.error('Erro ao atualizar invoice:', error);
       throw error;
     }
     if (data && data.length > 0) {
@@ -228,7 +229,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLoading(true);
     const { error } = await supabase.from('invoices').delete().eq('id', id);
     if (error) {
-      console.error('Erro ao deletar invoice:', error);
+      logger.error('Erro ao deletar invoice:', error);
       throw error;
     }
     setInvoices((prev) => prev.filter(inv => inv.id !== id));
@@ -244,7 +245,7 @@ export const InvoicesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useInvoices = () => {
   const context = useContext(InvoicesContext);
-  console.log('[useInvoices] Chamado, contexto:', context);
+  logger.debug('[useInvoices] Chamado, contexto:', context);
   if (context === undefined) {
     throw new Error('useInvoices must be used within an InvoicesProvider');
   }
