@@ -100,12 +100,20 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const cleanDoc = doc.replace(/\D/g, '');
+
+    // Validar se é CPF ou CNPJ
+    if (!isCNPJ(cleanDoc) && !isCPF(cleanDoc)) {
+      setError('Documento inválido. Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).');
+      setLoading(false);
+      return;
+    }
+
     // Verificação de duplicidade
-    const cnpjLimpo = (fields.cnpj || doc).replace(/\D/g, '');
     const razaoSocialTrim = fields.razao_social.trim().toLowerCase();
     const existeDuplicado = clients.some(c =>
       (!client || c.id !== client.id) &&
-      (c.cnpj.replace(/\D/g, '') === cnpjLimpo || c.razaoSocial.trim().toLowerCase() === razaoSocialTrim)
+      (c.cnpj.replace(/\D/g, '') === cleanDoc || c.razaoSocial.trim().toLowerCase() === razaoSocialTrim)
     );
     if (existeDuplicado) {
       setShowDuplicateModal(true);
@@ -113,9 +121,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
       return;
     }
     try {
-      const isCnpjDoc = isCNPJ(doc);
       const payload = {
-        cnpj: isCnpjDoc ? doc.replace(/\D/g, '') : '',
+        // Mantemos o campo "cnpj" no modelo, mas passamos CPF ou CNPJ limpo
+        cnpj: cleanDoc,
         razaoSocial: fields.razao_social,
         nomeFantasia: fields.nome_fantasia,
         email: fields.email,
@@ -189,7 +197,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>CNPJ *</Label>
+                <Label>CPF/CNPJ *</Label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Hash size={18} /></span>
@@ -197,7 +205,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
                       type="text"
                       value={doc}
                       onChange={handleDocChange}
-                      placeholder="Digite o CNPJ (apenas números)"
+                      placeholder="Digite o CPF ou CNPJ (apenas números)"
                       required
                       className="pl-10 w-full"
                     />

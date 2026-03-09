@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 
 export const ClientFormMinimal = () => {
   const [loading, setLoading] = useState(false);
-  const [cnpj, setCnpj] = useState('');
+  const [documento, setDocumento] = useState('');
   const [razaoSocial, setRazaoSocial] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +27,8 @@ export const ClientFormMinimal = () => {
 
       // Dados mínimos
       const clientData = {
-        cnpj: cnpj,
+        // Campo "cnpj" no banco armazena CPF ou CNPJ limpo
+        cnpj: documento.replace(/\D/g, ''),
         razao_social: razaoSocial,
         ativo: true
       };
@@ -47,7 +48,7 @@ export const ClientFormMinimal = () => {
       } else {
         logger.debug('Sucesso:', data);
         alert('Cliente cadastrado com sucesso!');
-        setCnpj('');
+        setDocumento('');
         setRazaoSocial('');
       }
       
@@ -66,12 +67,12 @@ export const ClientFormMinimal = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">
-            CNPJ *
+            CPF/CNPJ *
           </label>
           <input
             type="text"
-            value={cnpj}
-            onChange={(e) => setCnpj(e.target.value)}
+            value={documento}
+            onChange={(e) => setDocumento(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
             required
           />
