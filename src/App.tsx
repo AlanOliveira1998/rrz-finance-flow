@@ -5,6 +5,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { InvoicesProvider } from "@/hooks/useInvoices";
 import { ClientsProvider } from "@/hooks/useClients";
 import { ProjectsProvider } from "@/hooks/useProjects";
+import { ProposalsProvider } from "@/hooks/useProposals";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Dashboard } from './components/dashboard/Dashboard';
@@ -15,14 +16,16 @@ const App = () => (
     <ClientsProvider>
       <ProjectsProvider>
         <InvoicesProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard/*" element={<Dashboard />} />
-              <Route path="*" element={<NotFound />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-            </Routes>
-          </BrowserRouter>
+          <ProposalsProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+              </Routes>
+            </BrowserRouter>
+          </ProposalsProvider>
         </InvoicesProvider>
       </ProjectsProvider>
     </ClientsProvider>

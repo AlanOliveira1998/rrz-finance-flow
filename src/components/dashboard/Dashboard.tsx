@@ -16,6 +16,8 @@ import { ProjectForm } from '@/components/projects/ProjectForm';
 import { TaxesList } from '@/components/taxes/TaxesList';
 import { Client } from '@/hooks/useClients';
 import { Project } from '@/hooks/useProjects';
+import { ProposalsList } from '@/components/proposals/ProposalsList';
+import { ProposalForm } from '@/components/proposals/ProposalForm';
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
@@ -693,6 +695,10 @@ export const Dashboard = () => {
         navigate('/dashboard/projects'); break;
       case 'new-project':
         navigate('/dashboard/new-project'); break;
+      case 'proposals':
+        navigate('/dashboard/proposals'); break;
+      case 'new-proposal':
+        navigate('/dashboard/new-proposal'); break;
       case 'invoices':
         navigate('/dashboard/invoices'); break;
       case 'new-invoice':
@@ -762,6 +768,8 @@ export const Dashboard = () => {
         <Route path="new-client" element={<ClientForm client={selectedClient} onBack={handleBackToClients} />} />
         <Route path="projects" element={<ProjectList onEdit={handleEditProject} />} />
         <Route path="new-project" element={<ProjectForm project={selectedProject} onBack={handleBackToProjects} />} />
+        <Route path="proposals" element={<ProposalsList />} />
+        <Route path="new-proposal" element={<ProposalForm onBack={() => navigate('/dashboard/proposals')} />} />
         <Route path="invoices" element={<InvoiceList onEdit={handleEditInvoice} />} />
         <Route path="new-invoice" element={<InvoiceForm invoice={selectedInvoice} onBack={() => navigate('/dashboard/invoices')} />} />
         <Route path="reports" element={<Reports />} />

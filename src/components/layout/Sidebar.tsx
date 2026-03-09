@@ -126,6 +126,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       ],
     },
     {
+      title: 'Controle de Propostas',
+      items: [
+        { id: 'proposals', label: 'Propostas', icon: '📁' },
+        { id: 'new-proposal', label: 'Nova Proposta', icon: '✍️' },
+      ],
+    },
+    {
       title: 'Financeiro',
       items: [
         { id: 'invoices', label: 'Notas Fiscais', icon: '📄' },
