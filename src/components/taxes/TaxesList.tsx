@@ -56,6 +56,7 @@ export const TaxesList = () => {
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">CSLL (1%)</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">PIS (0,65%)</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">COFINS (3%)</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Impostos</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor Líquido</th>
                 </tr>
               </thead>
@@ -68,6 +69,9 @@ export const TaxesList = () => {
                     <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(inv.csll)}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(inv.pis)}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{formatCurrency(inv.cofins)}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {formatCurrency(inv.irrf + inv.csll + inv.pis + inv.cofins)}
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap font-bold text-blue-700">{formatCurrency(inv.valorLivreImpostos)}</td>
                   </tr>
                 ))}
