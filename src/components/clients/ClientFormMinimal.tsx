@@ -7,6 +7,23 @@ export const ClientFormMinimal = () => {
   const [documento, setDocumento] = useState('');
   const [razaoSocial, setRazaoSocial] = useState('');
 
+  const formatCpfCnpj = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 11) {
+      return digits
+        .replace(/^(\d{3})(\d)/, '$1.$2')
+        .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4')
+        .slice(0, 14);
+    }
+    return digits
+      .replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, '$1.$2.$3/$4-$5')
+      .slice(0, 18);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -72,7 +89,7 @@ export const ClientFormMinimal = () => {
           <input
             type="text"
             value={documento}
-            onChange={(e) => setDocumento(e.target.value)}
+            onChange={(e) => setDocumento(formatCpfCnpj(e.target.value))}
             className="w-full p-2 border border-gray-300 rounded"
             required
           />

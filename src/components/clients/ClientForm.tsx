@@ -19,6 +19,25 @@ function isCPF(value: string) {
   return value.replace(/\D/g, '').length === 11;
 }
 
+function formatCpfCnpj(value: string) {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 11) {
+    // CPF: 000.000.000-00
+    return digits
+      .replace(/^(\d{3})(\d)/, '$1.$2')
+      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4')
+      .slice(0, 14);
+  }
+  // CNPJ: 00.000.000/0000-00
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, '$1.$2.$3/$4-$5')
+    .slice(0, 18);
+}
+
 interface ClientFormProps {
   client?: Client | null;
   onBack?: () => void;
@@ -50,7 +69,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onBack }) => {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDoc(e.target.value);
+    const formatted = formatCpfCnpj(e.target.value);
+    setDoc(formatted);
     setError(null);
   };
 
