@@ -68,13 +68,56 @@ export const Reports = () => {
   };
 
   const exportToPDF = () => {
-    // Simulação de exportação para PDF
     alert('Funcionalidade de exportação para PDF em desenvolvimento');
   };
 
   const exportToExcel = () => {
-    // Simulação de exportação para Excel
-    alert('Funcionalidade de exportação para Excel em desenvolvimento');
+    const headers = [
+      'Número', 'Cliente', 'Descrição', 'Tipo', 'Tipo de Projeto',
+      'Status', 'Data Emissão', 'Data Vencimento',
+      'Valor Bruto', 'IRRF', 'CSLL', 'PIS', 'COFINS', 'Valor Líquido', 'Valor Recebido',
+    ];
+
+    const rows = filteredInvoices.map(inv => {
+      const client = clients.find(c => c.id === inv.clienteId);
+      const clientName = inv.cliente || client?.razaoSocial || client?.nomeFantasia || '';
+      const impostos = (inv.irrf || 0) + (inv.csll || 0) + (inv.pis || 0) + (inv.cofins || 0);
+      const liquido = inv.valorBruto - impostos;
+      return [
+        inv.numero ?? '',
+        clientName,
+        inv.descricao ?? '',
+        inv.tipo === 'entrada' ? 'Entrada' : inv.tipo === 'saida' ? 'Saída' : '',
+        inv.tipoProjeto ?? '',
+        inv.status ?? '',
+        inv.dataEmissao ? new Date(inv.dataEmissao).toLocaleDateString('pt-BR') : '',
+        inv.dataVencimento ? new Date(inv.dataVencimento + 'T12:00:00').toLocaleDateString('pt-BR') : '',
+        inv.valorBruto?.toFixed(2) ?? '0.00',
+        (inv.irrf || 0).toFixed(2),
+        (inv.csll || 0).toFixed(2),
+        (inv.pis || 0).toFixed(2),
+        (inv.cofins || 0).toFixed(2),
+        liquido.toFixed(2),
+        inv.valorRecebido?.toFixed(2) ?? '0.00',
+      ];
+    });
+
+    const escape = (v: string | number) => {
+      const s = String(v);
+      return s.includes(';') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(escape).join(';'))
+      .join('\r\n');
+
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio_nf_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // Função para aplicar os filtros
