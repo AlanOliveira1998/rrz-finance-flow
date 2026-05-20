@@ -71,12 +71,13 @@ export const Header = () => {
             { label: 'Contas a Receber', path: '/dashboard?tab=receber' },
             { label: 'Contas a Pagar', path: '/dashboard?tab=pagar' },
             { label: 'Rotinas', path: '/dashboard?tab=rotinas' },
-            { label: 'Dashboard', path: '/dashboard' },
+            { label: 'Dashboard', path: '/dashboard/financeiro' },
           ].map(item => (
             <li key={item.label}>
               <button
                 className={`px-3 py-1 rounded font-medium transition-colors ${
-                  (location.search.includes(item.path.split('=')[1]) || (item.path === '/dashboard' && location.pathname === '/dashboard'))
+                  (item.path.includes('=') && location.search.includes(item.path.split('=')[1])) ||
+                  (!item.path.includes('=') && location.pathname === item.path)
                     ? (item.label === 'Dashboard' ? 'bg-gray-800 text-white' : 'bg-blue-600 text-white')
                     : 'text-gray-700 hover:bg-blue-100'
                 }`}
