@@ -1,30 +1,42 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
-import { useProposals } from '@/hooks/useProposals';
+import { useProposals, Proposal, ProposalStatus } from '@/hooks/useProposals';
 import { supabase } from '@/lib/supabaseClient';
 
 interface ProposalFormProps {
   onBack?: () => void;
+  proposal?: Proposal | null;
 }
 
-export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
+export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) => {
   const { clients } = useClients();
   const { projects } = useProjects();
-  const { addProposal } = useProposals();
+  const { addProposal, updateProposal } = useProposals();
+  const isEditing = !!proposal;
 
-  const [clienteId, setClienteId] = useState('');
-  const [projetoId, setProjetoId] = useState('');
-  const [valor, setValor] = useState('');
-  const [status, setStatus] = useState<'rascunho' | 'enviado' | 'assinado' | 'rejeitado'>('rascunho');
-  const [docuSignId, setDocuSignId] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [clienteId, setClienteId] = useState(proposal?.clientId ?? '');
+  const [projetoId, setProjetoId] = useState(proposal?.projectId ?? '');
+  const [valor, setValor] = useState(proposal?.valor != null ? String(proposal.valor) : '');
+  const [status, setStatus] = useState<ProposalStatus>(proposal?.status ?? 'rascunho');
+  const [docuSignId, setDocuSignId] = useState(proposal?.docuSignId ?? '');
+  const [observacoes, setObservacoes] = useState(proposal?.observacoes ?? '');
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setClienteId(proposal?.clientId ?? '');
+    setProjetoId(proposal?.projectId ?? '');
+    setValor(proposal?.valor != null ? String(proposal.valor) : '');
+    setStatus(proposal?.status ?? 'rascunho');
+    setDocuSignId(proposal?.docuSignId ?? '');
+    setObservacoes(proposal?.observacoes ?? '');
+    setArquivo(null);
+  }, [proposal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +46,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
     }
 
     const numericValor = valor ? Number(valor) : null;
-    let arquivoUrl: string | null = null;
+    let arquivoUrl: string | null | undefined = isEditing ? proposal!.arquivoUrl : null;
 
     if (arquivo) {
       setUploading(true);
@@ -57,21 +69,30 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
     }
 
     try {
-      await addProposal({
-        clientId: clienteId,
-        projectId: projetoId || null,
-        valor: Number.isFinite(numericValor as number) ? (numericValor as number) : null,
-        status,
-        docuSignId: docuSignId || null,
-        observacoes: observacoes || null,
-        arquivoUrl,
-        id: '',
-        created_at: undefined,
-      });
-      alert('Proposta salva com sucesso!');
-      if (onBack) {
-        onBack();
+      if (isEditing) {
+        await updateProposal(proposal!.id, {
+          clientId: clienteId,
+          projectId: projetoId || null,
+          valor: Number.isFinite(numericValor as number) ? (numericValor as number) : null,
+          status,
+          docuSignId: docuSignId || null,
+          observacoes: observacoes || null,
+          arquivoUrl: arquivoUrl ?? null,
+        });
+        alert('Proposta atualizada com sucesso!');
       } else {
+        await addProposal({
+          clientId: clienteId,
+          projectId: projetoId || null,
+          valor: Number.isFinite(numericValor as number) ? (numericValor as number) : null,
+          status,
+          docuSignId: docuSignId || null,
+          observacoes: observacoes || null,
+          arquivoUrl: arquivoUrl ?? null,
+          id: '',
+          created_at: undefined,
+        });
+        alert('Proposta salva com sucesso!');
         setClienteId('');
         setProjetoId('');
         setValor('');
@@ -80,6 +101,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
         setObservacoes('');
         setArquivo(null);
       }
+      if (onBack) onBack();
     } catch (error: unknown) {
       const message = (error as any)?.message ?? String(error);
       alert(`Erro ao salvar proposta: ${message}`);
@@ -90,7 +112,9 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Nova Proposta</h2>
+          <h2 className="text-3xl font-bold text-gray-900">
+            {isEditing ? 'Editar Proposta' : 'Nova Proposta'}
+          </h2>
           <p className="text-gray-600">
             Registre aqui as propostas que você envia para assinatura (ex.: DocuSign).
           </p>
@@ -128,7 +152,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Projeto contratado</label>
               <select
                 className="w-full border rounded px-3 py-2 text-sm bg-white"
-                value={projetoId}
+                value={projetoId ?? ''}
                 onChange={(e) => setProjetoId(e.target.value)}
               >
                 <option value="">Selecione um projeto (opcional)</option>
@@ -156,7 +180,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
                 <select
                   className="w-full border rounded px-3 py-2 text-sm"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as typeof status)}
+                  onChange={(e) => setStatus(e.target.value as ProposalStatus)}
                 >
                   <option value="rascunho">Rascunho</option>
                   <option value="enviado">Enviada</option>
@@ -184,8 +208,16 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Arquivo PDF (opcional)
+                Arquivo PDF {isEditing ? '(deixe em branco para manter o atual)' : '(opcional)'}
               </label>
+              {isEditing && proposal?.arquivoUrl && !arquivo && (
+                <p className="text-xs text-green-700 mb-1">
+                  Arquivo atual:{' '}
+                  <a href={proposal.arquivoUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                    ver PDF
+                  </a>
+                </p>
+              )}
               <input
                 type="file"
                 accept="application/pdf"
@@ -203,7 +235,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
                 </Button>
               )}
               <Button type="submit" disabled={uploading} className="bg-blue-600 hover:bg-blue-700">
-                {uploading ? 'Enviando arquivo...' : 'Salvar Proposta'}
+                {uploading ? 'Enviando arquivo...' : isEditing ? 'Salvar Alterações' : 'Salvar Proposta'}
               </Button>
             </div>
           </form>
@@ -212,4 +244,3 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
     </div>
   );
 };
-

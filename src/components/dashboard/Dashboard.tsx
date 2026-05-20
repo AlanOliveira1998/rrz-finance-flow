@@ -778,6 +778,7 @@ export const Dashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<import('@/hooks/useProposals').Proposal | null>(null);
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -792,6 +793,11 @@ export const Dashboard = () => {
   const handleBackToClients = () => {
     setSelectedClient(null);
     // setActiveTab('clients'); // Removed
+  };
+
+  const handleEditProposal = (proposal: import('@/hooks/useProposals').Proposal) => {
+    setSelectedProposal(proposal);
+    navigate('/dashboard/edit-proposal');
   };
 
   const handleEditProject = (project: Project) => {
@@ -812,8 +818,9 @@ export const Dashboard = () => {
         <Route path="new-client" element={<ClientForm client={selectedClient} onBack={handleBackToClients} />} />
         <Route path="projects" element={<ProjectList onEdit={handleEditProject} />} />
         <Route path="new-project" element={<ProjectForm project={selectedProject} onBack={handleBackToProjects} />} />
-        <Route path="proposals" element={<ProposalsList />} />
-        <Route path="new-proposal" element={<ProposalForm onBack={() => navigate('/dashboard/proposals')} />} />
+        <Route path="proposals" element={<ProposalsList onEdit={handleEditProposal} />} />
+        <Route path="new-proposal" element={<ProposalForm onBack={() => { navigate('/dashboard/proposals'); }} />} />
+        <Route path="edit-proposal" element={<ProposalForm proposal={selectedProposal} onBack={() => { setSelectedProposal(null); navigate('/dashboard/proposals'); }} />} />
         <Route path="invoices" element={<InvoiceList onEdit={handleEditInvoice} />} />
         <Route path="new-invoice" element={<InvoiceForm invoice={selectedInvoice} onBack={() => navigate('/dashboard/invoices')} />} />
         <Route path="reports" element={<Reports />} />
