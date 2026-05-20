@@ -7,6 +7,7 @@ import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
 import { useProposals, Proposal, ProposalStatus } from '@/hooks/useProposals';
 import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProposalFormProps {
   onBack?: () => void;
@@ -17,6 +18,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
   const { clients } = useClients();
   const { projects } = useProjects();
   const { addProposal, updateProposal } = useProposals();
+  const { toast } = useToast();
   const isEditing = !!proposal;
 
   const [clienteId, setClienteId] = useState(proposal?.clientId ?? '');
@@ -41,7 +43,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clienteId) {
-      alert('Selecione um cliente para continuar.');
+      toast({ title: 'Atenção', description: 'Selecione um cliente para continuar.', variant: 'destructive' });
       return;
     }
 
@@ -61,7 +63,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
 
       if (uploadError) {
         setUploading(false);
-        alert(`Erro ao enviar o arquivo: ${uploadError.message}`);
+        toast({ title: 'Erro no upload', description: uploadError.message, variant: 'destructive' });
         return;
       }
 
@@ -83,7 +85,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
           observacoes: observacoes || null,
           arquivoUrl: arquivoUrl ?? null,
         });
-        alert('Proposta atualizada com sucesso!');
+        toast({ title: 'Proposta atualizada!', description: 'As alterações foram salvas.' });
       } else {
         await addProposal({
           clientId: clienteId,
@@ -96,7 +98,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
           id: '',
           created_at: undefined,
         });
-        alert('Proposta salva com sucesso!');
+        toast({ title: 'Proposta salva!', description: 'A proposta foi cadastrada com sucesso.' });
         setClienteId('');
         setProjetoId('');
         setValor('');
@@ -108,7 +110,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
       if (onBack) onBack();
     } catch (error: unknown) {
       const message = (error as any)?.message ?? String(error);
-      alert(`Erro ao salvar proposta: ${message}`);
+      toast({ title: 'Erro ao salvar', description: message, variant: 'destructive' });
     }
   };
 

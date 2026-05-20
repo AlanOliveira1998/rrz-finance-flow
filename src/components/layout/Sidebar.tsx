@@ -1,218 +1,148 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useNavigate } from 'react-router-dom';
+import {
+  Home, BarChart2, TrendingUp, CreditCard, LayoutGrid, CheckSquare,
+  FileText, Receipt, Building2, FolderOpen, DollarSign, BarChart,
+  Users, Clock, LogOut, Landmark, ListChecks,
+} from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
-  const { user } = useAuth();
+export const Sidebar: React.FC<SidebarProps> = () => {
+  const { user, logout } = useAuth();
   const permissions = usePermissions();
-  const location = window.location;
+  const location = useLocation();
   const navigate = useNavigate();
 
-  // Sidebar vazio para Rotinas, mas mantendo o logo
-  if (location.search.includes('tab=rotinas')) {
-    return (
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
-        <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
-            </div>
-            <div>
-              <h2 className="font-bold text-lg leading-tight">
-                Sistema<br />Financeiro
-              </h2>
-              <p className="text-sm text-gray-400">RRZ Consultoria</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <button
-            className="w-full text-left px-4 py-2 rounded hover:bg-gray-800 transition"
-            onClick={() => navigate('/dashboard/kanban?tab=rotinas')}
-          >
-            Kanban de Atividades
-          </button>
-          <button
-            className="w-full text-left px-4 py-2 rounded hover:bg-gray-800 transition"
-            onClick={() => navigate('/dashboard/checklist?tab=rotinas')}
-          >
-            Checklist de Rotinas
-          </button>
-        </nav>
-      </aside>
-    );
-  }
+  const tab = new URLSearchParams(location.search).get('tab');
+  const sub = new URLSearchParams(location.search).get('sub');
+  const pathname = location.pathname;
 
-  // Novo menu para Contas a Pagar
-  if (location.search.includes('tab=pagar')) {
-    return (
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
-        <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
-            </div>
-            <div>
-              <h2 className="font-bold text-lg leading-tight">
-                Sistema<br />Financeiro
-              </h2>
-              <p className="text-sm text-gray-400">RRZ Consultoria</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
-          <nav>
-            <div className="mb-4">
-              <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 pl-2">Contas a Pagar</div>
-              <Button
-                key="pagar-home"
-                variant={activeTab === 'pagar-home' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'pagar-home' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-gray-800'}`}
-                onClick={() => onTabChange('pagar-home')}
-                aria-label="Página Inicial"
-              >
-                <span className="mr-3">🏠</span>
-                Página Inicial
-              </Button>
-              <Button
-                key="boletos-cadastro"
-                variant={activeTab === 'boletos-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'boletos-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
-                onClick={() => onTabChange('boletos-cadastro')}
-                aria-label="Cadastrar Boleto"
-              >
-                <span className="mr-3">💳</span>
-                Cadastrar Boleto
-              </Button>
-              <hr className="my-3 border-gray-700" />
-              <Button
-                key="fornecedor-lista"
-                variant={activeTab === 'fornecedor-lista' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left mb-2 ${activeTab === 'fornecedor-lista' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
-                onClick={() => onTabChange('fornecedor-lista')}
-                aria-label="Fornecedores RRZ"
-              >
-                <span className="mr-3">📋</span>
-                Fornecedores RRZ
-              </Button>
-              <Button
-                key="fornecedor-cadastro"
-                variant={activeTab === 'fornecedor-cadastro' ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${activeTab === 'fornecedor-cadastro' ? 'bg-blue-700 text-white' : 'text-gray-200 hover:text-white hover:bg-blue-800'}`}
-                onClick={() => onTabChange('fornecedor-cadastro')}
-                aria-label="Cadastro de Fornecedores"
-              >
-                <span className="mr-3">🏢</span>
-                Cadastro de Fornecedores
-              </Button>
-            </div>
-          </nav>
-        </div>
-      </aside>
-    );
-  }
+  const itemCls = (active: boolean) =>
+    `flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+      active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+    }`;
 
-  const menuSections = [
-    {
-      title: '',
-      items: [
-        { id: 'dashboard', label: 'Página Inicial', icon: '📊' },
-      ],
-    },
-    {
-      title: 'Controle de Propostas',
-      items: [
-        { id: 'proposals', label: 'Propostas', icon: '📁' },
-        { id: 'new-proposal', label: 'Nova Proposta', icon: '✍️' },
-      ],
-    },
-    {
-      title: 'Financeiro',
-      items: [
-        { id: 'invoices', label: 'Notas Fiscais', icon: '📄' },
-        ...(permissions.canCreate ? [{ id: 'new-invoice', label: 'Nova Nota', icon: '➕' }] : []),
-        { id: 'taxes', label: 'Impostos', icon: '💸' },
-        { id: 'reports', label: 'Relatórios', icon: '📈' },
-      ],
-    },
-    {
-      title: 'Cadastros',
-      items: [
-        { id: 'clients', label: 'Clientes', icon: '🏢' },
-        ...(permissions.canCreate ? [{ id: 'new-client', label: 'Novo Cliente', icon: '👤' }] : []),
-        { id: 'projects', label: 'Projetos', icon: '🗂️' },
-        ...(permissions.canCreate ? [{ id: 'new-project', label: 'Novo Projeto', icon: '📝' }] : []),
-      ],
-    },
-    {
-      title: 'Administração',
-      items: [
-        ...(permissions.canManageUsers ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : []),
-        { id: 'logs', label: 'Histórico de Alterações', icon: '🕑' },
-      ],
-    },
-  ];
+  const subCls = (active: boolean) =>
+    `flex items-center gap-2 w-full pl-7 pr-3 py-1.5 rounded text-sm transition-colors cursor-pointer ${
+      active ? 'text-blue-300 font-semibold' : 'text-gray-500 hover:text-gray-200'
+    }`;
+
+  const Section = ({ label }: { label: string }) => (
+    <div className="text-xs uppercase tracking-wider text-gray-500 font-semibold px-3 pt-5 pb-1">
+      {label}
+    </div>
+  );
+
+  const isPath = (...paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + '/'));
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-lg">
-      <div className="p-6 border-b border-gray-700 flex-shrink-0 h-32">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 flex items-center justify-center">
-            <img src="/logo2.png" alt="Logo RRZ" className="w-12 h-12 object-contain rounded" />
-          </div>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-xl">
+      {/* Logo */}
+      <div className="p-5 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <img src="/logo2.png" alt="RRZ" className="w-10 h-10 object-contain rounded" />
           <div>
-            <h2 className="font-bold text-lg">Sistema Financeiro</h2>
-            <p className="text-sm text-gray-400">RRZ Consultoria</p>
+            <p className="font-bold text-sm leading-tight">Sistema Financeiro</p>
+            <p className="text-xs text-gray-400">RRZ Consultoria</p>
           </div>
         </div>
       </div>
-      <Button
-        key="dashboard"
-        variant={activeTab === 'dashboard' ? "secondary" : "ghost"}
-        className={`w-full justify-start text-left mt-4 mb-2 ${
-          activeTab === 'dashboard' 
-            ? 'bg-gray-800 text-white hover:bg-gray-900' 
-            : 'text-gray-300 hover:text-white hover:bg-gray-800'
-        }`}
-        onClick={() => onTabChange('dashboard')}
-        aria-label="Página Inicial"
-      >
-        <span className="mr-3">📊</span>
-        Página Inicial
-      </Button>
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 scrollbar-thumb-rounded scrollbar-track-rounded">
-        <nav>
-          {menuSections.filter(section => section.title !== '').map((section, idx) => (
-            <div key={idx} className="mb-2">
-              {section.title && <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2 mt-4 pl-2">{section.title}</div>}
-              {section.items.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={activeTab === item.id ? "secondary" : "ghost"}
-                  className={`w-full justify-start text-left ${
-                    activeTab === item.id 
-                      ? 'bg-blue-700 text-white' 
-                      : 'text-gray-200 hover:text-white hover:bg-gray-800'
-                  }`}
-                  onClick={() => onTabChange(item.id)}
-                  aria-label={item.label}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.label}
-                </Button>
-              ))}
-              {idx < menuSections.length - 2 && <hr className="my-4 border-gray-700" />}
-            </div>
-          ))}
-        </nav>
+
+      {/* Nav */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+        <button className={itemCls(pathname === '/dashboard' && !tab)} onClick={() => navigate('/dashboard')}>
+          <Home size={16} /> Página Inicial
+        </button>
+        <button className={itemCls(pathname === '/dashboard/financeiro')} onClick={() => navigate('/dashboard/financeiro')}>
+          <BarChart2 size={16} /> Dashboard Financeiro
+        </button>
+
+        <Section label="Financeiro" />
+        <button className={itemCls(tab === 'receber')} onClick={() => navigate('/dashboard?tab=receber')}>
+          <TrendingUp size={16} /> Contas a Receber
+        </button>
+        <button className={itemCls(tab === 'pagar')} onClick={() => navigate('/dashboard?tab=pagar')}>
+          <CreditCard size={16} /> Contas a Pagar
+        </button>
+        {tab === 'pagar' && (
+          <div className="ml-1 border-l border-gray-700 pl-1 space-y-0.5 mt-0.5">
+            <button className={subCls(!sub)} onClick={() => navigate('/dashboard?tab=pagar')}>
+              Visão Geral
+            </button>
+            <button className={subCls(sub === 'boletos-cadastro')} onClick={() => navigate('/dashboard?tab=pagar&sub=boletos-cadastro')}>
+              Cadastrar Boleto
+            </button>
+            <button className={subCls(sub === 'fornecedor-lista')} onClick={() => navigate('/dashboard?tab=pagar&sub=fornecedor-lista')}>
+              Fornecedores
+            </button>
+            <button className={subCls(sub === 'fornecedor-cadastro')} onClick={() => navigate('/dashboard?tab=pagar&sub=fornecedor-cadastro')}>
+              Cad. Fornecedores
+            </button>
+          </div>
+        )}
+
+        <Section label="Rotinas" />
+        <button className={itemCls(isPath('/dashboard/kanban'))} onClick={() => navigate('/dashboard/kanban?tab=rotinas')}>
+          <LayoutGrid size={16} /> Kanban de Atividades
+        </button>
+        <button className={itemCls(isPath('/dashboard/checklist'))} onClick={() => navigate('/dashboard/checklist')}>
+          <ListChecks size={16} /> Checklist
+        </button>
+
+        <Section label="Cadastros" />
+        <button className={itemCls(isPath('/dashboard/proposals', '/dashboard/new-proposal', '/dashboard/edit-proposal'))} onClick={() => navigate('/dashboard/proposals')}>
+          <FileText size={16} /> Propostas
+        </button>
+        <button className={itemCls(isPath('/dashboard/invoices', '/dashboard/new-invoice'))} onClick={() => navigate('/dashboard/invoices')}>
+          <Receipt size={16} /> Notas Fiscais
+        </button>
+        <button className={itemCls(isPath('/dashboard/clients', '/dashboard/new-client'))} onClick={() => navigate('/dashboard/clients')}>
+          <Building2 size={16} /> Clientes
+        </button>
+        <button className={itemCls(isPath('/dashboard/projects', '/dashboard/new-project'))} onClick={() => navigate('/dashboard/projects')}>
+          <FolderOpen size={16} /> Projetos
+        </button>
+        <button className={itemCls(isPath('/dashboard/taxes'))} onClick={() => navigate('/dashboard/taxes')}>
+          <DollarSign size={16} /> Impostos
+        </button>
+        <button className={itemCls(isPath('/dashboard/reports'))} onClick={() => navigate('/dashboard/reports')}>
+          <BarChart size={16} /> Relatórios
+        </button>
+
+        <Section label="Administração" />
+        {permissions.canManageUsers && (
+          <button className={itemCls(isPath('/dashboard/users'))} onClick={() => navigate('/dashboard/users')}>
+            <Users size={16} /> Usuários
+          </button>
+        )}
+        <button className={itemCls(isPath('/dashboard/logs'))} onClick={() => navigate('/dashboard/logs')}>
+          <Clock size={16} /> Histórico
+        </button>
+      </div>
+
+      {/* User + Logout */}
+      <div className="border-t border-gray-700 p-4 flex-shrink-0">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+            {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+            <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
+          </div>
+        </div>
+        <button
+          className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          onClick={async () => { await logout(); navigate('/'); }}
+        >
+          <LogOut size={14} /> Sair
+        </button>
       </div>
     </aside>
   );

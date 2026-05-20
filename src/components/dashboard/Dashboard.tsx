@@ -20,6 +20,7 @@ interface KanbanState {
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { HomeOverview } from '@/components/dashboard/HomeOverview';
 import { FinancialDashboard } from '@/components/dashboard/FinancialDashboard';
 import { InvoiceList } from '@/components/invoices/InvoiceList';
 import { InvoiceForm } from '@/components/invoices/InvoiceForm';
@@ -814,7 +815,7 @@ export const Dashboard = () => {
   const renderContent = () => {
     return (
       <Routes>
-        <Route path="" element={<DashboardOverview />} />
+        <Route path="" element={<HomeOverview />} />
         <Route path="financeiro" element={<FinancialDashboard />} />
         <Route path="clients" element={<ClientList onEdit={handleEditClient} />} />
         <Route path="new-client" element={<ClientForm client={selectedClient} onBack={handleBackToClients} />} />

@@ -30,6 +30,7 @@ interface ClientsContextType {
   addClient: (clientData: Omit<Client, 'id' | 'created_at'>) => Promise<void>;
   updateClient: (id: string, clientData: Partial<Client>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
+  refreshClients: () => void;
   getClientByCnpj: (cnpj: string) => Promise<{
     razaoSocial: string;
     nomeFantasia: string;
@@ -55,20 +56,11 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
   const { refreshSession } = useAuth();
 
-  useEffect(() => {
+  const fetchClients = () => {
     setLoading(true);
-    logger.debug('Carregando clientes...');
-    
     supabase.from('clients').select('*').then(({ data, error }) => {
-      logger.debug('Resposta do carregamento de clientes:', { data, error });
-      
-      if (error) {
-        logger.error('Erro ao carregar clientes:', error);
-      }
-      
+      if (error) logger.error('Erro ao carregar clientes:', error);
       if (data) {
-        logger.debug('Clientes carregados:', data);
-        // Converter snake_case para camelCase
         const convertedClients = data.map(client => ({
           id: client.id,
           cnpj: client.cnpj,
@@ -84,10 +76,11 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
         setClients(convertedClients as Client[]);
       }
-      
       setLoading(false);
     });
-  }, []);
+  };
+
+  useEffect(() => { fetchClients(); }, []);
 
   const getClientByCnpj = async (cnpj: string) => {
     try {
@@ -347,7 +340,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ClientsContext.Provider value={{ clients, loading, addClient, updateClient, deleteClient, getClientByCnpj }}>
+    <ClientsContext.Provider value={{ clients, loading, addClient, updateClient, deleteClient, refreshClients: fetchClients, getClientByCnpj }}>
       {children}
     </ClientsContext.Provider>
   );

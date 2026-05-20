@@ -18,7 +18,7 @@ interface ClientListProps {
 }
 
 export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
-  const { clients, deleteClient, loading } = useClients();
+  const { clients, deleteClient, loading, refreshClients } = useClients();
   const { toast } = useToast();
   const permissions = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +87,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
               if (!error) {
                 toast({ title: 'Todos os clientes ativados!' });
                 // Atualiza lista
-                window.location.reload();
+                refreshClients();
               } else {
                 toast({ title: 'Erro ao ativar todos', description: error.message, variant: 'destructive' });
               }
@@ -101,7 +101,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onEdit }) => {
               if (!error) {
                 toast({ title: 'Todos os clientes inativados!' });
                 // Atualiza lista
-                window.location.reload();
+                refreshClients();
               } else {
                 toast({ title: 'Erro ao inativar todos', description: error.message, variant: 'destructive' });
               }
