@@ -1,7 +1,7 @@
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 interface User {
   id: string;
@@ -26,12 +26,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const fetchProfileAndSetUser = async (userObj: unknown) => {
-      const u = userObj as any;
-      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', u.id).single();
+    const fetchProfileAndSetUser = async (userObj: { id: string; email?: string | null }) => {
+      const { data: profile } = await supabase.from('profiles').select('name, role').eq('id', userObj.id).single();
       setUser({
-        id: u.id,
-        email: u.email ?? '',
+        id: userObj.id,
+        email: userObj.email ?? '',
         name: profile?.name,
         role: profile?.role,
       });

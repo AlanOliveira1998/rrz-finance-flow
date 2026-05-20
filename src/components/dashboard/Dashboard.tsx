@@ -1,6 +1,22 @@
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
+
+interface KanbanTask {
+  id: string;
+  text: string;
+  status: string;
+  user_id?: string;
+  created_at?: string;
+}
+
+interface KanbanState {
+  todo: KanbanTask[];
+  doing: KanbanTask[];
+  done: KanbanTask[];
+  lembretes: KanbanTask[];
+  reunioes: KanbanTask[];
+}
+
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
@@ -19,6 +35,7 @@ import { Project } from '@/hooks/useProjects';
 import { ProposalsList } from '@/components/proposals/ProposalsList';
 import { ProposalForm } from '@/components/proposals/ProposalForm';
 import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -28,10 +45,20 @@ import Checklist from './Checklist'; // importar o novo componente
 import { useAuth } from '@/hooks/useAuth';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
+interface LogEntry {
+  timestamp: string;
+  user?: string;
+  type?: string;
+  action?: string;
+  razaoSocial?: string;
+  numero?: string;
+  nome?: string;
+}
+
 const LogsPanel = () => {
-  const [logs, setLogs] = React.useState<any[]>([]);
+  const [logs, setLogs] = React.useState<LogEntry[]>([]);
   React.useEffect(() => {
-    setLogs(JSON.parse(localStorage.getItem('rrz_logs') || '[]').reverse());
+    setLogs((JSON.parse(localStorage.getItem('rrz_logs') || '[]') as LogEntry[]).reverse());
   }, []);
   return (
     <div className="space-y-6">
@@ -284,14 +311,32 @@ const SupplierForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   );
 };
 
+interface Supplier {
+  id: string;
+  cnpj: string;
+  razao_social: string;
+  nome_fantasia?: string;
+  email?: string;
+  telefone?: string;
+  ativo: boolean;
+  endereco?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
+}
+
 const SupplierList = () => {
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterAtivo, setFilterAtivo] = useState('all');
   const [editId, setEditId] = useState<string | null>(null);
-  const [editFields, setEditFields] = useState<any>({});
+  const [editFields, setEditFields] = useState<Partial<Supplier>>({});
   const [editLoading, setEditLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -318,7 +363,7 @@ const SupplierList = () => {
     const matchesAtivo = filterAtivo === 'all' || (filterAtivo === 'ativo' ? s.ativo : !s.ativo);
     return matchesSearch && matchesAtivo;
   });
-  const handleEdit = (s: any) => {
+  const handleEdit = (s: Supplier) => {
     setEditId(s.id);
     setEditFields({ ...s, ...JSON.parse(s.endereco || '{}') });
   };
@@ -639,14 +684,13 @@ export const Dashboard = () => {
   const { user } = useAuth();
 
   // Kanban hooks SEMPRE no topo
-  const [kanban, setKanban] = React.useState({
+  const [kanban, setKanban] = React.useState<KanbanState>({
     todo: [],
     doing: [],
     done: [],
     lembretes: [],
     reunioes: [],
   });
-  const [newTask, setNewTask] = React.useState('');
   const [kanbanLoading, setKanbanLoading] = useState(false);
 
   // Buscar tarefas do Kanban do Supabase ao carregar
@@ -773,7 +817,7 @@ export const Dashboard = () => {
         <Route path="invoices" element={<InvoiceList onEdit={handleEditInvoice} />} />
         <Route path="new-invoice" element={<InvoiceForm invoice={selectedInvoice} onBack={() => navigate('/dashboard/invoices')} />} />
         <Route path="reports" element={<Reports />} />
-        <Route path="users" element={<UserManagement />} />
+        <Route path="users" element={<PermissionGuard require="canManageUsers"><UserManagement /></PermissionGuard>} />
         <Route path="taxes" element={<TaxesList />} />
         <Route path="logs" element={<LogsPanel />} />
         <Route path="kanban" element={<KanbanAtividades kanban={kanban} setKanban={setKanban} />} />
@@ -784,10 +828,9 @@ export const Dashboard = () => {
   };
 
   // Kanban de Atividades como componente separado
-  const KanbanAtividades = ({ kanban, setKanban }) => {
+  const KanbanAtividades = ({ kanban, setKanban }: { kanban: KanbanState; setKanban: React.Dispatch<React.SetStateAction<KanbanState>> }) => {
     const { toast } = useToast();
-    // Novo: um estado para cada input de nova tarefa por coluna
-    const [newTasks, setNewTasks] = React.useState({
+    const [newTasks, setNewTasks] = React.useState<Record<string, string>>({
       todo: '',
       doing: '',
       done: '',
@@ -795,7 +838,7 @@ export const Dashboard = () => {
       reunioes: '',
     });
     // Adicionar tarefa em qualquer coluna
-    const handleAddTask = async (colKey) => {
+    const handleAddTask = async (colKey: string) => {
       const text = newTasks[colKey]?.trim();
       if (!text || !user?.id) return;
       setKanbanLoading(true);
@@ -811,7 +854,7 @@ export const Dashboard = () => {
       setKanbanLoading(false);
     };
     // Mover tarefa entre colunas
-    const moveTask = async (fromCol, fromIdx, toCol) => {
+    const moveTask = async (fromCol: string, fromIdx: number, toCol: string) => {
       const item = kanban[fromCol][fromIdx];
       if (!item) return;
       setKanbanLoading(true);
@@ -831,7 +874,7 @@ export const Dashboard = () => {
       setKanbanLoading(false);
     };
     // Remover tarefa
-    const removeTask = async (col, idx) => {
+    const removeTask = async (col: string, idx: number) => {
       const item = kanban[col][idx];
       if (!item) return;
       setKanbanLoading(true);
@@ -849,18 +892,18 @@ export const Dashboard = () => {
       }
       setKanbanLoading(false);
     };
-    const handleDragStart = (col, idx) => (e) => {
+    const handleDragStart = (col: string, idx: number) => (e: React.DragEvent) => {
       e.dataTransfer.setData('col', col);
       e.dataTransfer.setData('idx', idx);
     };
-    const handleDrop = (targetCol) => (e) => {
+    const handleDrop = (targetCol: string) => (e: React.DragEvent) => {
       const fromCol = e.dataTransfer.getData('col');
       const fromIdx = parseInt(e.dataTransfer.getData('idx'), 10);
       if (fromCol && fromCol !== targetCol) {
         moveTask(fromCol, fromIdx, targetCol);
       }
     };
-    const handleDragOver = (e) => e.preventDefault();
+    const handleDragOver = (e: React.DragEvent) => e.preventDefault();
     // Colunas do Kanban
     const columns = [
       { key: 'todo', label: 'A Fazer', color: 'bg-red-50' },
@@ -870,11 +913,11 @@ export const Dashboard = () => {
       { key: 'reunioes', label: 'Reuniões', color: 'bg-purple-50' },
     ];
     // Estado para edição inline
-    const [editingTask, setEditingTask] = React.useState({ col: null, idx: null });
+    const [editingTask, setEditingTask] = React.useState<{ col: string | null; idx: number | null }>({ col: null, idx: null });
     const [editingText, setEditingText] = React.useState('');
 
     // Salvar edição
-    const handleEditSave = async (col, idx) => {
+    const handleEditSave = async (col: string, idx: number) => {
       const item = kanban[col][idx];
       if (!item || !editingText.trim()) {
         setEditingTask({ col: null, idx: null });
@@ -899,10 +942,10 @@ export const Dashboard = () => {
       setKanbanLoading(false);
     };
     // Estado para controle do modal de remoção
-    const [removeDialog, setRemoveDialog] = React.useState({ open: false, col: null, idx: null });
+    const [removeDialog, setRemoveDialog] = React.useState<{ open: boolean; col: string | null; idx: number | null }>({ open: false, col: null, idx: null });
 
     // Função para abrir o modal
-    const handleRemoveClick = (col, idx) => {
+    const handleRemoveClick = (col: string, idx: number) => {
       setRemoveDialog({ open: true, col, idx });
     };
     // Função para confirmar remoção

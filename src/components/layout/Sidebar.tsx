@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { user } = useAuth();
+  const permissions = usePermissions();
   const location = window.location;
   const navigate = useNavigate();
 
@@ -136,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       title: 'Financeiro',
       items: [
         { id: 'invoices', label: 'Notas Fiscais', icon: '📄' },
-        { id: 'new-invoice', label: 'Nova Nota', icon: '➕' },
+        ...(permissions.canCreate ? [{ id: 'new-invoice', label: 'Nova Nota', icon: '➕' }] : []),
         { id: 'taxes', label: 'Impostos', icon: '💸' },
         { id: 'reports', label: 'Relatórios', icon: '📈' },
       ],
@@ -145,15 +147,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       title: 'Cadastros',
       items: [
         { id: 'clients', label: 'Clientes', icon: '🏢' },
-        { id: 'new-client', label: 'Novo Cliente', icon: '👤' },
+        ...(permissions.canCreate ? [{ id: 'new-client', label: 'Novo Cliente', icon: '👤' }] : []),
         { id: 'projects', label: 'Projetos', icon: '🗂️' },
-        { id: 'new-project', label: 'Novo Projeto', icon: '📝' },
+        ...(permissions.canCreate ? [{ id: 'new-project', label: 'Novo Projeto', icon: '📝' }] : []),
       ],
     },
     {
       title: 'Administração',
       items: [
-        ...(user?.role === 'admin' ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : []),
+        ...(permissions.canManageUsers ? [{ id: 'users', label: 'Usuários', icon: '👥' }] : []),
         { id: 'logs', label: 'Histórico de Alterações', icon: '🕑' },
       ],
     },

@@ -1,5 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +40,7 @@ interface Installment {
 export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   const { invoices, deleteInvoice, updateInvoice, loading } = useInvoices();
   const { toast } = useToast();
+  const permissions = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -97,7 +101,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     updateInvoice(id, { status: value });
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
+  const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = (invoice.numero?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          (invoice.descricao?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          (invoice.cliente?.toLowerCase() || '').includes(searchTerm.toLowerCase());
@@ -114,6 +118,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     const matchesDataVencimentoFim = !dataVencimentoFim || new Date(invoice.dataVencimento) <= new Date(dataVencimentoFim);
     return matchesSearch && matchesStatus && matchesType && matchesProject && matchesTipoProjeto && matchesCliente && matchesValorMin && matchesValorMax && matchesDataEmissaoInicio && matchesDataEmissaoFim && matchesDataVencimentoInicio && matchesDataVencimentoFim;
   });
+
+  const { paginatedItems: pagedInvoices, currentPage: invoicePage, totalPages: invoiceTotalPages, goToPage: goToInvoicePage, reset: resetInvoicePage } = usePagination(filteredInvoices, 10);
+
+  const resetFilters = useCallback(() => { resetInvoicePage(); }, [searchTerm, statusFilter, typeFilter, projectFilter, tipoProjetoFilter, clienteFilter, valorMin, valorMax, dataEmissaoInicio, dataEmissaoFim, dataVencimentoInicio, dataVencimentoFim]);
+  useEffect(() => { resetFilters(); }, [resetFilters]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -441,7 +450,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                 </CardContent>
               </Card>
             ) : (
-              filteredInvoices.map((invoice) => (
+              pagedInvoices.map((invoice) => (
                 <Card key={invoice.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -494,20 +503,24 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                         </div>
                       </div>
                       <div className="flex flex-col space-y-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(invoice)}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setInvoiceToDelete(invoice)}
-                        >
-                          Excluir
-                        </Button>
+                        {permissions.canEdit && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(invoice)}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                        {permissions.canDelete && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setInvoiceToDelete(invoice)}
+                          >
+                            Excluir
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -515,6 +528,14 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
               ))
             )}
           </div>
+
+          <PaginationControls
+            currentPage={invoicePage}
+            totalPages={invoiceTotalPages}
+            onPageChange={goToInvoicePage}
+            totalItems={filteredInvoices.length}
+            pageSize={10}
+          />
 
           {/* Modal de confirmação de exclusão de nota fiscal */}
           <AlertDialog open={!!invoiceToDelete} onOpenChange={open => { if (!open) setInvoiceToDelete(null); }}>
