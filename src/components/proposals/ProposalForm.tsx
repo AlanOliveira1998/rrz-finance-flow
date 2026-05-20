@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useClients } from '@/hooks/useClients';
 import { useProjects } from '@/hooks/useProjects';
 import { useProposals } from '@/hooks/useProposals';
+import { supabase } from '@/lib/supabaseClient';
 
 interface ProposalFormProps {
   onBack?: () => void;
@@ -22,6 +23,8 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
   const [status, setStatus] = useState<'rascunho' | 'enviado' | 'assinado' | 'rejeitado'>('rascunho');
   const [docuSignId, setDocuSignId] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +34,27 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
     }
 
     const numericValor = valor ? Number(valor) : null;
+    let arquivoUrl: string | null = null;
+
+    if (arquivo) {
+      setUploading(true);
+      const nomeArquivo = `${Date.now()}_${arquivo.name.replace(/\s+/g, '_')}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('proposals')
+        .upload(nomeArquivo, arquivo, { contentType: 'application/pdf' });
+
+      if (uploadError) {
+        setUploading(false);
+        alert(`Erro ao enviar o arquivo: ${uploadError.message}`);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('proposals')
+        .getPublicUrl(uploadData.path);
+      arquivoUrl = urlData.publicUrl;
+      setUploading(false);
+    }
 
     try {
       await addProposal({
@@ -40,7 +64,8 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
         status,
         docuSignId: docuSignId || null,
         observacoes: observacoes || null,
-        id: '', // não usado na inserção
+        arquivoUrl,
+        id: '',
         created_at: undefined,
       });
       alert('Proposta salva com sucesso!');
@@ -53,6 +78,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
         setStatus('rascunho');
         setDocuSignId('');
         setObservacoes('');
+        setArquivo(null);
       }
     } catch (error: unknown) {
       const message = (error as any)?.message ?? String(error);
@@ -156,14 +182,28 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack }) => {
                 rows={4}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Arquivo PDF (opcional)
+              </label>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {arquivo && (
+                <p className="text-xs text-gray-500 mt-1">Selecionado: {arquivo.name}</p>
+              )}
+            </div>
             <div className="flex justify-end space-x-4 mt-4">
               {onBack && (
                 <Button type="button" variant="outline" onClick={onBack}>
                   Cancelar
                 </Button>
               )}
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                Salvar Proposta
+              <Button type="submit" disabled={uploading} className="bg-blue-600 hover:bg-blue-700">
+                {uploading ? 'Enviando arquivo...' : 'Salvar Proposta'}
               </Button>
             </div>
           </form>

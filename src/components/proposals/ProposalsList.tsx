@@ -47,6 +47,7 @@ export const ProposalsList: React.FC = () => {
                   <th className="px-4 py-2 text-left font-semibold text-gray-600">Valor</th>
                   <th className="px-4 py-2 text-left font-semibold text-gray-600">Status</th>
                   <th className="px-4 py-2 text-left font-semibold text-gray-600">DocuSign ID</th>
+                  <th className="px-4 py-2 text-left font-semibold text-gray-600">Arquivo</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,6 +65,20 @@ export const ProposalsList: React.FC = () => {
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap capitalize">{p.status}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{p.docuSignId || '—'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {p.arquivoUrl ? (
+                        <a
+                          href={p.arquivoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          Baixar PDF
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

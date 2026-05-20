@@ -12,6 +12,7 @@ export interface Proposal {
   status: ProposalStatus;
   docuSignId?: string | null;
   observacoes?: string | null;
+  arquivoUrl?: string | null;
   created_at?: string;
 }
 
@@ -46,6 +47,7 @@ export const ProposalsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             status: p.status,
             docuSignId: p.docusign_id,
             observacoes: p.observacoes,
+            arquivoUrl: p.arquivo_url,
             created_at: p.created_at,
           }));
           setProposals(mapped);
@@ -63,6 +65,7 @@ export const ProposalsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: proposal.status,
       docusign_id: proposal.docuSignId ?? null,
       observacoes: proposal.observacoes ?? null,
+      arquivo_url: proposal.arquivoUrl ?? null,
     };
 
     const { data, error } = await supabase.from('proposals').insert([payload]).select();
@@ -79,6 +82,7 @@ export const ProposalsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         status: data[0].status,
         docuSignId: data[0].docusign_id,
         observacoes: data[0].observacoes,
+        arquivoUrl: data[0].arquivo_url,
         created_at: data[0].created_at,
       };
       setProposals((prev) => [created, ...prev]);
