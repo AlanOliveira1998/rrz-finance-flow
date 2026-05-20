@@ -50,7 +50,11 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ onBack, proposal }) 
 
     if (arquivo) {
       setUploading(true);
-      const nomeArquivo = `${Date.now()}_${arquivo.name.replace(/\s+/g, '_')}`;
+      const nomeArquivo = `${Date.now()}_${arquivo.name
+        .normalize('NFD')
+        // eslint-disable-next-line no-misleading-character-class
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '_')}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('proposals')
         .upload(nomeArquivo, arquivo, { contentType: 'application/pdf' });
