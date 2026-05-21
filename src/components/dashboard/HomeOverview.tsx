@@ -123,7 +123,7 @@ export const HomeOverview = () => {
       bg: 'bg-red-50',
       color: 'text-red-700',
       iconBg: 'bg-red-100',
-      onClick: () => navigate('/dashboard?tab=pagar'),
+      onClick: () => navigate('/dashboard/pagar'),
     },
     {
       label: 'Propostas Abertas',
@@ -146,8 +146,8 @@ export const HomeOverview = () => {
   ];
 
   const atalhos = [
-    { label: 'Contas a Receber', desc: 'Controle de notas fiscais', path: '/dashboard?tab=receber', color: 'border-green-200 hover:border-green-400' },
-    { label: 'Contas a Pagar', desc: 'Boletos e fornecedores', path: '/dashboard?tab=pagar', color: 'border-red-200 hover:border-red-400' },
+    { label: 'Contas a Receber', desc: 'Controle de notas fiscais', path: '/dashboard/receber', color: 'border-green-200 hover:border-green-400' },
+    { label: 'Contas a Pagar', desc: 'Boletos e fornecedores', path: '/dashboard/pagar', color: 'border-red-200 hover:border-red-400' },
     { label: 'Notas Fiscais', desc: 'Cadastro e lançamentos', path: '/dashboard/invoices', color: 'border-blue-200 hover:border-blue-400' },
     { label: 'Propostas', desc: 'Contratos para assinatura', path: '/dashboard/proposals', color: 'border-purple-200 hover:border-purple-400' },
   ];
