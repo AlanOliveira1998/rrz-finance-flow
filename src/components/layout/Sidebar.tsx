@@ -5,7 +5,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import {
   Home, BarChart2, TrendingUp, CreditCard, LayoutGrid,
   FileText, Receipt, Building2, FolderOpen, DollarSign, BarChart,
-  Users, Clock, LogOut, ListChecks,
+  Users, Clock, LogOut, ListChecks, Timer, Upload, ScrollText,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -15,6 +15,7 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
   const pathname = location.pathname;
+  const isTimesheet = pathname.startsWith('/timesheet');
 
   const isPath = (...paths: string[]) =>
     paths.some(p => pathname === p || pathname.startsWith(p + '/'));
@@ -50,76 +51,116 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
+      {/* Module switcher */}
+      <div className="px-3 pt-3 pb-1 flex-shrink-0">
+        <div className="flex rounded-lg overflow-hidden border border-gray-700">
+          <button
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors ${
+              !isTimesheet ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+            }`}
+            onClick={() => navigate('/dashboard')}
+          >
+            <BarChart2 size={13} /> Financeiro
+          </button>
+          <button
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors ${
+              isTimesheet ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+            }`}
+            onClick={() => navigate('/timesheet')}
+          >
+            <Timer size={13} /> Timesheet
+          </button>
+        </div>
+      </div>
+
       {/* Nav */}
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        <button className={itemCls(pathname === '/dashboard')} onClick={() => navigate('/dashboard')}>
-          <Home size={16} /> Página Inicial
-        </button>
-        <button className={itemCls(pathname === '/dashboard/financeiro')} onClick={() => navigate('/dashboard/financeiro')}>
-          <BarChart2 size={16} /> Dashboard Financeiro
-        </button>
+        {!isTimesheet ? (
+          <>
+            <button className={itemCls(pathname === '/dashboard')} onClick={() => navigate('/dashboard')}>
+              <Home size={16} /> Página Inicial
+            </button>
+            <button className={itemCls(pathname === '/dashboard/financeiro')} onClick={() => navigate('/dashboard/financeiro')}>
+              <BarChart2 size={16} /> Dashboard Financeiro
+            </button>
 
-        <Section label="Financeiro" />
-        <button className={itemCls(isPath('/dashboard/receber'))} onClick={() => navigate('/dashboard/receber')}>
-          <TrendingUp size={16} /> Contas a Receber
-        </button>
-        <button className={itemCls(isPayables)} onClick={() => navigate('/dashboard/pagar')}>
-          <CreditCard size={16} /> Contas a Pagar
-        </button>
-        {isPayables && (
-          <div className="ml-1 border-l border-gray-700 pl-1 space-y-0.5 mt-0.5">
-            <button className={subCls(pathname === '/dashboard/pagar')} onClick={() => navigate('/dashboard/pagar')}>
-              Visão Geral
+            <Section label="Financeiro" />
+            <button className={itemCls(isPath('/dashboard/receber'))} onClick={() => navigate('/dashboard/receber')}>
+              <TrendingUp size={16} /> Contas a Receber
             </button>
-            <button className={subCls(pathname === '/dashboard/pagar/boleto/novo')} onClick={() => navigate('/dashboard/pagar/boleto/novo')}>
-              Cadastrar Boleto
+            <button className={itemCls(isPayables)} onClick={() => navigate('/dashboard/pagar')}>
+              <CreditCard size={16} /> Contas a Pagar
             </button>
-            <button className={subCls(isPath('/dashboard/pagar/fornecedores'))} onClick={() => navigate('/dashboard/pagar/fornecedores')}>
-              Fornecedores
+            {isPayables && (
+              <div className="ml-1 border-l border-gray-700 pl-1 space-y-0.5 mt-0.5">
+                <button className={subCls(pathname === '/dashboard/pagar')} onClick={() => navigate('/dashboard/pagar')}>
+                  Visão Geral
+                </button>
+                <button className={subCls(pathname === '/dashboard/pagar/boleto/novo')} onClick={() => navigate('/dashboard/pagar/boleto/novo')}>
+                  Cadastrar Boleto
+                </button>
+                <button className={subCls(pathname === '/dashboard/pagar/fornecedores')} onClick={() => navigate('/dashboard/pagar/fornecedores')}>
+                  Fornecedores
+                </button>
+                <button className={subCls(isPath('/dashboard/pagar/fornecedores/novo'))} onClick={() => navigate('/dashboard/pagar/fornecedores/novo')}>
+                  Cad. Fornecedores
+                </button>
+              </div>
+            )}
+
+            <Section label="Rotinas" />
+            <button className={itemCls(isPath('/dashboard/kanban'))} onClick={() => navigate('/dashboard/kanban')}>
+              <LayoutGrid size={16} /> Kanban de Atividades
             </button>
-            <button className={subCls(pathname === '/dashboard/pagar/fornecedores/novo')} onClick={() => navigate('/dashboard/pagar/fornecedores/novo')}>
-              Cad. Fornecedores
+            <button className={itemCls(isPath('/dashboard/checklist'))} onClick={() => navigate('/dashboard/checklist')}>
+              <ListChecks size={16} /> Checklist
             </button>
-          </div>
+
+            <Section label="Cadastros" />
+            <button className={itemCls(isPath('/dashboard/proposals', '/dashboard/new-proposal', '/dashboard/edit-proposal'))} onClick={() => navigate('/dashboard/proposals')}>
+              <FileText size={16} /> Propostas
+            </button>
+            <button className={itemCls(isPath('/dashboard/invoices', '/dashboard/new-invoice'))} onClick={() => navigate('/dashboard/invoices')}>
+              <Receipt size={16} /> Notas Fiscais
+            </button>
+            <button className={itemCls(isPath('/dashboard/clients', '/dashboard/new-client'))} onClick={() => navigate('/dashboard/clients')}>
+              <Building2 size={16} /> Clientes
+            </button>
+            <button className={itemCls(isPath('/dashboard/projects', '/dashboard/new-project'))} onClick={() => navigate('/dashboard/projects')}>
+              <FolderOpen size={16} /> Projetos
+            </button>
+            <button className={itemCls(isPath('/dashboard/taxes'))} onClick={() => navigate('/dashboard/taxes')}>
+              <DollarSign size={16} /> Impostos
+            </button>
+            <button className={itemCls(isPath('/dashboard/reports'))} onClick={() => navigate('/dashboard/reports')}>
+              <BarChart size={16} /> Relatórios
+            </button>
+
+            <Section label="Administração" />
+            {permissions.canManageUsers && (
+              <button className={itemCls(isPath('/dashboard/users'))} onClick={() => navigate('/dashboard/users')}>
+                <Users size={16} /> Usuários
+              </button>
+            )}
+            <button className={itemCls(isPath('/dashboard/logs'))} onClick={() => navigate('/dashboard/logs')}>
+              <Clock size={16} /> Histórico
+            </button>
+          </>
+        ) : (
+          <>
+            <button className={itemCls(pathname === '/timesheet')} onClick={() => navigate('/timesheet')}>
+              <Home size={16} /> Visão Geral
+            </button>
+
+            <Section label="Banco de Horas" />
+            <button className={itemCls(isPath('/timesheet/contracts'))} onClick={() => navigate('/timesheet/contracts')}>
+              <ScrollText size={16} /> Contratos
+            </button>
+            <button className={itemCls(isPath('/timesheet/import'))} onClick={() => navigate('/timesheet/import')}>
+              <Upload size={16} /> Importar Horas
+            </button>
+          </>
         )}
-
-        <Section label="Rotinas" />
-        <button className={itemCls(isPath('/dashboard/kanban'))} onClick={() => navigate('/dashboard/kanban')}>
-          <LayoutGrid size={16} /> Kanban de Atividades
-        </button>
-        <button className={itemCls(isPath('/dashboard/checklist'))} onClick={() => navigate('/dashboard/checklist')}>
-          <ListChecks size={16} /> Checklist
-        </button>
-
-        <Section label="Cadastros" />
-        <button className={itemCls(isPath('/dashboard/proposals', '/dashboard/new-proposal', '/dashboard/edit-proposal'))} onClick={() => navigate('/dashboard/proposals')}>
-          <FileText size={16} /> Propostas
-        </button>
-        <button className={itemCls(isPath('/dashboard/invoices', '/dashboard/new-invoice'))} onClick={() => navigate('/dashboard/invoices')}>
-          <Receipt size={16} /> Notas Fiscais
-        </button>
-        <button className={itemCls(isPath('/dashboard/clients', '/dashboard/new-client'))} onClick={() => navigate('/dashboard/clients')}>
-          <Building2 size={16} /> Clientes
-        </button>
-        <button className={itemCls(isPath('/dashboard/projects', '/dashboard/new-project'))} onClick={() => navigate('/dashboard/projects')}>
-          <FolderOpen size={16} /> Projetos
-        </button>
-        <button className={itemCls(isPath('/dashboard/taxes'))} onClick={() => navigate('/dashboard/taxes')}>
-          <DollarSign size={16} /> Impostos
-        </button>
-        <button className={itemCls(isPath('/dashboard/reports'))} onClick={() => navigate('/dashboard/reports')}>
-          <BarChart size={16} /> Relatórios
-        </button>
-
-        <Section label="Administração" />
-        {permissions.canManageUsers && (
-          <button className={itemCls(isPath('/dashboard/users'))} onClick={() => navigate('/dashboard/users')}>
-            <Users size={16} /> Usuários
-          </button>
-        )}
-        <button className={itemCls(isPath('/dashboard/logs'))} onClick={() => navigate('/dashboard/logs')}>
-          <Clock size={16} /> Histórico
-        </button>
       </div>
 
       {/* User + Logout */}
