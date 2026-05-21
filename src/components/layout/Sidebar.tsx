@@ -3,25 +3,21 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
-  Home, BarChart2, TrendingUp, CreditCard, LayoutGrid, CheckSquare,
+  Home, BarChart2, TrendingUp, CreditCard, LayoutGrid,
   FileText, Receipt, Building2, FolderOpen, DollarSign, BarChart,
-  Users, Clock, LogOut, Landmark, ListChecks,
+  Users, Clock, LogOut, ListChecks,
 } from 'lucide-react';
 
-interface SidebarProps {
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = () => {
+export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const permissions = usePermissions();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const tab = new URLSearchParams(location.search).get('tab');
-  const sub = new URLSearchParams(location.search).get('sub');
   const pathname = location.pathname;
+
+  const isPath = (...paths: string[]) =>
+    paths.some(p => pathname === p || pathname.startsWith(p + '/'));
 
   const itemCls = (active: boolean) =>
     `flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
@@ -39,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
     </div>
   );
 
-  const isPath = (...paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + '/'));
+  const isPayables = isPath('/dashboard/pagar');
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-40 shadow-xl">
@@ -56,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
 
       {/* Nav */}
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        <button className={itemCls(pathname === '/dashboard' && !tab)} onClick={() => navigate('/dashboard')}>
+        <button className={itemCls(pathname === '/dashboard')} onClick={() => navigate('/dashboard')}>
           <Home size={16} /> Página Inicial
         </button>
         <button className={itemCls(pathname === '/dashboard/financeiro')} onClick={() => navigate('/dashboard/financeiro')}>
@@ -64,31 +60,31 @@ export const Sidebar: React.FC<SidebarProps> = () => {
         </button>
 
         <Section label="Financeiro" />
-        <button className={itemCls(tab === 'receber')} onClick={() => navigate('/dashboard?tab=receber')}>
+        <button className={itemCls(isPath('/dashboard/receber'))} onClick={() => navigate('/dashboard/receber')}>
           <TrendingUp size={16} /> Contas a Receber
         </button>
-        <button className={itemCls(tab === 'pagar')} onClick={() => navigate('/dashboard?tab=pagar')}>
+        <button className={itemCls(isPayables)} onClick={() => navigate('/dashboard/pagar')}>
           <CreditCard size={16} /> Contas a Pagar
         </button>
-        {tab === 'pagar' && (
+        {isPayables && (
           <div className="ml-1 border-l border-gray-700 pl-1 space-y-0.5 mt-0.5">
-            <button className={subCls(!sub)} onClick={() => navigate('/dashboard?tab=pagar')}>
+            <button className={subCls(pathname === '/dashboard/pagar')} onClick={() => navigate('/dashboard/pagar')}>
               Visão Geral
             </button>
-            <button className={subCls(sub === 'boletos-cadastro')} onClick={() => navigate('/dashboard?tab=pagar&sub=boletos-cadastro')}>
+            <button className={subCls(pathname === '/dashboard/pagar/boleto/novo')} onClick={() => navigate('/dashboard/pagar/boleto/novo')}>
               Cadastrar Boleto
             </button>
-            <button className={subCls(sub === 'fornecedor-lista')} onClick={() => navigate('/dashboard?tab=pagar&sub=fornecedor-lista')}>
+            <button className={subCls(isPath('/dashboard/pagar/fornecedores'))} onClick={() => navigate('/dashboard/pagar/fornecedores')}>
               Fornecedores
             </button>
-            <button className={subCls(sub === 'fornecedor-cadastro')} onClick={() => navigate('/dashboard?tab=pagar&sub=fornecedor-cadastro')}>
+            <button className={subCls(pathname === '/dashboard/pagar/fornecedores/novo')} onClick={() => navigate('/dashboard/pagar/fornecedores/novo')}>
               Cad. Fornecedores
             </button>
           </div>
         )}
 
         <Section label="Rotinas" />
-        <button className={itemCls(isPath('/dashboard/kanban'))} onClick={() => navigate('/dashboard/kanban?tab=rotinas')}>
+        <button className={itemCls(isPath('/dashboard/kanban'))} onClick={() => navigate('/dashboard/kanban')}>
           <LayoutGrid size={16} /> Kanban de Atividades
         </button>
         <button className={itemCls(isPath('/dashboard/checklist'))} onClick={() => navigate('/dashboard/checklist')}>

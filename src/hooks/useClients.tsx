@@ -3,6 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from './useAuth';
 import { logger } from '@/lib/logger';
+import { toSnakeCase, toCamelCase, CLIENT_FIELD_MAP } from '@/lib/caseConverters';
+import { logActivity } from '@/lib/activityLogger';
 
 export interface Client {
   id: string;
@@ -51,6 +53,14 @@ interface ClientsContextType {
 
 const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
 
+function mapClientFromDb(row: Record<string, unknown>): Client {
+  const m = toCamelCase(row, CLIENT_FIELD_MAP)
+  const endereco = typeof m.endereco === 'string'
+    ? JSON.parse(m.endereco as string)
+    : (m.endereco as Client['endereco']) || {}
+  return { ...(m as unknown as Client), endereco }
+}
+
 export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,22 +70,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     supabase.from('clients').select('*').then(({ data, error }) => {
       if (error) logger.error('Erro ao carregar clientes:', error);
-      if (data) {
-        const convertedClients = data.map(client => ({
-          id: client.id,
-          cnpj: client.cnpj,
-          razaoSocial: client.razao_social,
-          nomeFantasia: client.nome_fantasia,
-          email: client.email,
-          telefone: client.telefone,
-          endereco: typeof client.endereco === 'string'
-            ? JSON.parse(client.endereco)
-            : client.endereco || {},
-          ativo: client.ativo,
-          created_at: client.created_at
-        }));
-        setClients(convertedClients as Client[]);
-      }
+      if (data) setClients(data.map(row => mapClientFromDb(row as Record<string, unknown>)));
       setLoading(false);
     });
   };
@@ -220,16 +215,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ativo: clientData.ativo ?? true
     };
 
-    // Converter camelCase para snake_case para o Supabase
-    const supabaseData = {
-      cnpj: cleanClientData.cnpj,
-      razao_social: cleanClientData.razaoSocial,
-      nome_fantasia: cleanClientData.nomeFantasia,
-      email: cleanClientData.email,
-      telefone: cleanClientData.telefone,
-      endereco: cleanClientData.endereco,
-      ativo: cleanClientData.ativo
-    };
+    const supabaseData = toSnakeCase(cleanClientData as unknown as Record<string, unknown>, CLIENT_FIELD_MAP);
     
     logger.debug('Dados originais:', clientData);
     logger.debug('Dados limpos:', cleanClientData);
@@ -258,18 +244,9 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
           if (retryData && retryData.length > 0) {
             logger.debug('Cliente adicionado com sucesso na segunda tentativa:', retryData[0]);
-            const client = {
-              id: retryData[0].id,
-              cnpj: retryData[0].cnpj,
-              razaoSocial: retryData[0].razao_social,
-              nomeFantasia: retryData[0].nome_fantasia,
-              email: retryData[0].email,
-              telefone: retryData[0].telefone,
-              endereco: retryData[0].endereco,
-              ativo: retryData[0].ativo,
-              created_at: retryData[0].created_at
-            };
-            setClients((prev) => [...prev, client as Client]);
+            const added = mapClientFromDb(retryData[0] as Record<string, unknown>);
+            setClients((prev) => [...prev, added]);
+            void logActivity({ action: 'create', entityType: 'cliente', entityId: added.id, entityName: added.razaoSocial });
             setLoading(false);
             return;
           }
@@ -281,19 +258,9 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     if (data && data.length > 0) {
       logger.debug('Cliente adicionado com sucesso:', data[0]);
-      // Converter de volta para camelCase
-      const client = {
-        id: data[0].id,
-        cnpj: data[0].cnpj,
-        razaoSocial: data[0].razao_social,
-        nomeFantasia: data[0].nome_fantasia,
-        email: data[0].email,
-        telefone: data[0].telefone,
-        endereco: data[0].endereco,
-        ativo: data[0].ativo,
-        created_at: data[0].created_at
-      };
-      setClients((prev) => [...prev, client as Client]);
+      const added = mapClientFromDb(data[0] as Record<string, unknown>);
+      setClients((prev) => [...prev, added]);
+      void logActivity({ action: 'create', entityType: 'cliente', entityId: added.id, entityName: added.razaoSocial });
     } else {
       logger.error('Nenhum dado retornado após inserção');
     }
@@ -303,31 +270,15 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateClient = async (id: string, clientData: Partial<Client>) => {
     setLoading(true);
-    
-    // Converter camelCase para snake_case
-    const supabaseData: Record<string, unknown> = {};
-    if (clientData.cnpj !== undefined) supabaseData.cnpj = clientData.cnpj;
-    if (clientData.razaoSocial !== undefined) supabaseData.razao_social = clientData.razaoSocial;
-    if (clientData.nomeFantasia !== undefined) supabaseData.nome_fantasia = clientData.nomeFantasia;
-    if (clientData.email !== undefined) supabaseData.email = clientData.email;
-    if (clientData.telefone !== undefined) supabaseData.telefone = clientData.telefone;
-    if (clientData.endereco !== undefined) supabaseData.endereco = clientData.endereco;
-    if (clientData.ativo !== undefined) supabaseData.ativo = clientData.ativo;
-    
+    const filtered = Object.fromEntries(
+      Object.entries(clientData).filter(([, v]) => v !== undefined)
+    ) as Record<string, unknown>;
+    const supabaseData = toSnakeCase(filtered, CLIENT_FIELD_MAP);
     const { data, error } = await supabase.from('clients').update(supabaseData).eq('id', id).select();
     if (!error && data && data.length > 0) {
-      const updatedClient = {
-        id: data[0].id,
-        cnpj: data[0].cnpj,
-        razaoSocial: data[0].razao_social,
-        nomeFantasia: data[0].nome_fantasia,
-        email: data[0].email,
-        telefone: data[0].telefone,
-        endereco: data[0].endereco,
-        ativo: data[0].ativo,
-        created_at: data[0].created_at
-      };
-      setClients((prev) => prev.map(c => c.id === id ? updatedClient : c));
+      const updated = mapClientFromDb(data[0] as Record<string, unknown>);
+      setClients((prev) => prev.map(c => c.id === id ? updated : c));
+      void logActivity({ action: 'update', entityType: 'cliente', entityId: id, entityName: updated.razaoSocial });
     }
     setLoading(false);
   };
@@ -335,7 +286,10 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteClient = async (id: string) => {
     setLoading(true);
     const { error } = await supabase.from('clients').delete().eq('id', id);
-    if (!error) setClients((prev) => prev.filter(c => c.id !== id));
+    if (!error) {
+      setClients((prev) => prev.filter(c => c.id !== id));
+      void logActivity({ action: 'delete', entityType: 'cliente', entityId: id });
+    }
     setLoading(false);
   };
 

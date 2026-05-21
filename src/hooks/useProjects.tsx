@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logActivity } from '@/lib/activityLogger';
 
 export interface Project {
   id: string;
@@ -34,26 +35,32 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addProject = async (projectData: Omit<Project, 'id' | 'created_at'>) => {
     setLoading(true);
     const { data, error } = await supabase.from('projects').insert([{ ...projectData }]).select();
-    if (!error && data) setProjects((prev) => [...prev, data[0] as Project]);
+    if (!error && data) {
+      setProjects((prev) => [...prev, data[0] as Project]);
+      void logActivity({ action: 'create', entityType: 'projeto', entityId: data[0].id, entityName: data[0].nome });
+    }
     setLoading(false);
   };
 
   const updateProject = async (id: string, projectData: Partial<Project>) => {
     setLoading(true);
-    // Garante que o campo 'ativo' seja enviado explicitamente se existir
     const updateData = { ...projectData };
-    if ('ativo' in projectData) {
-      updateData.ativo = projectData.ativo;
-    }
+    if ('ativo' in projectData) updateData.ativo = projectData.ativo;
     const { data, error } = await supabase.from('projects').update(updateData).eq('id', id).select();
-    if (!error && data) setProjects((prev) => prev.map(p => p.id === id ? { ...p, ...data[0] } : p));
+    if (!error && data) {
+      setProjects((prev) => prev.map(p => p.id === id ? { ...p, ...data[0] } : p));
+      void logActivity({ action: 'update', entityType: 'projeto', entityId: id, entityName: data[0]?.nome });
+    }
     setLoading(false);
   };
 
   const deleteProject = async (id: string) => {
     setLoading(true);
     const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (!error) setProjects((prev) => prev.filter(p => p.id !== id));
+    if (!error) {
+      setProjects((prev) => prev.filter(p => p.id !== id));
+      void logActivity({ action: 'delete', entityType: 'projeto', entityId: id });
+    }
     setLoading(false);
   };
 
@@ -66,8 +73,6 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useProjects = () => {
   const context = useContext(ProjectsContext);
-  if (context === undefined) {
-    throw new Error('useProjects must be used within a ProjectsProvider');
-  }
+  if (context === undefined) throw new Error('useProjects must be used within a ProjectsProvider');
   return context;
-}; 
+};
