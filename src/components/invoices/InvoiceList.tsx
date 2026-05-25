@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -50,6 +50,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   // Estado local para data de recebimento e status por nota
   const [notaExtras, setNotaExtras] = useState<{ [id: string]: { dataRecebimento?: string; status?: 'pendente' | 'pago' | 'atrasado' } }>({});
 
+  const [emittedInstallments, setEmittedInstallments] = useState<Record<string, { emitida?: boolean; valorEditado?: number }>>(() => {
+    const saved = localStorage.getItem('rrz_emitted_installments');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const notifiedInvoices = useRef(new Set<string>());
+
   const { projects } = useProjects();
   const { clients } = useClients();
   const [projectFilter, setProjectFilter] = useState('all');
@@ -73,17 +80,16 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
   }, [notaExtras]);
 
   useEffect(() => {
-    // Notificações automáticas para notas a vencer em até 3 dias
     const hoje = new Date();
     invoices.forEach((invoice) => {
-      if (invoice.status === 'pendente') {
+      if (invoice.status === 'pendente' && !notifiedInvoices.current.has(invoice.id)) {
         const vencimento = new Date(invoice.dataVencimento);
         const diff = (vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
         if (diff >= 0 && diff <= 3) {
+          notifiedInvoices.current.add(invoice.id);
           toast({
             title: 'Nota a vencer',
             description: `A nota ${invoice.numero} vence em ${Math.ceil(diff)} dia(s).`,
-            variant: 'default',
           });
         }
       }
@@ -135,52 +141,49 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  // Função para gerar todas as próximas parcelas de todas as notas
+  const toggleEmitted = (key: string, currentValue: boolean) => {
+    setEmittedInstallments(prev => {
+      const next = { ...prev, [key]: { ...prev[key], emitida: !currentValue } };
+      localStorage.setItem('rrz_emitted_installments', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const generateAllUpcomingInstallments = (onlyEmitted: boolean = false) => {
-    const allInstallments: Installment[] = []; 
-    
+    const allInstallments: Installment[] = [];
+
     invoicesWithFutureInstallments.forEach((invoice) => {
       const cliente = clients.find(c => c.id === invoice.clienteId);
       const valorLiquidoPorParcela = invoice.valorLivreImpostos || invoice.valorBruto;
       const numeroParcela = invoice.numeroParcela || 1;
       const totalParcelas = invoice.totalParcelas || 1;
-      
-      // Carregar extras do localStorage
-      const saved = localStorage.getItem('rrz_emitted_installments');
-      const extras = saved ? JSON.parse(saved) : {};
-      
-      // Gerar parcelas futuras para esta nota
+
       const dataEmissaoBase = invoice.dataEmissao;
       let dataEmissaoAnterior = new Date(dataEmissaoBase);
-      
+
       for (let i = numeroParcela + 1; i <= totalParcelas; i++) {
-        // Data de emissão da próxima parcela = data de emissão anterior + 1 mês
         let dataEmissaoParcela = new Date(dataEmissaoAnterior);
         dataEmissaoParcela.setMonth(dataEmissaoParcela.getMonth() + 1);
-        
-        // Função para avançar para o próximo dia útil
+
         const getNextBusinessDay = (date: Date) => {
           const d = new Date(date);
-          while (d.getDay() === 0 || d.getDay() === 6) {
-            d.setDate(d.getDate() + 1);
-          }
+          while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
           return d;
         };
-        
+
         dataEmissaoParcela = getNextBusinessDay(dataEmissaoParcela);
-        
+
         const dueDate = new Date(invoice.dataVencimento);
         dueDate.setMonth(dueDate.getMonth() + (i - numeroParcela));
-        
+
         const key = `${invoice.numero}-${i}`;
-        const emitida = !!extras[key]?.emitida;
-        
-        // Filtrar por status de emissão
+        const emitida = !!emittedInstallments[key]?.emitida;
+
         if (onlyEmitted === emitida) {
           allInstallments.push({
             numero: i,
             dataVencimento: dueDate.toISOString().split('T')[0],
-            valor: extras[key]?.valorEditado ?? valorLiquidoPorParcela,
+            valor: emittedInstallments[key]?.valorEditado ?? valorLiquidoPorParcela,
             mes: dueDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
             cliente: cliente?.razaoSocial || 'Cliente não encontrado',
             numeroNota: invoice.numero,
@@ -192,13 +195,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
             tipoProjeto: invoice.tipoProjeto || '',
           });
         }
-        
-        // Atualizar dataEmissaoAnterior para a próxima parcela
+
         dataEmissaoAnterior = new Date(dataEmissaoParcela);
       }
     });
-    
-    // Ordenar por data de vencimento
+
     return allInstallments.sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime());
   };
 
@@ -662,14 +663,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                               <input
                                 type="checkbox"
                                 checked={installment.emitida}
-                                onChange={() => {
-                                  const saved = localStorage.getItem('rrz_emitted_installments');
-                                  const extras = saved ? JSON.parse(saved) : {};
-                                  extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
-                                  localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
-                                  // Forçar re-render
-                                  window.location.reload();
-                                }}
+                                onChange={() => toggleEmitted(installment.key, installment.emitida)}
                               />
                             </TableCell>
                             <TableCell>
@@ -768,14 +762,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
                               <input
                                 type="checkbox"
                                 checked={installment.emitida}
-                                onChange={() => {
-                                  const saved = localStorage.getItem('rrz_emitted_installments');
-                                  const extras = saved ? JSON.parse(saved) : {};
-                                  extras[installment.key] = { ...extras[installment.key], emitida: !installment.emitida };
-                                  localStorage.setItem('rrz_emitted_installments', JSON.stringify(extras));
-                                  // Forçar re-render
-                                  window.location.reload();
-                                }}
+                                onChange={() => toggleEmitted(installment.key, installment.emitida)}
                               />
                             </TableCell>
                             <TableCell>
