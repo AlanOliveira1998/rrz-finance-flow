@@ -20,6 +20,7 @@ import { Download } from 'lucide-react';
 
 interface InvoiceListProps {
   onEdit: (invoice: Invoice) => void;
+  onNew?: () => void;
 }
 
 interface Installment {
@@ -37,7 +38,7 @@ interface Installment {
   tipoProjeto?: string;
 }
 
-export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
+export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit, onNew }) => {
   const { invoices, deleteInvoice, updateInvoice, loading } = useInvoices();
   const { toast } = useToast();
   const permissions = usePermissions();
@@ -312,9 +313,16 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onEdit }) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Notas Fiscais</h2>
-        <p className="text-gray-600">Gerencie todas as suas notas fiscais</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Notas Fiscais</h2>
+          <p className="text-gray-600">Gerencie todas as suas notas fiscais</p>
+        </div>
+        {permissions.canCreate && onNew && (
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={onNew}>
+            Nova Nota Fiscal
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="lista" className="w-full">

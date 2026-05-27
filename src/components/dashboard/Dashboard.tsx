@@ -55,7 +55,7 @@ export const Dashboard = () => {
             <Route path="proposals" element={<ProposalsList onEdit={p => { setSelectedProposal(p); navigate('/dashboard/edit-proposal'); }} />} />
             <Route path="new-proposal" element={<ProposalForm onBack={() => navigate('/dashboard/proposals')} />} />
             <Route path="edit-proposal" element={<ProposalForm proposal={selectedProposal} onBack={() => { setSelectedProposal(null); navigate('/dashboard/proposals'); }} />} />
-            <Route path="invoices" element={<InvoiceList onEdit={inv => { setSelectedInvoice(inv); navigate('/dashboard/new-invoice'); }} />} />
+            <Route path="invoices" element={<InvoiceList onEdit={inv => { setSelectedInvoice(inv); navigate('/dashboard/new-invoice'); }} onNew={() => { setSelectedInvoice(null); navigate('/dashboard/new-invoice'); }} />} />
             <Route path="new-invoice" element={<InvoiceForm invoice={selectedInvoice} onBack={() => navigate('/dashboard/invoices')} />} />
             <Route path="clients" element={<ClientList onEdit={c => { setSelectedClient(c); navigate('/dashboard/new-client'); }} />} />
             <Route path="new-client" element={<ClientForm client={selectedClient} onBack={() => setSelectedClient(null)} />} />
